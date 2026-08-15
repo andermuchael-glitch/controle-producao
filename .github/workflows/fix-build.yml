@@ -1,0 +1,42 @@
+name: Fix NeoCooler build
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: ${{ !contains(github.event.head_commit.message, 'Fix NeoCooler build') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fix truncated style definition
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/App.jsx')
+          s = p.read_text(encoding='utf-8')
+          broken = 'alocGrid: { display: "grid", g\n  };'
+          fixed = 'alocGrid: { display: "grid", gridTemplateColumns: "1.2fr 0.8fr 1fr 0.8fr auto", gap: 8 },\n};'
+          if broken in s:
+              p.write_text(s.replace(broken, fixed, 1), encoding='utf-8')
+          else:
+              print('No truncated style definition found; leaving file unchanged.')
+          PY
+
+      - name: Commit fix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.jsx
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "Fix NeoCooler build"
+            git push
+          fi

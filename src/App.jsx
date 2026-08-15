@@ -1343,5 +1343,5 @@ const styles = {
 
   corteLinha: { borderTop: "1px solid #f0e9d8", paddingTop: 10, marginTop: 4 },
   corteLinhaTopo: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 8, fontFamily: "'Helvetica Neue', Arial, sans-serif", flexWrap: "wrap" },
-  alocGrid: { display: "grid", g
-  };
+  alocGrid: { display: "grid", gridTemplateColumns: "1.2fr 0.8fr 1fr 0.8fr auto", gap: 8 },
+};

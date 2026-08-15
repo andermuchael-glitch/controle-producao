@@ -3,19 +3,26 @@ import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 // Configuração do aplicativo Web Firebase.
-// Estas chaves identificam o projeto; a proteção dos dados é feita pelo
-// Firebase Authentication e pelas regras de segurança do Firestore.
+// No Netlify, os valores são fornecidos pelas variáveis VITE_FIREBASE_*.
+// Para desenvolvimento local, crie um arquivo .env.local com os mesmos nomes.
 const firebaseConfig = {
-  apiKey: "AIzaSyDgsPDlc0EoNAxg1VdDGlAswBFBuayBHEE",
-  authDomain: "controleproducao-54d30.firebaseapp.com",
-  projectId: "controleproducao-54d30",
-  storageBucket: "controleproducao-54d30.firebasestorage.app",
-  messagingSenderId: "1050330222691",
-  appId: "1:1050330222691:web:58127dc993d3698e456856",
-  measurementId: "G-C24WJW6VWN",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-export const firebaseConfigurado = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
+export const firebaseConfigurado = Boolean(
+  firebaseConfig.apiKey &&
+  firebaseConfig.authDomain &&
+  firebaseConfig.projectId &&
+  firebaseConfig.storageBucket &&
+  firebaseConfig.messagingSenderId &&
+  firebaseConfig.appId
+);
 
 export const app = firebaseConfigurado
   ? (getApps().length ? getApps()[0] : initializeApp(firebaseConfig))

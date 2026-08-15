@@ -3,12 +3,6 @@ import fs from "node:fs";
 const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
 
-// The PDF exported from the user's sales system is structured as:
-// "Venda 11063" followed by rows such as
-// "36 MBAG - NEO - MINI BAG GRANDE 36,90 1.328,40"
-// with continuation lines such as "LATERAL MBAG - NEO".
-// Replace the generic parser injected by fix-build.mjs with one that understands
-// this real format and keeps ambiguous products for manual review.
 const inicio = source.indexOf("  const normalizarTextoPdf =");
 const fim = source.indexOf("  const atualizarLinhaPdf =", inicio);
 
@@ -16,7 +10,6 @@ if (inicio !== -1 && fim !== -1) {
   const novoParser = `  const normalizarTextoPdf = (v) => (v || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
   const limparDescricaoPdf = (texto) => String(texto || "")
     .replace(/\\bNEO\\b/gi, " ")
-    .replace(/\\b[A-Z0-9]{2,8}\\s*-?\\s*NEO\\b/gi, " ")
     .replace(/\\s+/g, " ")
     .replace(/\\s*-\\s*$/g, "")
     .trim();
@@ -90,8 +83,8 @@ if (inicio !== -1 && fim !== -1) {
       const venda = textoCompleto.match(/\\bVenda\\s+(\\d+)\\b/i);
       const pedidoPadrao = venda?.[1] || "";
       const encontrados = [];
-      const inicioTabela = Math.max(0, linhas.findIndex((l) => /Qt\\.?\\s*\\.? Produto\\/Servi/i.test(l)));
-      const linhasTabela = inicioTabela >= 0 ? linhas.slice(inicioTabela + 1) : linhas;
+      const indiceCabecalho = linhas.findIndex((l) => /Qt\\.?\\s*Produto\\/Servi/i.test(l));
+      const linhasTabela = indiceCabecalho >= 0 ? linhas.slice(indiceCabecalho + 1) : linhas;
 
       for (let i = 0; i < linhasTabela.length; i++) {
         const linha = linhasTabela[i];
@@ -101,20 +94,18 @@ if (inicio !== -1 && fim !== -1) {
         const qtdItem = Number(m[1]);
         const codigo = m[2].toUpperCase();
         let descricao = limparDescricaoPdf(m[3]);
-
-        // Continuation lines are part of the same product description until the next quantity row.
         const continuacoes = [];
         for (let j = i + 1; j < linhasTabela.length; j++) {
           if (/^\\d+\\s+[A-Z0-9]{2,10}\\s*-\\s*NEO\\s*-/i.test(linhasTabela[j])) break;
           if (/^(?:Valor líquido|Total|Condição de pagamento|Forma de pagamento|Página)\\b/i.test(linhasTabela[j])) break;
           if (linhasTabela[j] && !/^\\d+[\\s]/.test(linhasTabela[j])) continuacoes.push(linhasTabela[j]);
         }
-        if (continuacoes.length) descricao = limparDescricaoPdf(`${descricao} ${continuacoes.join(" ")}`);
+        if (continuacoes.length) descricao = limparDescricaoPdf(\`\${descricao} \${continuacoes.join(" ")}\`);
 
         const produtoSugerido = sugerirProdutoPdf(descricao, codigo);
         const confianca = produtoSugerido === "__MANUAL__" ? "revisar" : (equivalenciasCodigoPdf[codigo] ? "confirmado" : "provavel");
         encontrados.push({
-          id: uid(), pedido: pedidoPadrao, textoOriginal: `${codigo} — ${descricao}`, codigoPdf: codigo,
+          id: uid(), pedido: pedidoPadrao, textoOriginal: \`\${codigo} — \${descricao}\`, codigoPdf: codigo,
           produto: produtoSugerido, produtoManual: "", qtd: qtdItem, dataEntrega: "", passaPeloCorte: true,
           incluir: true, confianca,
         });
@@ -122,7 +113,7 @@ if (inicio !== -1 && fim !== -1) {
 
       setPdfLinhas(encontrados);
       if (!encontrados.length) {
-        setErro("O PDF foi lido, mas nenhuma linha de produto foi reconhecida no formato esperado. Você pode enviar o arquivo aqui para ajustarmos outro modelo de PDF.");
+        setErro("O PDF foi lido, mas nenhuma linha de produto foi reconhecida no formato esperado. Envie o arquivo aqui para ajustarmos outro modelo de PDF.");
         return;
       }
       setMostrarImportacaoPdf(true);
@@ -135,7 +126,6 @@ if (inicio !== -1 && fim !== -1) {
   source = source.slice(0, inicio) + novoParser + source.slice(fim);
 }
 
-// Add small table styles if the injected modal uses them.
 if (!source.includes("thPdf:")) {
   const marker = "const styles = {";
   const pos = source.indexOf(marker);

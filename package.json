@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node -e \"const fs=require('fs');const p='src/App.jsx';let s=fs.readFileSync(p,'utf8');s=s.replace('alocGrid: { display: \\\"grid\\\", g\\n  };','alocGrid: { display: \\\"grid\\\", gridTemplateColumns: \\\"1.2fr 0.8fr 1fr 0.8fr auto\\\", gap: 8 },\\n};');fs.writeFileSync(p,s)\" && vite build",
+    "build": "node scripts/fix-build.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

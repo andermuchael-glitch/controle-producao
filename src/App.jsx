@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import * as XLSX from "xlsx";
-import { inscrever, salvarValor } from "./storage.js";
-import { firebaseConfigurado } from "./firebase.js";
+import { inscrever, salvarValor, registrarAuditoria, inscreverAuditoria } from "./storage.js";
+import { auth, firebaseConfigurado } from "./firebase.js";
 
 const PRODUTOS = ["LATA 350ML","LATA 473ML","LATA PALITO 269ML","LATA PALITO 350ML","LONG NECK","GFA 600ML","GFA 1000ML","PORTA COPOS","COOLER TÉRMICO PEQUENO","COOLER TÉRMICO GRANDE","PORTA ÁGUA/ISOTÔNICO","PORTA SQUEEZE","600ML DE MESA","BARMAT GRANDE","BARMAT PADRÃO","COOLER TÉRMICO LATERAL","PORTA VINHO SIMPLES","PORTA VINHO DUPLO","PORTA VINHO DUPLO COM BOLSA","ESPUMANTES","ESTEIRA DE PRAIA","MATEIRA MEDIA","MATEIRA GRANDE","MINI BAG PEQUENA TRANSVERSAL","CASE TABLET","CASE NOTEBOOK","MOUSEPAD PADRÃO","MOUSEPAD GAMER","POCHETE","PORTA ÓCULOS","VISEIRA","MUNHEQUEIRA","TAPA OLHOS","CASE CELULAR","TAG MALA","LUVA COM APARADOR","CORRENTE ÓCULOS","NECESSAIRE GRANDE","MÁSCARA","PROTETOR FACIAL","MOCHILA TRANSVERSAL","BOLSA DE OMBRO","BOLSA MEIA LUA","MINI BAG","CARTEIRA FEMININA","LIXEIRA","MOEDEIRO","NECESSAIRE","LANCHEIRA","ESTOJO","MOCHILA TÉRMICA","MOCHILA INFANTIL","LATA CAMISA","LONG NECK CAMISA","PORTA UTILIDADES","WINE BAG","WINE CASE DELUXE","MARMITEIRA","CANGA DE PRAIA","SUPORTE DE COPO","TOLHA DE BANHO","TOALHA C/ CAPUZ G","TOALHA C/ CAPUZ M","BOLSA TOALHA","CANGA DE PRAIA GRANDE","CAPA P/ MALA GRANDE","CAPA P/ MALA MÉDIA","CAPA P/ MALA PEQUENA","MOCHILA IMPERMEÁVEL","VISEIRA TURBANTE"];
 
@@ -43,6 +43,8 @@ const ETAPA_LABEL = {
 
 const STORAGE_KEY = "costura:itens";
 const META_KEY = "costura:pedidosMeta";
+const AUDIT_ADMIN_EMAIL = "andermuchael@gmail.com";
+// PRE_CORTE_AUDIT_V1
 const uid = () => Math.random().toString(36).slice(2, 10);
 
 const hoje = () => new Date().toISOString().slice(0, 10);
@@ -92,6 +94,8 @@ export default function App() {
   const [filtroSublimador, setFiltroSublimador] = useState("Todos");
   const [filtroDia, setFiltroDia] = useState("");
   const [mostrarDrive, setMostrarDrive] = useState(false);
+  const [mostrarAuditoria, setMostrarAuditoria] = useState(false);
+  const [auditoria, setAuditoria] = useState([]);
   const [telaCheia, setTelaCheia] = useState(false);
 
   useEffect(() => {
@@ -171,9 +175,44 @@ export default function App() {
     };
   }, []);
 
+
+  useEffect(() => {
+    if (!mostrarAuditoria || auth?.currentUser?.email?.toLowerCase() !== AUDIT_ADMIN_EMAIL) return () => {};
+    return inscreverAuditoria((registros, erroSnap) => {
+      if (erroSnap) setErro("Não foi possível carregar o histórico de auditoria.");
+      else setAuditoria(registros);
+    });
+  }, [mostrarAuditoria]);
+
+  const registrarDiffAuditoria = async (antes, depois) => {
+    const antesMap = Object.fromEntries(antes.map((i) => [i.id, i]));
+    const depoisMap = Object.fromEntries(depois.map((i) => [i.id, i]));
+    const adicionados = depois.filter((i) => !antesMap[i.id]);
+    const removidos = antes.filter((i) => !depoisMap[i.id]);
+    const alterados = depois.filter((i) => {
+      const a = antesMap[i.id];
+      if (!a) return false;
+      return JSON.stringify(a) !== JSON.stringify(i);
+    });
+    if (!adicionados.length && !removidos.length && !alterados.length) return;
+    const user = auth?.currentUser;
+    if (!user) return;
+    const acao = removidos.length ? "exclusão" : adicionados.length ? "criação" : "alteração";
+    const amostra = [...adicionados, ...removidos, ...alterados][0];
+    await registrarAuditoria({
+      usuarioEmail: user.email || "desconhecido",
+      usuarioNome: user.displayName || user.email || "desconhecido",
+      acao,
+      pedido: amostra?.pedido || "",
+      detalhes: `${adicionados.length} criação(ões), ${alterados.length} alteração(ões), ${removidos.length} exclusão(ões)`,
+    });
+  };
+
   const salvar = async (novaLista) => {
+    const anterior = itens;
     setItens(novaLista);
     const ok = await salvarValor(STORAGE_KEY, JSON.stringify(novaLista));
+    if (ok) await registrarDiffAuditoria(anterior, novaLista);
     setErro(ok ? "" : "Não foi possível salvar. Verifique sua conexão ou as chaves do Firebase.");
   };
 
@@ -187,17 +226,23 @@ export default function App() {
   };
 
   const adicionarItem = () => {
-    if (!pedido.trim()) return;
+    const numero = pedido.trim();
+    if (!numero) return;
+    const existente = itens.find((i) => i.pedido === numero && i.produto === produto && i.etapa === "pre_corte");
+    if (existente) {
+      setErro(`O pedido #${numero} já possui ${produto} no pré-corte. Para evitar duplicação, altere a quantidade no lançamento existente.`);
+      return;
+    }
     const novo = {
       id: uid(),
-      pedido: pedido.trim(),
+      pedido: numero,
       produto,
       qtd: Math.max(1, Number(qtd) || 1),
       etapa: "pre_corte",
       criadoEm: Date.now(),
     };
     salvar([...itens, novo]);
-    if (dataEntregaForm) definirDataEntrega(pedido.trim(), dataEntregaForm);
+    if (dataEntregaForm) definirDataEntrega(numero, dataEntregaForm);
     setQtd(1);
   };
 
@@ -285,6 +330,27 @@ export default function App() {
   const setEquipeItem = (id, eq) => {
     salvar(itens.map((i) => (i.id === id ? { ...i, equipe: eq } : i)));
   };
+  const excluirPedidoPreCorte = async (numero) => {
+    const confirmar = window.confirm(`Excluir o pedido #${numero} do Pré-Corte?\n\nEle ficará oculto do Pré-Corte e a ação será registrada no histórico.`);
+    if (!confirmar) return;
+    const user = auth?.currentUser;
+    const novoMeta = {
+      ...pedidosMeta,
+      [numero]: { ...(pedidosMeta[numero] || {}), excluidoPreCorte: true, excluidoPreCorteEm: Date.now() },
+    };
+    setPedidosMeta(novoMeta);
+    await salvarValor(META_KEY, JSON.stringify(novoMeta));
+    if (user) {
+      await registrarAuditoria({
+        usuarioEmail: user.email || "desconhecido",
+        usuarioNome: user.displayName || user.email || "desconhecido",
+        acao: "exclusão de pedido do pré-corte",
+        pedido: numero,
+        detalhes: "Pedido ocultado do Pré-Corte por exclusão manual.",
+      });
+    }
+  };
+
   const removerItem = (id) => {
     salvar(itens.filter((i) => i.id !== id));
   };
@@ -376,7 +442,7 @@ export default function App() {
 
   // ---------- PRÉ-CORTE: agrupado por pedido, com quanto já foi cortado ----------
   const preCorteAgrupado = useMemo(() => {
-    const itensPre = itens.filter((i) => i.etapa === "pre_corte");
+    const itensPre = itens.filter((i) => i.etapa === "pre_corte" && !pedidosMeta[i.pedido]?.excluidoPreCorte);
     const grupos = {};
     for (const it of itensPre) {
       if (!grupos[it.pedido]) grupos[it.pedido] = {};
@@ -412,7 +478,7 @@ export default function App() {
       if (db === null) return -1;
       return da - db;
     });
-    return pedidosArr.filter((p) => p.numero.toLowerCase().includes(filtroPedido.toLowerCase()));
+    return pedidosArr.filter((p) => p.linhas.some((l) => l.restante > 0)).filter((p) => p.numero.toLowerCase().includes(filtroPedido.toLowerCase()));
   }, [itens, pedidosMeta, filtroPedido]);
 
   // ---------- Resumo por produto: soma o que falta cortar de cada modelo em todos os pedidos ----------
@@ -724,6 +790,9 @@ export default function App() {
             {pdfGerando ? "Gerando PDF..." : "📄 Baixar PDF"}
           </button>
           <button style={styles.exportBtnOutline} onClick={() => setMostrarDrive(true)}>Salvar no Google Drive</button>
+          {auth?.currentUser?.email?.toLowerCase() === AUDIT_ADMIN_EMAIL && (
+            <button style={styles.exportBtnOutline} onClick={() => setMostrarAuditoria(true)}>🕘 Histórico</button>
+          )}
           <button style={styles.limparBtn} onClick={() => setConfirmarLimpeza(true)} disabled={itens.length === 0}>🗑 Limpar tudo</button>
         </section>
 
@@ -738,6 +807,30 @@ export default function App() {
               <button style={{ ...styles.modalFechar, background: "transparent", color: "#7a7160", marginTop: 8 }} onClick={() => setConfirmarLimpeza(false)}>
                 Cancelar
               </button>
+            </div>
+          </div>
+        )}
+
+        {mostrarAuditoria && auth?.currentUser?.email?.toLowerCase() === AUDIT_ADMIN_EMAIL && (
+          <div style={styles.modalOverlay} onClick={() => setMostrarAuditoria(false)}>
+            <div style={{ ...styles.modalBox, maxWidth: 760 }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+                <h3 style={styles.modalTitle}>Histórico de alterações</h3>
+                <button style={styles.modalFechar} onClick={() => setMostrarAuditoria(false)}>Fechar</button>
+              </div>
+              {auditoria.length === 0 ? (
+                <p style={styles.vazio}>Nenhum registro encontrado.</p>
+              ) : (
+                <div style={{ maxHeight: 520, overflow: "auto" }}>
+                  {auditoria.map((r) => (
+                    <div key={r.id} style={{ padding: "10px 0", borderBottom: "1px solid #e4dbc8" }}>
+                      <b>{r.acao}</b> · pedido <b>#{r.pedido || "-"}</b><br />
+                      <span style={{ fontSize: 12, color: "#6f6658" }}>{r.usuarioEmail} · {new Date(r.criadoEm).toLocaleString("pt-BR")}</span><br />
+                      <span style={{ fontSize: 12 }}>{r.detalhes || ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -846,6 +939,7 @@ export default function App() {
                       )}
                     </div>
                     <span style={styles.pctText}>{p.cortadoGeral}/{p.totalGeral} cortado</span>
+                    <button style={styles.excluirPedidoBtn} onClick={() => excluirPedidoPreCorte(p.numero)}>Excluir pedido</button>
                   </div>
                   <div style={styles.itensLista}>
                     {p.linhas.map((linha) => {
@@ -1262,6 +1356,7 @@ const styles = {
   exportRow: { display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" },
   exportBtn: { background: "#1c2a3a", color: "#fff", border: "none", borderRadius: 9, padding: "10px 16px", fontSize: 13.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Helvetica Neue', Arial, sans-serif", flex: 1, minWidth: 180 },
   exportBtnOutline: { background: "transparent", color: "#1c2a3a", border: "1.5px solid #1c2a3a", borderRadius: 9, padding: "10px 16px", fontSize: 13.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Helvetica Neue', Arial, sans-serif", flex: 1, minWidth: 180 },
+  excluirPedidoBtn: { border: "1px solid #c81e2c", color: "#a51d2d", background: "#fff7f7", borderRadius: 8, padding: "7px 9px", fontSize: 11, fontWeight: 700, cursor: "pointer" },
   limparBtn: { background: "transparent", color: "#c81e2c", border: "1.5px solid #c81e2c55", borderRadius: 9, padding: "10px 16px", fontSize: 13.5, fontWeight: 700, cursor: "pointer", fontFamily: "'Helvetica Neue', Arial, sans-serif", flex: "0 0 auto" },
   modalOverlay: { position: "fixed", inset: 0, background: "#1c2a3aaa", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, zIndex: 50 },
   modalBox: { background: "#fffdf8", borderRadius: 14, padding: 22, maxWidth: 400, width: "100%", fontFamily: "'Helvetica Neue', Arial, sans-serif", maxHeight: "85vh", overflowY: "auto" },

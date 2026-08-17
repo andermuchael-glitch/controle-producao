@@ -1,4 +1,4 @@
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
+import { addDoc, collection, doc, onSnapshot, query, orderBy, limit, onSnapshot as onSnapshotQuery, setDoc } from "firebase/firestore";
 import { db, firebaseConfigurado } from "./firebase.js";
 
 const COLECAO = "controleProducao";
@@ -40,4 +40,32 @@ export async function salvarValor(key, value) {
   } catch (e) {
     return false;
   }
+}
+
+
+// PRE_CORTE_AUDIT_V1
+const AUDIT_COLLECTION = "auditoriaProducao";
+
+export async function registrarAuditoria(registro) {
+  if (!firebaseConfigurado) return false;
+  try {
+    await addDoc(collection(db, AUDIT_COLLECTION), {
+      ...registro,
+      criadoEm: Date.now(),
+    });
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function inscreverAuditoria(callback) {
+  if (!firebaseConfigurado) {
+    callback([], null);
+    return () => {};
+  }
+  const q = query(collection(db, AUDIT_COLLECTION), orderBy("criadoEm", "desc"), limit(300));
+  return onSnapshotQuery(q, (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })), null);
+  }, (erro) => callback([], erro));
 }

@@ -97,8 +97,8 @@ const blocoNovo = `  // ---------- AGUARDANDO SUBLIMAÇÃO: agrupado por pedido,
       const produtos = new Set([
         ...Object.keys(pendentes[numero] || {}),
         ...Object.keys(alocadoPorChave)
-          .filter((chave) => chave.startsWith(`\${numero}||`))
-          .map((chave) => chave.slice(`\${numero}||`.length)),
+          .filter((chave) => chave.startsWith(String(numero) + "||"))
+          .map((chave) => chave.slice((String(numero) + "||").length)),
       ]);
 
       const linhas = Array.from(produtos).map((prod) => {

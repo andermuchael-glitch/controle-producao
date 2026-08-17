@@ -26,10 +26,8 @@ if (!source.includes("<NeoTopBar ")) {
   source = source.replace(anchor, topbar);
 }
 
-source = source.replaceAll(
-  '<section style={styles.listWrap}>',
-  '<section style={styles.listWrap} className="neo-board">'
-);
+source = source.replaceAll('<section style={styles.listWrap}>', '<section style={styles.listWrap} className="neo-board">');
+source = source.replace('className="tabs-row"', 'className="tabs-row neo-legacy-tabs"');
 
 fs.writeFileSync(path, source, "utf8");
 console.log("NeoCooler: barra superior e quadros aplicados sem alterar a estrutura de dados.");

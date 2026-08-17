@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/apply-pre-corte-audit.mjs && node scripts/sanitize-build-script.mjs && node scripts/fix-build.mjs && node scripts/patch-pdf-import.mjs && node scripts/ajuste-cores.mjs && node scripts/ajuste-cores-v2.mjs && node scripts/ajuste-lancamento-direto.mjs && node scripts/retroativo-costura.mjs && node scripts/modern-ui.mjs && node scripts/ajuste-barra-rastreamento.mjs && node scripts/ajuste-dashboard-etapas.mjs && node scripts/fix-transicao-sublimacao.mjs && vite build",
+    "build": "node scripts/apply-pre-corte-audit.mjs && node scripts/fix-pre-corte-count.mjs && node scripts/sanitize-build-script.mjs && node scripts/fix-build.mjs && node scripts/patch-pdf-import.mjs && node scripts/ajuste-cores.mjs && node scripts/ajuste-cores-v2.mjs && node scripts/ajuste-lancamento-direto.mjs && node scripts/retroativo-costura.mjs && node scripts/modern-ui.mjs && node scripts/ajuste-barra-rastreamento.mjs && node scripts/ajuste-dashboard-etapas.mjs && node scripts/fix-transicao-sublimacao.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -1,24 +1,7 @@
 import fs from "node:fs";
 
-const fixBuildPath = "scripts/fix-build.mjs";
-let fixBuild = fs.readFileSync(fixBuildPath, "utf8");
-
-// fix-build.mjs contains a generated JSX string. The font family has single quotes
-// inside an outer single-quoted JavaScript string, so they must be escaped before
-// Node parses fix-build.mjs.
-const quebrado = 'fontFamily: "\\'Helvetica Neue\\', Arial, sans-serif"';
-const corrigido = 'fontFamily: "\\\\\\'Helvetica Neue\\\\\\', Arial, sans-serif"';
-
-if (fixBuild.includes(quebrado)) {
-  fixBuild = fixBuild.replace(quebrado, corrigido);
-  fs.writeFileSync(fixBuildPath, fixBuild, "utf8");
-  console.log("NeoCooler: corrigida a string de fontFamily no fix-build.");
-} else {
-  console.log("NeoCooler: fix-build já está corrigido ou não contém a string problemática.");
-}
-
-// ajuste-cores.mjs gera JSX dentro de template literals. Além de ${...},
-// havia template literals internos que fechavam prematuramente o template externo.
+// ajuste-cores.mjs gera JSX dentro de template literals. Alguns trechos tinham
+// template literals internos e fechavam prematuramente o template externo.
 const ajusteCoresPath = "scripts/ajuste-cores.mjs";
 if (fs.existsSync(ajusteCoresPath)) {
   let texto = fs.readFileSync(ajusteCoresPath, "utf8");
@@ -36,8 +19,8 @@ if (fs.existsSync(ajusteCoresPath)) {
     }
   }
 
-  // Escape only ${...} that is not already escaped. These are meant to survive
-  // the generator and become JSX expressions in the resulting App.jsx.
+  // Preserve JSX expressions for the generated App.jsx instead of evaluating
+  // them while Node parses this generator.
   const novoTexto = texto.replace(/(?<!\\)\$\{/g, "\\${");
   if (novoTexto !== texto) {
     texto = novoTexto;

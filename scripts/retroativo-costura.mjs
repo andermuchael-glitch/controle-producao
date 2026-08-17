@@ -14,14 +14,14 @@ const substituir = (nome, from, to) => {
   return false;
 };
 
-// 1) Estados para lançamento retroativo direto em Aguardando Costura.
+// O ajuste-lancamento-direto já criou destinoLancamento; acrescentamos o histórico.
 substituir(
   "estadoRetroativoCostura",
-  'const [passaPeloCorte, setPassaPeloCorte] = useState(true);\n  const [qtd, setQtd] = useState(1);',
-  'const [passaPeloCorte, setPassaPeloCorte] = useState(true);\n  const [destinoLancamento, setDestinoLancamento] = useState("pre_corte");\n  const [dataSublimacaoRetroativa, setDataSublimacaoRetroativa] = useState(hoje());\n  const [sublimadorRetroativo, setSublimadorRetroativo] = useState(SUBLIMADORES[0]);\n  const [qtd, setQtd] = useState(1);'
+  '  const [destinoLancamento, setDestinoLancamento] = useState("pre_corte");\n  const [qtd, setQtd] = useState(1);',
+  '  const [destinoLancamento, setDestinoLancamento] = useState("pre_corte");\n  const [dataSublimacaoRetroativa, setDataSublimacaoRetroativa] = useState(hoje());\n  const [sublimadorRetroativo, setSublimadorRetroativo] = useState(SUBLIMADORES[0]);\n  const [qtd, setQtd] = useState(1);'
 );
 
-// 2) Substitui a função de lançamento para suportar os três destinos e o histórico de sublimação.
+// Substitui o lançamento inteiro para registrar data e sublimador no lançamento retroativo.
 const inicio = source.indexOf('  const adicionarItem = () => {');
 const fim = source.indexOf('\n  // ---- Chave comum', inicio);
 if (inicio !== -1 && fim !== -1) {
@@ -39,31 +39,18 @@ if (inicio !== -1 && fim !== -1) {
         ? "aguardando_sublimacao"
         : "pre_corte";
     const novo = {
-      id: uid(),
-      pedido: pedido.trim(),
-      produto: produtoFinal,
-      qtd: qtdFinal,
-      passaPeloCorte: etapaFinal === "pre_corte",
-      etapa: etapaFinal,
-      criadoEm: Date.now(),
+      id: uid(), pedido: pedido.trim(), produto: produtoFinal, qtd: qtdFinal,
+      passaPeloCorte: etapaFinal === "pre_corte", etapa: etapaFinal, criadoEm: Date.now(),
       ...(etapaFinal === "aguardando_costura" ? {
-        sublimador: sublimadorRetroativo,
-        dataSublimacao: dataSublimacaoRetroativa || hoje(),
-        retroativo: true,
-        equipe: "Não decidido",
-        feito: false,
-        conferido: false,
+        sublimador: sublimadorRetroativo, dataSublimacao: dataSublimacaoRetroativa || hoje(),
+        retroativo: true, equipe: "Não decidido", feito: false, conferido: false,
       } : {}),
     };
     salvar([...itens, novo]);
     if (dataEntregaForm) definirDataEntrega(pedido.trim(), dataEntregaForm);
-    setQtd(1);
-    setProdutoManual("");
-    setProduto(PRODUTOS[0]);
-    setPassaPeloCorte(true);
-    setDestinoLancamento("pre_corte");
-    setDataSublimacaoRetroativa(hoje());
-    setSublimadorRetroativo(SUBLIMADORES[0]);
+    setQtd(1); setProdutoManual(""); setProduto(PRODUTOS[0]);
+    setPassaPeloCorte(true); setDestinoLancamento("pre_corte");
+    setDataSublimacaoRetroativa(hoje()); setSublimadorRetroativo(SUBLIMADORES[0]);
   };
 `;
   source = source.slice(0, inicio) + novo + source.slice(fim);
@@ -71,61 +58,21 @@ if (inicio !== -1 && fim !== -1) {
   console.log("NeoCooler: lançamento retroativo aplicado.");
 }
 
-// 3) Troca o campo de passagem pelo corte por destino explícito e, quando necessário, exibe data/sublimador.
-const antigoCampo = `            <Field label="Passa pelo corte?">
-              <select style={styles.input} value={passaPeloCorte ? "sim" : "nao"} onChange={(e) => setPassaPeloCorte(e.target.value === "sim")}>
-                <option value="sim">Sim — entra no Pré-Corte</option>
-                <option value="nao">Não — vai direto para Aguardando Sublimação</option>
-              </select>
-            </Field>`;
-const novoCampo = `            <Field label="Destino do pedido">
-              <select
-                style={styles.input}
-                value={destinoLancamento}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setDestinoLancamento(v);
-                  setPassaPeloCorte(v === "pre_corte");
-                }}
-              >
-                <option value="pre_corte">Pré-Corte — fluxo normal</option>
-                <option value="aguardando_sublimacao">Aguardando Sublimação — não passa pelo corte</option>
-                <option value="aguardando_costura">Aguardando Costura — já sublimado</option>
-              </select>
-            </Field>
-            {destinoLancamento === "aguardando_costura" && (
-              <>
-                <Field label="Data em que foi sublimado">
-                  <input style={styles.input} type="date" value={dataSublimacaoRetroativa} onChange={(e) => setDataSublimacaoRetroativa(e.target.value)} />
-                </Field>
-                <Field label="Quem sublimou">
-                  <select style={styles.input} value={sublimadorRetroativo} onChange={(e) => setSublimadorRetroativo(e.target.value)}>
-                    {SUBLIMADORES.map((s) => <option key={s} value={s}>{s}</option>)}
-                  </select>
-                </Field>
-              </>
-            )}`;
-substituir("campoDestinoLancamento", antigoCampo, novoCampo);
+// Campo de destino já instalado pelo ajuste-lancamento-direto.
+const campoDestinoAtual = `            <Field label="Destino do pedido">\n              <select style={styles.input} value={destinoLancamento} onChange={(e) => {\n                const valor = e.target.value;\n                setDestinoLancamento(valor);\n                setPassaPeloCorte(valor === "pre_corte");\n              }}>\n                <option value="pre_corte">🔵 Pré-Corte — fluxo normal</option>\n                <option value="aguardando_sublimacao">🟡 Aguardando Sublimação — não passa pelo corte</option>\n                <option value="aguardando_costura">🟢 Aguardando Costura — já pronto para distribuir as cores</option>\n              </select>\n            </Field>`;
+const campoDestinoNovo = `            <Field label="Destino do pedido">\n              <select style={styles.input} value={destinoLancamento} onChange={(e) => {\n                const valor = e.target.value;\n                setDestinoLancamento(valor);\n                setPassaPeloCorte(valor === "pre_corte");\n              }}>\n                <option value="pre_corte">🔵 Pré-Corte — fluxo normal</option>\n                <option value="aguardando_sublimacao">🟡 Aguardando Sublimação — não passa pelo corte</option>\n                <option value="aguardando_costura">🟢 Aguardando Costura — já sublimado, preparar cores</option>\n              </select>\n            </Field>\n            {destinoLancamento === "aguardando_costura" && (\n              <>\n                <Field label="Data em que foi sublimado">\n                  <input style={styles.input} type="date" value={dataSublimacaoRetroativa} onChange={(e) => setDataSublimacaoRetroativa(e.target.value)} />\n                </Field>\n                <Field label="Quem sublimou">\n                  <select style={styles.input} value={sublimadorRetroativo} onChange={(e) => setSublimadorRetroativo(e.target.value)}>\n                    {SUBLIMADORES.map((s) => <option key={s} value={s}>{s}</option>)}\n                  </select>\n                </Field>\n              </>\n            )}`;
+substituir("campoHistoricoSublimacao", campoDestinoAtual, campoDestinoNovo);
 
-// 4) Texto do botão se adapta ao destino.
 substituir(
-  "botaoDestinoLancamento",
-  '{passaPeloCorte ? "Adicionar ao pré-corte" : "Adicionar sem passar pelo corte"}',
-  '{destinoLancamento === "aguardando_costura" ? "Lançar em aguardando costura" : destinoLancamento === "aguardando_sublimacao" ? "Lançar em aguardando sublimação" : "Adicionar ao pré-corte"}'
+  "avisoHistoricoSublimacao",
+  '<p style={styles.aviso}>Produtos novos podem ser escritos manualmente. Escolha o destino: pedidos já prontos podem entrar diretamente em <b>Aguardando Costura</b>, onde você distribui as cores e prepara os lotes para envio à costura.</p>',
+  '<p style={styles.aviso}>Produtos novos podem ser escritos manualmente. Pedidos já sublimados podem entrar diretamente em <b>Aguardando Costura</b>. Nesse caso informe a data da sublimação e quem sublimou; depois distribua as cores e prepare os lotes para a costura.</p>'
 );
 
-// 5) Aviso explica o lançamento retroativo.
-substituir(
-  "avisoDestinoLancamento",
-  '<p style={styles.aviso}>Produtos novos podem ser escritos manualmente. Selecione se o item passa pelo corte; quando não passar, ele entra diretamente em Aguardando Sublimação.</p>',
-  '<p style={styles.aviso}>Você pode lançar o pedido no fluxo normal, direto em Aguardando Sublimação ou, se já estiver sublimado, diretamente em Aguardando Costura informando a data e quem sublimou.</p>'
-);
-
-// 6) Migração defensiva para registros antigos.
-const marcador = '            equipe: i.equipe || "Não decidido",\n            feito: i.feito ?? false,';
+// Migração defensiva para registros antigos.
 substituir(
   "migracaoHistoricoSublimacao",
-  marcador,
+  '            equipe: i.equipe || "Não decidido",\n            feito: i.feito ?? false,',
   '            equipe: i.equipe || "Não decidido",\n            sublimador: i.sublimador || "",\n            dataSublimacao: i.dataSublimacao || "",\n            retroativo: i.retroativo ?? false,\n            feito: i.feito ?? false,'
 );
 

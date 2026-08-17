@@ -5,8 +5,12 @@ let source = fs.readFileSync(path, "utf8");
 
 const importLine = 'import NeoTopBar from "./NeoTopBar.jsx";';
 if (!source.includes(importLine)) {
-  const anchor = 'import { firebaseConfigurado } from "./firebase.js";';
-  if (!source.includes(anchor)) throw new Error("NeoCooler: âncora de imports não encontrada.");
+  const anchors = [
+    'import { auth, firebaseConfigurado } from "./firebase.js";',
+    'import { firebaseConfigurado } from "./firebase.js";'
+  ];
+  const anchor = anchors.find((a) => source.includes(a));
+  if (!anchor) throw new Error("NeoCooler: âncora de imports não encontrada.");
   source = source.replace(anchor, `${anchor}\n${importLine}`);
 }
 

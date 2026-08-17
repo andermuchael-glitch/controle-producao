@@ -3,7 +3,6 @@ import fs from "node:fs";
 const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
 
-// Substitui a transição inteira por uma versão que consome o lote aguardando.
 const antigoEnviar = /  const enviarParaSublimacao = \(pedidoNum, produtoNome\) => \{[\s\S]*?\n  \};\n\n  const moverParaAguardandoCostura/;
 const novoEnviar = `  const enviarParaSublimacao = (pedidoNum, produtoNome) => {
     const f = getAlocForm(pedidoNum, produtoNome);
@@ -65,8 +64,6 @@ if (!antigoEnviar.test(source)) {
 }
 source = source.replace(antigoEnviar, novoEnviar);
 
-// Aguardando deve mostrar sempre o total original já chegado a esta etapa:
-// pendente + o que já foi alocado para sublimação/costura/separação.
 const inicio = source.indexOf('  // ---------- AGUARDANDO SUBLIMAÇÃO:');
 const fim = source.indexOf('  // ---------- SUBLIMAÇÃO: agrupado por dia de lançamento ----------');
 if (inicio < 0 || fim <= inicio) {
@@ -100,8 +97,8 @@ const blocoNovo = `  // ---------- AGUARDANDO SUBLIMAÇÃO: agrupado por pedido,
       const produtos = new Set([
         ...Object.keys(pendentes[numero] || {}),
         ...Object.keys(alocadoPorChave)
-          .filter((chave) => chave.startsWith(`${numero}||`))
-          .map((chave) => chave.slice(`${numero}||`.length)),
+          .filter((chave) => chave.startsWith(`\${numero}||`))
+          .map((chave) => chave.slice(`\${numero}||`.length)),
       ]);
 
       const linhas = Array.from(produtos).map((prod) => {

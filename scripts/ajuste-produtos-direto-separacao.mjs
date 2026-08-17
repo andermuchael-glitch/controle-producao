@@ -12,6 +12,11 @@ if (!source.includes(directConst)) {
   source = source.replace(marker, directConst + marker);
 }
 
+// Corrige também registros que já estavam indevidamente em Aguardando Costura/Costura.
+const oldMigracao = `            etapa: i.etapa || "costura",`;
+const newMigracao = `            etapa: DIRECT_TO_SEPARACAO_V1.has(i.produto) && (i.etapa === "aguardando_costura" || i.etapa === "costura") ? "separacao" : (i.etapa || "costura"),`;
+if (source.includes(oldMigracao)) source = source.replace(oldMigracao, newMigracao);
+
 const oldA = `  const moverParaAguardandoCostura = (id) => {\n    salvar(itens.map((i) => (i.id === id ? { ...i, etapa: "aguardando_costura" } : i)));\n  };`;
 const newA = `  const moverParaAguardandoCostura = (id) => {\n    salvar(itens.map((i) => {\n      if (i.id !== id) return i;\n      const etapaDestino = DIRECT_TO_SEPARACAO_V1.has(i.produto) ? "separacao" : "aguardando_costura";\n      return { ...i, etapa: etapaDestino };\n    }));\n  };`;
 if (source.includes(oldA)) source = source.replace(oldA, newA);
@@ -21,4 +26,4 @@ const newB = `  const moverParaCostura = (id) => {\n    salvar(itens.map((i) => 
 if (source.includes(oldB)) source = source.replace(oldB, newB);
 
 fs.writeFileSync(path, source, "utf8");
-console.log("NeoCooler: Porta Copos, Mousepad Padrão e Mousepad Gamer passam diretamente para Separação.");
+console.log("NeoCooler: Porta Copos, Mousepad Padrão e Mousepad Gamer passam diretamente para Separação; registros antigos são corrigidos.");

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fix-build.mjs && node scripts/patch-pdf-import.mjs && vite build",
+    "build": "node scripts/fix-build.mjs && node scripts/patch-pdf-import.mjs && node scripts/ajuste-cores.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

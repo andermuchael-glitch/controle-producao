@@ -9,9 +9,7 @@ let source = fs.readFileSync(path, "utf8");
 
 if (!source.includes('const [corForm, setCorForm] = useState({});')) {
   const anchor = '  const [alocForm, setAlocForm] = useState({});';
-  if (source.includes(anchor)) {
-    source = source.replace(anchor, `${anchor}\n  const [corForm, setCorForm] = useState({});`);
-  }
+  if (source.includes(anchor)) source = source.replace(anchor, `${anchor}\n  const [corForm, setCorForm] = useState({});`);
 }
 
 if (!source.includes('const distribuirCorParaAguardandoCostura')) {
@@ -72,10 +70,10 @@ if (inicio !== -1 && fim !== -1) {
                         <div key={it.id} style={{ borderTop: "1px solid #e4dbc8", paddingTop: 12 }}>
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap", marginBottom: 9, fontFamily: "'Helvetica Neue', Arial, sans-serif" }}>
                             <span style={{ fontSize: 14, fontWeight: 700, color: "#17283a" }}>
-                              {it.produto} · {it.qtd}un {it.cor ? `· ${it.cor}` : "· SEM COR"}
+                              {it.produto} · {it.qtd}un {it.cor ? ("· " + it.cor) : "· SEM COR"}
                             </span>
                             <span style={{ fontSize: 11, fontWeight: 700, color: it.cor ? "#1f8a3d" : "#d8622c", background: it.cor ? "#e7f5ea" : "#fff0e7", borderRadius: 20, padding: "4px 9px" }}>
-                              {it.cor ? "cor definida" : `faltam ${it.qtd}un`}
+                              {it.cor ? "cor definida" : ("faltam " + it.qtd + "un")}
                             </span>
                           </div>
                           {!it.cor ? (

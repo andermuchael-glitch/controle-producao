@@ -9,8 +9,10 @@ if (source.includes(marker)) {
   process.exit(0);
 }
 
-const anchor = '        {loaded && aba === "sublimacao" && (';
-if (!source.includes(anchor)) {
+const anchor1 = '        {loaded && aba === "sublimacao" && (';
+const anchor2 = '        )}{loaded && aba === "sublimacao" && (';
+const anchor = source.includes(anchor1) ? anchor1 : (source.includes(anchor2) ? anchor2 : null);
+if (!anchor) {
   throw new Error("NeoCooler: âncora da aba Sublimação não encontrada para inserir a aba Corte.");
 }
 

@@ -1,4 +1,3 @@
-import "./scripts/fix-edicao-costura-final.mjs";
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 

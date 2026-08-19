@@ -25,14 +25,21 @@ source = source.replace(
   `          <section style={styles.listWrap} className="separacao-etapa-list">\n            {separacaoAgrupado.length === 0 ? (`
 );
 
+const sepInicio = source.indexOf('        {loaded && aba === "separacao" && (');
+const sepFim = source.indexOf('        </section>', sepInicio);
+if (sepInicio === -1 || sepFim === -1) {
+  throw new Error("NeoCooler: limites da seção Separação não encontrados.");
+}
+const sepBloco = source.slice(sepInicio, sepFim);
 const cardAnchor = `className="card pedido-card">\n                  <div style={styles.pedidoTop}>`;
-if (!source.includes(cardAnchor)) {
+if (!sepBloco.includes(cardAnchor)) {
   throw new Error("NeoCooler: cartão da Separação não encontrado.");
 }
-source = source.replace(
+const sepBlocoNovo = sepBloco.replace(
   cardAnchor,
   `className="card pedido-card separacao-etapa-card pedido-aberto">\n                  <div style={styles.pedidoTop}>`
 );
+source = source.slice(0, sepInicio) + sepBlocoNovo + source.slice(sepFim);
 
 const cssAnchor = `        @media (prefers-reduced-motion: reduce) { .card { animation: none; } }`;
 if (!source.includes(cssAnchor)) {

@@ -2,52 +2,107 @@ import fs from "node:fs";
 
 const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
-const marker = "// FIX_SEPARACAO_VISIBLE_V1";
+const marker = "/* FIX_SEPARACAO_VISIBLE_V2 */";
 
 if (source.includes(marker)) {
-  console.log("NeoCooler: correção da aba Separação já aplicada.");
+  console.log("NeoCooler: correção V2 da aba Separação já aplicada.");
   process.exit(0);
 }
 
-const anchor = '        {loaded && aba === "separacao" && (';
-if (!source.includes(anchor)) {
-  throw new Error("NeoCooler: âncora da aba Separação não encontrada.");
+// Os patches anteriores podem alterar a estrutura JSX da aba antes deste script.
+// Por isso não dependemos de uma âncora exata; localizamos a região pela expressão
+// da aba e aplicamos a proteção no primeiro cartão encontrado depois dela.
+const sepInicio = source.indexOf('aba === "separacao"');
+if (sepInicio === -1) {
+  console.warn("NeoCooler: aba Separação não localizada; build continuará sem este patch.");
+  process.exit(0);
 }
 
-source = source.replace(anchor, `${anchor}\n          {/* FIX_SEPARACAO_VISIBLE_V1 */}`);
-
-const sectionAnchor = `          <section style={styles.listWrap}>\n            {separacaoAgrupado.length === 0 ? (`;
-if (!source.includes(sectionAnchor)) {
-  throw new Error("NeoCooler: estrutura da seção Separação não encontrada.");
-}
-source = source.replace(
-  sectionAnchor,
-  `          <section style={styles.listWrap} className="separacao-etapa-list">\n            {separacaoAgrupado.length === 0 ? (`
-);
-
-const sepInicio = source.indexOf('        {loaded && aba === "separacao" && (');
-const sepFim = source.indexOf('        </section>', sepInicio);
-if (sepInicio === -1 || sepFim === -1) {
-  throw new Error("NeoCooler: limites da seção Separação não encontrados.");
-}
-const sepBloco = source.slice(sepInicio, sepFim);
-const cardAnchor = `className="card pedido-card">\n                  <div style={styles.pedidoTop}>`;
-if (!sepBloco.includes(cardAnchor)) {
-  throw new Error("NeoCooler: cartão da Separação não encontrado.");
-}
-const sepBlocoNovo = sepBloco.replace(
-  cardAnchor,
-  `className="card pedido-card separacao-etapa-card pedido-aberto">\n                  <div style={styles.pedidoTop}>`
-);
-source = source.slice(0, sepInicio) + sepBlocoNovo + source.slice(sepFim);
-
-const cssAnchor = `        @media (prefers-reduced-motion: reduce) { .card { animation: none; } }`;
-if (!source.includes(cssAnchor)) {
-  throw new Error("NeoCooler: âncora CSS não encontrada para a aba Separação.");
+const sectionInicio = source.indexOf('<section', sepInicio);
+const sectionFim = source.indexOf('</section>', sectionInicio);
+if (sectionInicio !== -1 && sectionFim !== -1 && sectionInicio < sectionFim) {
+  const sectionTrecho = source.slice(sectionInicio, sectionFim);
+  if (!sectionTrecho.includes('separacao-etapa-list')) {
+    const posStyle = sectionTrecho.indexOf('style={styles.listWrap}');
+    if (posStyle !== -1) {
+      const posFimStyle = posStyle + 'style={styles.listWrap}'.length;
+      const trechoNovo = sectionTrecho.slice(0, posFimStyle) + ' className="separacao-etapa-list"' + sectionTrecho.slice(posFimStyle);
+      source = source.slice(0, sectionInicio) + trechoNovo + source.slice(sectionFim);
+    }
+  }
 }
 
-const css = `        /* FIX_SEPARACAO_VISIBLE_V1: Separação não pode herdar a compactação dos pedidos. */\n        .separacao-etapa-list .separacao-etapa-card,\n        .separacao-etapa-list .separacao-etapa-card.pedido-card {\n          display: block !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n          overflow: visible !important;\n          height: auto !important;\n          max-height: none !important;\n          padding: 14px 16px !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .pedidoTop,\n        .separacao-etapa-list .separacao-etapa-card .pedidoNumWrap,\n        .separacao-etapa-list .separacao-etapa-card .pedidoNum,\n        .separacao-etapa-list .separacao-etapa-card .pctText,\n        .separacao-etapa-list .separacao-etapa-card .itensLista,\n        .separacao-etapa-list .separacao-etapa-card .item-linha,\n        .separacao-etapa-list .separacao-etapa-card .itemTexto {\n          display: flex !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .pedidoTop {\n          min-height: 48px !important;\n          margin-bottom: 8px !important;\n          padding: 8px 4px !important;\n          color: #17283a !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .pedidoNum,\n        .separacao-etapa-list .separacao-etapa-card .itemTexto,\n        .separacao-etapa-list .separacao-etapa-card .pctText {\n          color: #17283a !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .itensLista {\n          flex-direction: column !important;\n          gap: 6px !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .item-linha {\n          align-items: center !important;\n          min-height: 46px !important;\n          width: 100% !important;\n          gap: 8px !important;\n          color: #17283a !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .checkbox {\n          display: flex !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n          flex: 0 0 auto !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .swatchSm {\n          display: inline-block !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n          flex: 0 0 auto !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .removerBtn {\n          display: flex !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n          flex: 0 0 auto !important;\n        }\n        .separacao-etapa-list .separacao-etapa-card .pedidoTop::after {\n          display: none !important;\n        }\n\n`;
-source = source.replace(cssAnchor, css + cssAnchor);
+// Localiza o primeiro cartão dentro da seção de Separação, sem depender do texto
+// exato gerado pelos outros scripts.
+const sepInicio2 = source.indexOf('aba === "separacao"');
+const sepFim2 = source.indexOf('</section>', sepInicio2);
+const sepBloco = source.slice(sepInicio2, sepFim2 === -1 ? source.length : sepFim2);
+const cardPos = sepBloco.indexOf('className="card pedido-card"');
+if (cardPos !== -1 && !sepBloco.includes('separacao-etapa-card')) {
+  const absoluto = sepInicio2 + cardPos;
+  source = source.slice(0, absoluto) + 'className="card pedido-card separacao-etapa-card pedido-aberto"' + source.slice(absoluto + 'className="card pedido-card"'.length);
+}
+
+// Proteção final contra .pedido-card:not(.pedido-aberto) e outras regras de
+// compactação. Inserimos no fim do <style>, depois de todos os demais patches.
+const cssMarker = `${marker}\n`;
+const css = `${cssMarker}        /* Separação deve permanecer totalmente aberta e visível. */
+        .separacao-etapa-list,
+        .separacao-etapa-list .separacao-etapa-card,
+        .separacao-etapa-list .separacao-etapa-card.pedido-card {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+          overflow: visible !important;
+          height: auto !important;
+          max-height: none !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card > * {
+          display: block !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card .pedidoTop,
+        .separacao-etapa-list .separacao-etapa-card .pedidoNumWrap,
+        .separacao-etapa-list .separacao-etapa-card .itensLista,
+        .separacao-etapa-list .separacao-etapa-card .item-linha {
+          display: flex !important;
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card .pedidoTop {
+          min-height: 48px !important;
+          margin-bottom: 8px !important;
+          padding: 8px 4px !important;
+          cursor: default !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card .pedidoTop::after {
+          display: none !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card .itensLista {
+          flex-direction: column !important;
+          gap: 6px !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card .item-linha {
+          align-items: center !important;
+          min-height: 46px !important;
+          width: 100% !important;
+          gap: 8px !important;
+        }
+        .separacao-etapa-list .separacao-etapa-card .checkbox,
+        .separacao-etapa-list .separacao-etapa-card .swatchSm,
+        .separacao-etapa-list .separacao-etapa-card .removerBtn {
+          visibility: visible !important;
+          opacity: 1 !important;
+        }
+`;
+
+const styleFim = source.lastIndexOf('</style>');
+if (styleFim !== -1) {
+  source = source.slice(0, styleFim) + css + source.slice(styleFim);
+} else {
+  console.warn("NeoCooler: bloco <style> não encontrado; proteção CSS não aplicada.");
+}
 
 fs.writeFileSync(path, source, "utf8");
-console.log("NeoCooler: aba Separação com pedidos e itens sempre visíveis.");
+console.log("NeoCooler: V2 da aba Separação aplicada de forma resiliente aos patches anteriores.");

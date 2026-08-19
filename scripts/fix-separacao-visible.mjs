@@ -16,6 +16,24 @@ if (!source.includes(anchor)) {
 
 source = source.replace(anchor, `${anchor}\n          {/* FIX_SEPARACAO_VISIBLE_V1 */}`);
 
+const sectionAnchor = `          <section style={styles.listWrap}>\n            {separacaoAgrupado.length === 0 ? (`;
+if (!source.includes(sectionAnchor)) {
+  throw new Error("NeoCooler: estrutura da seção Separação não encontrada.");
+}
+source = source.replace(
+  sectionAnchor,
+  `          <section style={styles.listWrap} className="separacao-etapa-list">\n            {separacaoAgrupado.length === 0 ? (`
+);
+
+const cardAnchor = `className="card pedido-card">\n                  <div style={styles.pedidoTop}>`;
+if (!source.includes(cardAnchor)) {
+  throw new Error("NeoCooler: cartão da Separação não encontrado.");
+}
+source = source.replace(
+  cardAnchor,
+  `className="card pedido-card separacao-etapa-card pedido-aberto">\n                  <div style={styles.pedidoTop}>`
+);
+
 const cssAnchor = `        @media (prefers-reduced-motion: reduce) { .card { animation: none; } }`;
 if (!source.includes(cssAnchor)) {
   throw new Error("NeoCooler: âncora CSS não encontrada para a aba Separação.");

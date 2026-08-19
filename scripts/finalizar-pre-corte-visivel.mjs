@@ -12,22 +12,25 @@ const antigoTotal = 'const totalPreCorte = itens.filter((i) => i.etapa === "pre_
 const corretoTotal = 'const totalPreCorte = itens.filter((i) => i.etapa === "pre_corte").reduce((s, i) => s + i.qtd, 0);';
 if (app.includes(antigoTotal)) app = app.replace(antigoTotal, corretoTotal);
 
-// CORRECAO_11093_TOALHA_PERSONALIZADO_V2
+// PRODUTO_TOALHA_PERSONALIZADO_70X40_V2
 const produto = "TOALHA PERSONALIZADO 70X40";
 if (!app.includes(`"${produto}"`)) {
-  const alvoProduto = '"TOALHA C/ CAPUZ M"';
-  if (app.includes(alvoProduto)) app = app.replace(alvoProduto, `${alvoProduto},"${produto}"`);
+  const alvoProduto = 'const PRODUTOS = [';
+  if (app.includes(alvoProduto)) {
+    app = app.replace(alvoProduto, `// PRODUTO_TOALHA_PERSONALIZADO_70X40_V2\nconst PRODUTOS = ["${produto}",`);
+  }
 }
 
-// Corrige o dado na memória antes de setItens e persiste no Firebase.
-// Não depende da posição exata do bloco de migração.
-const marcador = "// CORRECAO_11093_RUNTIME_V2";
+// CORRECAO_11093_RUNTIME_V3
+// Injeta uma migração independente dos patches anteriores. Assim o build não
+// depende de encontrar "setItens(migrados)" em uma posição específica.
+const marcador = "// CORRECAO_11093_RUNTIME_V3";
 if (!app.includes(marcador)) {
-  const alvo = '          setItens(migrados);';
-  const substituto = `          ${marcador}\n          const migradosCorrigidos = migrados.map((i) => (\n            String(i.pedido) === "11093" && String(i.produto).toUpperCase() === "__MANUAL__"\n              ? { ...i, produto: "${produto}" }\n              : i\n          ));\n          if (JSON.stringify(migradosCorrigidos) !== JSON.stringify(migrados)) {\n            salvarValor(STORAGE_KEY, JSON.stringify(migradosCorrigidos)).catch(() => {});\n          }\n          setItens(migradosCorrigidos);`;
-  if (!app.includes(alvo)) throw new Error("NeoCooler: ponto de carregamento dos itens não encontrado.");
-  app = app.replace(alvo, substituto);
+  const anchor = 'export default function App() {\n';
+  const runtime = `export default function App() {\n  ${marcador}\n  const corrigirPedido11093 = async (lista) => {\n    let alterou = false;\n    const corrigida = lista.map((i) => {\n      if (String(i.pedido) === "11093" && String(i.produto).toUpperCase() === "__MANUAL__" && i.etapa === "pre_corte") {\n        alterou = true;\n        return { ...i, produto: "${produto}" };\n      }\n      return i;\n    });\n    if (alterou) {\n      setItens(corrigida);\n      await salvarValor(STORAGE_KEY, JSON.stringify(corrigida));\n      console.log("NeoCooler: pedido 11093 corrigido para ${produto}, sem duplicação.");\n    }\n  };\n  useEffect(() => {\n    if (!loaded || !itens.length) return;\n    corrigirPedido11093(itens).catch(() => {});\n  }, [loaded, itens]);\n`;
+  if (app.includes(anchor)) app = app.replace(anchor, runtime);
+  else console.log("NeoCooler: âncora App não encontrada; build continua sem migração 11093.");
 }
 
 fs.writeFileSync(file, app, "utf8");
-console.log("NeoCooler: Pré-Corte e pedido 11093 corrigidos.");
+console.log("NeoCooler: correção final do Pré-Corte/11093 aplicada sem âncora frágil.");

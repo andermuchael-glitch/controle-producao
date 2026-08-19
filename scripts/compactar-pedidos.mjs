@@ -4,28 +4,40 @@ const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
 let alterado = false;
 
-const aplicar = (nome, from, to) => {
-  if (!source.includes(from)) {
-    console.log(`NeoCooler: alvo não encontrado para ${nome}.`);
-    return;
-  }
-  source = source.replace(from, to);
-  alterado = true;
-  console.log(`NeoCooler: ${nome} aplicado.`);
-};
-
-// Todos os pedidos começam minimizados. O cabeçalho do pedido funciona como abre/fecha.
+// Mantém o comportamento de abrir/fechar por toque, mas nunca permite que
+// os cartões fiquem invisíveis por causa da regra de compactação antiga.
 const ponto = `  useEffect(() => {\n    if (window.jspdf) return;`;
-const insercao = `  // Pedidos minimizados: clicar no cabeçalho abre/fecha os itens.\n  useEffect(() => {\n    const alternarPedido = (e) => {\n      const alvo = e.target;\n      if (alvo.closest("button, input, select, textarea, a")) return;\n      const topo = alvo.closest(".pedido-card .pedidoTop");\n      if (!topo) return;\n      const card = topo.closest(".pedido-card");\n      if (card) card.classList.toggle("pedido-aberto");\n    };\n    document.addEventListener("click", alternarPedido);\n    return () => document.removeEventListener("click", alternarPedido);\n  }, []);\n\n  useEffect(() => {\n    if (window.jspdf) return;`;
-aplicar("comportamentoAbrirFecharPedido", ponto, insercao);
+const insercao = `  // Pedidos podem ser abertos/fechados pelo cabeçalho, sem esconder o conteúdo por CSS.\n  useEffect(() => {\n    const alternarPedido = (e) => {\n      const alvo = e.target;\n      if (alvo.closest("button, input, select, textarea, a")) return;\n      const topo = alvo.closest(".pedido-card .pedidoTop");\n      if (!topo) return;\n      const card = topo.closest(".pedido-card");\n      if (card) card.classList.toggle("pedido-aberto");\n    };\n    document.addEventListener("click", alternarPedido);\n    return () => document.removeEventListener("click", alternarPedido);\n  }, []);\n\n  useEffect(() => {\n    if (window.jspdf) return;`;
+if (!source.includes("Pedidos podem ser abertos/fechados pelo cabeçalho")) {
+  if (source.includes(ponto)) {
+    source = source.replace(ponto, insercao);
+    alterado = true;
+  }
+}
 
-const cssPonto = `        .card { animation: rise .25s ease both; }\n        @keyframes rise`;
-const cssNovo = `        .card { animation: rise .25s ease both; }\n\n        /* Pedidos compactos: mostra sempre um cabeçalho legível e abre os detalhes ao tocar. */\n        .pedido-card { overflow: hidden; }\n        .pedido-card:not(.pedido-aberto) > :not(.pedidoTop) { display: none !important; }\n        .pedido-card .pedidoTop {\n          cursor: pointer;\n          user-select: none;\n          position: relative;\n          display: flex !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n          min-height: 48px !important;\n          align-items: center !important;\n          margin: 0 !important;\n          padding: 10px 42px 10px 4px !important;\n          color: #1d2b3a !important;\n          border-radius: 9px;\n        }\n        .pedido-card:not(.pedido-aberto) .pedidoTop {\n          background: #f7f3e8 !important;\n          border: 1px solid #e2d8c5;\n          box-shadow: 0 1px 3px rgba(0,0,0,.08);\n        }\n        .pedido-card .pedidoTop > * { visibility: visible !important; opacity: 1 !important; }\n        .pedido-card .pedidoTop span { visibility: visible !important; opacity: 1 !important; }\n        .pedido-card .pedidoNum { font-size: 18px !important; font-weight: 800 !important; color: #17283a !important; }\n        .pedido-card .pedidoTop::after {\n          content: "＋";\n          position: absolute;\n          right: 10px;\n          top: 50%;\n          transform: translateY(-50%);\n          width: 30px;\n          height: 30px;\n          display: flex;\n          align-items: center;\n          justify-content: center;\n          border-radius: 50%;\n          background: #1f8a3d;\n          color: #fff;\n          font-size: 20px;\n          font-weight: 800;\n          line-height: 1;\n          opacity: 1;\n        }\n        .pedido-card.pedido-aberto .pedidoTop::after { content: "−"; }\n        .pedido-card:not(.pedido-aberto) { padding: 8px !important; }\n\n        /* Aguardando Costura: os controles de distribuição de cores nunca podem ficar ocultos. */\n        .pedido-card:has(.aloc-grid) > .itensLista { display: flex !important; }\n        .pedido-card:has(.aloc-grid) .aloc-grid {\n          display: grid !important;\n          grid-template-columns: 1fr !important;\n          gap: 10px !important;\n          background: #eef3f7 !important;\n          border: 2px solid #aebdca !important;\n          border-radius: 12px !important;\n          padding: 12px !important;\n          margin-top: 10px !important;\n        }\n        .pedido-card:has(.aloc-grid) .aloc-grid input,\n        .pedido-card:has(.aloc-grid) .aloc-grid select {\n          display: block !important;\n          visibility: visible !important;\n          opacity: 1 !important;\n          min-height: 50px !important;\n          width: 100% !important;\n          background: #fff !important;\n          color: #17283a !important;\n          border: 2px solid #7f909f !important;\n          border-radius: 9px !important;\n          font-size: 16px !important;\n          font-weight: 700 !important;\n          padding: 10px 12px !important;\n        }\n        .pedido-card:has(.aloc-grid) .aloc-grid button {\n          min-height: 50px !important;\n          width: 100% !important;\n          font-size: 15px !important;\n        }\n\n        @keyframes rise`;
-aplicar("estiloPedidosCompactos", cssPonto, cssNovo);
+// Remove a regra antiga que escondia todo o conteúdo dos cartões fechados.
+const regraAntiga = `.pedido-card:not(.pedido-aberto) > :not(.pedidoTop) { display: none !important; }`;
+if (source.includes(regraAntiga)) {
+  source = source.replace(regraAntiga, `.pedido-card:not(.pedido-aberto) > :not(.pedidoTop) { display: block !important; visibility: visible !important; opacity: 1 !important; }`);
+  alterado = true;
+}
+
+// Também neutraliza qualquer versão anterior de compactação que tenha ficado no App.jsx.
+const marker = "/* FIX_PEDIDOS_VISIVEIS_GLOBAL */";
+if (!source.includes(marker)) {
+  const css = `${marker}\n        /* Todos os cartões e seus itens devem permanecer visíveis. */\n        .pedido-card,\n        .pedido-card > :not(.pedidoTop),\n        .pedido-card .itensLista,\n        .pedido-card .item-linha,\n        .pedido-card .corteLinha,\n        .pedido-card .corteFormGrid,\n        .pedido-card .alocGrid {\n          visibility: visible !important;\n          opacity: 1 !important;\n        }\n        .pedido-card {\n          overflow: visible !important;\n          height: auto !important;\n          max-height: none !important;\n        }\n        .pedido-card:not(.pedido-aberto) > :not(.pedidoTop) {\n          display: block !important;\n        }\n        .pedido-card .itensLista {\n          display: flex !important;\n          flex-direction: column !important;\n        }\n`;
+  const templateEnd = source.lastIndexOf("`}</style>");
+  if (templateEnd !== -1) {
+    source = source.slice(0, templateEnd) + css + source.slice(templateEnd);
+    alterado = true;
+  } else {
+    console.warn("NeoCooler: template de estilo não encontrado; proteção global não aplicada.");
+  }
+}
 
 if (alterado) {
   fs.writeFileSync(path, source, "utf8");
-  console.log("NeoCooler: pedidos compactos e distribuição de cores com controles sempre visíveis.");
+  console.log("NeoCooler: cartões e itens das etapas mantidos visíveis.");
 } else {
   console.log("NeoCooler: nenhuma alteração necessária.");
 }

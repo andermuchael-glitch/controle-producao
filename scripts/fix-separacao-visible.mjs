@@ -2,16 +2,15 @@ import fs from "node:fs";
 
 const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
-const marker = "/* FIX_SEPARACAO_VISIBLE_V2 */";
+const marker = "/* FIX_SEPARACAO_VISIBLE_V3 */";
 
 if (source.includes(marker)) {
-  console.log("NeoCooler: correção V2 da aba Separação já aplicada.");
+  console.log("NeoCooler: correção V3 da aba Separação já aplicada.");
   process.exit(0);
 }
 
 // Os patches anteriores podem alterar a estrutura JSX da aba antes deste script.
-// Por isso não dependemos de uma âncora exata; localizamos a região pela expressão
-// da aba e aplicamos a proteção no primeiro cartão encontrado depois dela.
+// Por isso não dependemos de uma âncora exata.
 const sepInicio = source.indexOf('aba === "separacao"');
 if (sepInicio === -1) {
   console.warn("NeoCooler: aba Separação não localizada; build continuará sem este patch.");
@@ -32,8 +31,7 @@ if (sectionInicio !== -1 && sectionFim !== -1 && sectionInicio < sectionFim) {
   }
 }
 
-// Localiza o primeiro cartão dentro da seção de Separação, sem depender do texto
-// exato gerado pelos outros scripts.
+// Marca o cartão da Separação como aberto para neutralizar a compactação dos pedidos.
 const sepInicio2 = source.indexOf('aba === "separacao"');
 const sepFim2 = source.indexOf('</section>', sepInicio2);
 const sepBloco = source.slice(sepInicio2, sepFim2 === -1 ? source.length : sepFim2);
@@ -43,10 +41,10 @@ if (cardPos !== -1 && !sepBloco.includes('separacao-etapa-card')) {
   source = source.slice(0, absoluto) + 'className="card pedido-card separacao-etapa-card pedido-aberto"' + source.slice(absoluto + 'className="card pedido-card"'.length);
 }
 
-// Proteção final contra .pedido-card:not(.pedido-aberto) e outras regras de
-// compactação. Inserimos no fim do <style>, depois de todos os demais patches.
-const cssMarker = `${marker}\n`;
-const css = `${cssMarker}        /* Separação deve permanecer totalmente aberta e visível. */
+// A aplicação usa <style>{` ... `}</style>. A versão anterior inseria CSS depois
+// de </style>, quebrando o JSX. Aqui inserimos o CSS dentro da template string.
+const css = `${marker}
+        /* Separação deve permanecer totalmente aberta e visível. */
         .separacao-etapa-list,
         .separacao-etapa-list .separacao-etapa-card,
         .separacao-etapa-list .separacao-etapa-card.pedido-card {
@@ -97,12 +95,12 @@ const css = `${cssMarker}        /* Separação deve permanecer totalmente abert
         }
 `;
 
-const styleFim = source.lastIndexOf('</style>');
-if (styleFim !== -1) {
-  source = source.slice(0, styleFim) + css + source.slice(styleFim);
+const templateEnd = source.lastIndexOf('`}</style>');
+if (templateEnd !== -1) {
+  source = source.slice(0, templateEnd) + css + source.slice(templateEnd);
 } else {
-  console.warn("NeoCooler: bloco <style> não encontrado; proteção CSS não aplicada.");
+  console.warn("NeoCooler: template de estilo JSX não encontrado; proteção CSS não aplicada.");
 }
 
 fs.writeFileSync(path, source, "utf8");
-console.log("NeoCooler: V2 da aba Separação aplicada de forma resiliente aos patches anteriores.");
+console.log("NeoCooler: V3 da aba Separação aplicada dentro do template CSS do JSX.");

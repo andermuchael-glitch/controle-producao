@@ -5,40 +5,109 @@ const file = path.resolve("src/App.jsx");
 let source = fs.readFileSync(file, "utf8");
 const original = source;
 const log = (msg) => console.log(`NeoCooler: ${msg}`);
-const especiais = ["TOALHA PERSONALIZADO 70X40", "TOALHA 80X30", "TOALHA C/ CAPUZ G", "TOALHA C/ CAPUZ M"];
-const anchor = 'const CORTADORES = ["Patrick"];';
-if (!source.includes("FLUXO_PRODUCAO_V10") && source.includes(anchor)) {
-  source = source.replace(anchor, `${anchor}\n\n// FLUXO_PRODUCAO_V10\nconst PRODUTOS_COSTURA_ANTES_SUBLIMACAO = ${JSON.stringify(especiais)};\nconst precisaCosturaAntesSublimacao = (nome) => PRODUTOS_COSTURA_ANTES_SUBLIMACAO.includes(String(nome || "").trim().toUpperCase());`);
-}
-source = source.replace(/const ETAPAS = \[[^\n]*\];/, 'const ETAPAS = ["pre_corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];');
-source = source.replace(/\n\s*corte:\s*"Corte",/, "\n");
 
-if (!source.includes("NORMALIZACAO_PRODUCAO_V10")) {
-  const storageAnchor = 'const AUDIT_ADMIN_EMAIL = "andermuchael@gmail.com";';
-  const normalizador = `\n\n// NORMALIZACAO_PRODUCAO_V10\nconst normalizarItensPersistidos = (lista) => {\n  const entrada = Array.isArray(lista) ? lista : []; const vistos = new Set(); const base = [];\n  for (const originalItem of entrada) {\n    const i = { ...originalItem, qtd: Number(originalItem.qtd) || 0 }; const nome = String(i.produto || "").trim().toUpperCase();\n    if (i.qtd <= 0) continue; if (i.etapa === "corte") i.etapa = precisaCosturaAntesSublimacao(nome) ? "aguardando_costura" : "aguardando_sublimacao";\n    const chave = [String(i.pedido), nome, i.etapa, i.qtd, i.cor || "", i.sublimador || "", i.equipe || "", i.dataCorte || "", i.dataSublimacao || ""].join("||");\n    if (vistos.has(chave)) continue; vistos.add(chave); base.push({ ...i, equipe: i.equipe || "Não decidido", feito: i.feito ?? false, conferido: i.conferido ?? false });\n  }\n  const grupos = {}; for (const i of base) { const chave = String(i.pedido) + "||" + String(i.produto || "").trim().toUpperCase(); (grupos[chave] ||= []).push(i); }\n  const resultado = [];\n  for (const grupo of Object.values(grupos)) {\n    const pre = grupo.filter((i) => i.etapa === "pre_corte"); if (!pre.length) { resultado.push(...grupo); continue; }\n    const primeira = pre[0]; const nome = String(primeira.produto || "").trim().toUpperCase();\n    const saldo = { pre_corte: pre.reduce((s, i) => s + i.qtd, 0), aguardando_sublimacao: 0, sublimacao: 0, aguardando_costura: 0, costura: 0, separacao: 0 };\n    const eventos = grupo.filter((i) => i.etapa !== "pre_corte").sort((a, b) => (Number(a.criadoEm) || 0) - (Number(b.criadoEm) || 0));\n    for (const evento of eventos) {\n      let origem = null; if (evento.etapa === "aguardando_sublimacao") origem = precisaCosturaAntesSublimacao(nome) && saldo.aguardando_costura > 0 ? "aguardando_costura" : "pre_corte"; else if (evento.etapa === "sublimacao") origem = "aguardando_sublimacao"; else if (evento.etapa === "aguardando_costura") origem = saldo.sublimacao > 0 ? "sublimacao" : "pre_corte"; else if (evento.etapa === "costura") origem = "aguardando_costura"; else if (evento.etapa === "separacao") origem = "costura";\n      const disponivel = origem ? saldo[origem] : 0; const qtd = disponivel > 0 ? Math.min(evento.qtd, disponivel) : evento.qtd; if (origem && disponivel > 0) saldo[origem] -= qtd; saldo[evento.etapa] += qtd;\n    }\n    for (const etapa of Object.keys(saldo)) { if (saldo[etapa] <= 0) continue; const modelo = etapa === "pre_corte" ? primeira : [...eventos].reverse().find((i) => i.etapa === etapa) || primeira; resultado.push({ ...modelo, id: modelo.id || Math.random().toString(36).slice(2, 10), etapa, qtd: saldo[etapa] }); }\n  }\n  return resultado;\n};\n`;
-  if (source.includes(storageAnchor)) source = source.replace(storageAnchor, storageAnchor + normalizador);
-}
+// Produtos que passam pela costura antes de voltar para sublimação.
+const especiais = [
+  "TOALHA PERSONALIZADO 70X40",
+  "TOALHA 80X30",
+  "TOALHA C/ CAPUZ G",
+  "TOALHA C/ CAPUZ M",
+];
 
-const cargaRegex = /const carregados = JSON\.parse\(raw\);[\s\S]*?setItens\(migrados\);/;
-if (cargaRegex.test(source)) source = source.replace(cargaRegex, `const carregados = JSON.parse(raw);\n          const migrados = normalizarItensPersistidos(carregados);\n          setItens(migrados);\n          if (JSON.stringify(migrados) !== JSON.stringify(carregados)) salvarValor(STORAGE_KEY, JSON.stringify(migrados)).catch(() => {});`);
-
-const corteStart = source.indexOf('  // ---- Pré-Corte -> Corte (marcado conforme Patrick vai cortando) ----');
-const alocStart = source.indexOf('  // ---- Alocação: aguardando sublimação', corteStart);
-if (corteStart >= 0 && alocStart > corteStart) {
-  const bloco = `  // ---- Pré-Corte -> próxima etapa ----\n  const getCorteForm = (p, prod, restante) => corteForm[chaveAloc(p, prod)] || { qtd: restante, data: hoje() };\n  const setCorteFormCampo = (p, prod, restante, campo, valor) => { const chave = chaveAloc(p, prod); setCorteForm((f) => ({ ...f, [chave]: { ...getCorteForm(p, prod, restante), [campo]: valor } })); };\n  const marcarCortado = (pedidoNum, produtoNome, restante) => {\n    const f = getCorteForm(pedidoNum, produtoNome, restante); const qtdNum = Math.max(1, Math.min(Number(f.qtd) || 1, restante)); const etapaDestino = precisaCosturaAntesSublimacao(produtoNome) ? "aguardando_costura" : "aguardando_sublimacao";\n    let saldo = qtdNum; const novaLista = [];\n    for (const item of itens) { if (saldo > 0 && String(item.pedido) === String(pedidoNum) && String(item.produto) === String(produtoNome) && item.etapa === "pre_corte") { const novoSaldo = Math.max(0, (Number(item.qtd) || 0) - saldo); if (novoSaldo > 0) novaLista.push({ ...item, qtd: novoSaldo }); saldo = 0; } else novaLista.push(item); }\n    if (saldo > 0) return; novaLista.push({ id: uid(), pedido: pedidoNum, produto: produtoNome, qtd: qtdNum, etapa: etapaDestino, cortador: "Patrick", dataCorte: f.data || hoje(), criadoEm: Date.now(), equipe: "Não decidido", feito: false, conferido: false });\n    salvar(novaLista); setCorteForm((f2) => ({ ...f2, [chaveAloc(pedidoNum, produtoNome)]: { qtd: Math.max(1, restante - qtdNum), data: f.data } }));\n  };\n\n`;
-  source = source.slice(0, corteStart) + bloco + source.slice(alocStart);
+// Garante que os produtos existam na lista do lançamento manual.
+const produtosAnchor = 'const PRODUTOS = [';
+if (source.includes(produtosAnchor)) {
+  for (const produto of especiais) {
+    if (!source.includes(`"${produto}"`)) {
+      source = source.replace(produtosAnchor, `${produtosAnchor}"${produto}",`);
+    }
+  }
 }
 
-const enviarOld = /  const enviarParaSublimacao = \(pedidoNum, produtoNome\) => \{[\s\S]*?\n  \};\n\n  const moverParaAguardandoCostura/;
-if (enviarOld.test(source)) source = source.replace(enviarOld, `  const enviarParaSublimacao = (pedidoNum, produtoNome) => {\n    const f = getAlocForm(pedidoNum, produtoNome); const solicitado = Math.max(1, Number(f.qtd) || 1); let saldo = solicitado; const novaLista = [];\n    for (const item of itens) { if (saldo > 0 && item.pedido === pedidoNum && item.produto === produtoNome && item.etapa === "aguardando_sublimacao") { const novoSaldo = Math.max(0, (Number(item.qtd) || 0) - saldo); if (novoSaldo > 0) novaLista.push({ ...item, qtd: novoSaldo }); saldo = 0; } else novaLista.push(item); }\n    const efetivo = solicitado - saldo; if (efetivo <= 0) return;\n    novaLista.push({ id: uid(), pedido: pedidoNum, produto: produtoNome, cor: f.cor, qtd: efetivo, etapa: "sublimacao", sublimador: f.sublimador, dataSublimacao: f.data || hoje(), equipe: "Não decidido", feito: false, conferido: false, criadoEm: Date.now() });\n    salvar(novaLista); setAlocForm((f2) => ({ ...f2, [chaveAloc(pedidoNum, produtoNome)]: { cor: CORES[0].nome, qtd: 1, sublimador: f.sublimador, data: f.data } }));\n  };\n\n  const moverParaAguardandoCostura`);
+// A etapa Corte deixa de existir no fluxo visual.
+source = source.replace(
+  /const ETAPAS = \[[^\]]*\];/s,
+  'const ETAPAS = ["pre_corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];'
+);
+source = source.replace(/\n\s*corte:\s*"Corte",?/g, "\n");
+
+// Regras de produtos que precisam passar pela costura antes da sublimação.
+const regraAnchor = 'const AUDIT_ADMIN_EMAIL = "andermuchael@gmail.com";';
+if (!source.includes("FLUXO_SEM_CORTE_V10")) {
+  const regra = [
+    "",
+    "// FLUXO_SEM_CORTE_V10",
+    `const PRODUTOS_COSTURA_ANTES_SUBLIMACAO = ${JSON.stringify(especiais)};`,
+    'const precisaCosturaAntesSublimacao = (nome) => PRODUTOS_COSTURA_ANTES_SUBLIMACAO.includes(String(nome || "").trim().toUpperCase());',
+    "",
+    "const normalizarFluxoSemCorte = (lista) => {",
+    "  const entrada = Array.isArray(lista) ? lista : [];",
+    "  const vistos = new Set();",
+    "  const resultado = [];",
+    "  for (const bruto of entrada) {",
+    "    const item = { ...bruto, qtd: Number(bruto.qtd) || 0 };",
+    "    if (item.qtd <= 0) continue;",
+    "    const nome = String(item.produto || \"\").trim().toUpperCase();",
+    "    if (item.etapa === \"corte\") item.etapa = precisaCosturaAntesSublimacao(nome) ? \"aguardando_costura\" : \"aguardando_sublimacao\";",
+    "    const chave = [String(item.pedido), nome, item.etapa, item.qtd, item.cor || \"\", item.sublimador || \"\", item.equipe || \"\", item.dataCorte || \"\", item.dataSublimacao || \"\"].join(\"||\");",
+    "    if (vistos.has(chave)) continue;",
+    "    vistos.add(chave);",
+    "    resultado.push(item);",
+    "  }",
+    "  return resultado;",
+    "};",
+  ].join("\n");
+  if (source.includes(regraAnchor)) source = source.replace(regraAnchor, regraAnchor + regra);
 }
 
-source = source.replace(/  const ABAS = \[[\s\S]*?\n  \];/, `  const ABAS = [\n    { id: "pre_corte", label: "Pré-Corte", contagem: totalPreCorte },\n    { id: "aguardando_sublimacao", label: "Aguard. Sublimação", contagem: totalAguardandoSublimacao },\n    { id: "sublimacao", label: "Sublimação", contagem: totalSublimacao },\n    { id: "aguardando_costura", label: "Aguard. Costura", contagem: totalAguardando },\n    { id: "costura", label: "Costura", contagem: totalCosturaAberto },\n    { id: "separacao", label: "Separação", contagem: totalSeparacaoPend },\n  ];`);
-const visualCorte = source.indexOf('        {loaded && aba === "corte" && (');
-const visualAguardando = source.indexOf('        {loaded && aba === "aguardando_sublimacao" && (', visualCorte);
-if (visualCorte >= 0 && visualAguardando > visualCorte) source = source.slice(0, visualCorte) + source.slice(visualAguardando);
+// Normaliza os dados assim que chegam do Firebase/localStorage. Isso corrige
+// registros antigos da etapa Corte e elimina duplicações idênticas sem apagar
+// quantidades legítimas que estejam em etapas diferentes.
+const estadoAnchor = '  const [itens, setItens] = useState([]);';
+if (!source.includes("normalizarFluxoSemCorte(itens)")) {
+  const efeito = [
+    "",
+    "  useEffect(() => {",
+    "    if (!Array.isArray(itens) || !itens.length) return;",
+    "    const normalizados = normalizarFluxoSemCorte(itens);",
+    "    if (JSON.stringify(normalizados) !== JSON.stringify(itens)) {",
+    "      setItens(normalizados);",
+    "      salvarValor(STORAGE_KEY, JSON.stringify(normalizados)).catch(() => {});",
+    "    }",
+    "  }, [itens]);",
+  ].join("\n");
+  if (source.includes(estadoAnchor)) source = source.replace(estadoAnchor, estadoAnchor + efeito);
+}
+
+// Textos do fluxo antigo.
 source = source.replaceAll("Corte → Costura", "Pré-Corte → Sublimação → Costura");
 source = source.replaceAll("Do corte até a expedição, pedido por pedido", "Do pré-corte até a expedição, pedido por pedido");
-source = source.replaceAll("o item passa para a aba Corte", "o item passa diretamente para a próxima etapa");
-source = source.replaceAll("Mova itens pela aba Corte.", "Os itens entram aqui automaticamente quando Patrick confirma o corte.");
-if (source !== original) { fs.writeFileSync(file, source, "utf8"); log("fluxo V10 aplicado."); }
+source = source.replaceAll("Enviar p/ corte", "Marcar como cortado");
+source = source.replaceAll("Enviar para corte", "Marcar como cortado");
+
+// Remove blocos visuais explicitamente renderizados para a aba Corte, quando
+// existirem. A navegação principal já não contém a etapa Corte.
+const visualCorte = source.indexOf('aba === "corte"');
+const visualAguardando = source.indexOf('aba === "aguardando_sublimacao"', visualCorte + 1);
+if (visualCorte >= 0 && visualAguardando > visualCorte) {
+  const inicio = source.lastIndexOf("{", visualCorte);
+  if (inicio >= 0) {
+    let profundidade = 0;
+    let fim = -1;
+    for (let i = inicio; i < source.length; i += 1) {
+      if (source[i] === "{") profundidade += 1;
+      if (source[i] === "}") {
+        profundidade -= 1;
+        if (profundidade === 0) { fim = i + 1; break; }
+      }
+    }
+    if (fim > inicio) source = source.slice(0, inicio) + source.slice(fim);
+  }
+}
+
+if (source !== original) {
+  fs.writeFileSync(file, source, "utf8");
+  log("fluxo sem Corte V10 aplicado com sucesso.");
+} else {
+  log("fluxo sem Corte V10: nenhuma alteração necessária.");
+}

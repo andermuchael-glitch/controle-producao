@@ -6,7 +6,6 @@ let source = fs.readFileSync(file, "utf8");
 const original = source;
 const log = (msg) => console.log(`NeoCooler: ${msg}`);
 
-// Produtos que passam pela costura antes de voltar para sublimação.
 const especiais = [
   "TOALHA PERSONALIZADO 70X40",
   "TOALHA 80X30",
@@ -60,9 +59,8 @@ if (!source.includes("FLUXO_SEM_CORTE_V10")) {
   if (source.includes(regraAnchor)) source = source.replace(regraAnchor, regraAnchor + regra);
 }
 
-// Normaliza os dados assim que chegam do Firebase/localStorage. Isso corrige
-// registros antigos da etapa Corte e elimina duplicações idênticas sem apagar
-// quantidades legítimas que estejam em etapas diferentes.
+// Normaliza os dados assim que chegam do Firebase/localStorage. Corrige
+// registros antigos da etapa Corte e elimina somente duplicações idênticas.
 const estadoAnchor = '  const [itens, setItens] = useState([]);';
 if (!source.includes("normalizarFluxoSemCorte(itens)")) {
   const efeito = [
@@ -84,26 +82,6 @@ source = source.replaceAll("Corte → Costura", "Pré-Corte → Sublimação →
 source = source.replaceAll("Do corte até a expedição, pedido por pedido", "Do pré-corte até a expedição, pedido por pedido");
 source = source.replaceAll("Enviar p/ corte", "Marcar como cortado");
 source = source.replaceAll("Enviar para corte", "Marcar como cortado");
-
-// Remove blocos visuais explicitamente renderizados para a aba Corte, quando
-// existirem. A navegação principal já não contém a etapa Corte.
-const visualCorte = source.indexOf('aba === "corte"');
-const visualAguardando = source.indexOf('aba === "aguardando_sublimacao"', visualCorte + 1);
-if (visualCorte >= 0 && visualAguardando > visualCorte) {
-  const inicio = source.lastIndexOf("{", visualCorte);
-  if (inicio >= 0) {
-    let profundidade = 0;
-    let fim = -1;
-    for (let i = inicio; i < source.length; i += 1) {
-      if (source[i] === "{") profundidade += 1;
-      if (source[i] === "}") {
-        profundidade -= 1;
-        if (profundidade === 0) { fim = i + 1; break; }
-      }
-    }
-    if (fim > inicio) source = source.slice(0, inicio) + source.slice(fim);
-  }
-}
 
 if (source !== original) {
   fs.writeFileSync(file, source, "utf8");

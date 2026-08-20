@@ -3,16 +3,34 @@ import fs from "node:fs";
 const file = "scripts/finalizar-fluxo-producao-v11.mjs";
 let source = fs.readFileSync(file, "utf8");
 
-// O V11 gera JSX dentro de template literals. Os backticks internos precisam
-// estar escapados para não encerrar prematuramente o template `modais`.
-const replacements = [
-  ["{it.cor ? ` · ${it.cor}` : \"\"}", "{it.cor ? \\\` · ${it.cor}\\\` : \"\"}"],
-  ["{it.sublimador ? ` · ${it.sublimador}` : \"\"}", "{it.sublimador ? \\\` · ${it.sublimador}\\\` : \"\"}"],
-  ["{it.dataSublimacao ? ` · ${formatarDataBR(it.dataSublimacao)}` : \"\"}", "{it.dataSublimacao ? \\\` · ${formatarDataBR(it.dataSublimacao)}\\\` : \"\"}"],
-  ["`Mês atual (${nomeMes(mesRef(hoje()))})`", "\\\`Mês atual (${nomeMes(mesRef(hoje()))})\\\`"],
-  ["{it.cor ? ` · ${it.cor}` : \"\"}", "{it.cor ? \\\` · ${it.cor}\\\` : \"\"}"],
-];
+function escapeGeneratedTemplate(source, startMarker, endMarker) {
+  const start = source.indexOf(startMarker);
+  if (start < 0) return source;
+  const contentStart = start + startMarker.length;
+  const end = source.indexOf(endMarker, contentStart);
+  if (end < 0) return source;
 
-for (const [from, to] of replacements) source = source.split(from).join(to);
+  let body = source.slice(contentStart, end);
+  body = body.replaceAll("\\`", "`");
+  body = body.replaceAll("\\${", "${");
+  body = body.replaceAll("`", "\\`");
+  body = body.replaceAll("${", "\\${");
+
+  return source.slice(0, contentStart) + body + source.slice(end);
+}
+
+// V11 gera JSX dentro de template literals. Tudo dentro desses blocos
+// pertence ao App.jsx e não deve ser interpretado pelo próprio script.
+source = escapeGeneratedTemplate(
+  source,
+  "const computedBlock = `",
+  "`;\n  if (source.includes(computedAnchor))"
+);
+source = escapeGeneratedTemplate(
+  source,
+  "const modais = `",
+  "`;\n  if (source.includes(modalAnchor))"
+);
+
 fs.writeFileSync(file, source, "utf8");
-console.log("NeoCooler: script V11 sanitizado antes da execução.");
+console.log("NeoCooler: template literals do V11 sanitizados antes da execução.");

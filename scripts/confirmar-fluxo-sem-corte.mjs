@@ -30,13 +30,46 @@ if (!source.includes('"TOALHA 80X30"')) {
 source = source.replace(/const ETAPAS = \[[^\n]*\];/, 'const ETAPAS = ["pre_corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];');
 source = source.replace(/\n\s*corte:\s*"Corte",/, "\n");
 
-// NORMALIZACAO_DUPLICATAS_PRE_CORTE_V1
-// Remove apenas duplicações inequívocas: registro duplicado no Pré-Corte ou
-// Pré-Corte com a mesma quantidade do mesmo pedido/produto já existente depois.
+// NORMALIZACAO_DUPLICATAS_PRE_CORTE_V2
+// Remove apenas duplicações inequívocas e migra registros antigos de Corte.
 // Quantidades diferentes são preservadas para não apagar produção parcial legítima.
-if (!source.includes("NORMALIZACAO_DUPLICATAS_PRE_CORTE_V1")) {
+if (!source.includes("NORMALIZACAO_DUPLICATAS_PRE_CORTE_V2")) {
   const storageAnchor = 'const AUDIT_ADMIN_EMAIL = "andermuchael@gmail.com";';
-  const normalizador = `\n// NORMALIZACAO_DUPLICATAS_PRE_CORTE_V1\nconst normalizarItensPersistidos = (lista) => {\n  const base = (Array.isArray(lista) ? lista : []).map((i) => {\n    const nome = String(i.produto || "").trim().toUpperCase();\n    let etapa = i.etapa || "costura";\n    if (etapa === "corte") {\n      etapa = precisaCosturaAntesSublimacao(nome) || String(i.pedido) === "11089" ? "aguardando_costura" : "aguardando_sublimacao";\n    }\n    return { ...i, etapa, equipe: i.equipe || "Não decidido", feito: i.feito ?? false, conferido: i.conferido ?? false };\n  });\n  const vistos = new Set();\n  const semExatos = base.filter((i) => {\n    const chave = [i.pedido, String(i.produto || "").trim().toUpperCase(), i.etapa, i.qtd, i.cor || "", i.sublimador || "", i.equipe || ""].join("||");\n    if (vistos.has(chave)) return false;\n    vistos.add(chave);\n    return true;\n  });\n  const posteriores = new Set(semExatos.filter((i) => i.etapa !== "pre_corte").map((i) => `${i.pedido}||${String(i.produto || "").trim().toUpperCase()}||${Number(i.qtd) || 0}`));\n  return semExatos.filter((i) => {\n    if (i.etapa !== "pre_corte") return true;\n    const chave = `${i.pedido}||${String(i.produto || "").trim().toUpperCase()}||${Number(i.qtd) || 0}`;\n    return !posteriores.has(chave);\n  });\n};\n`;
+  const normalizador = `
+// NORMALIZACAO_DUPLICATAS_PRE_CORTE_V2
+const normalizarItensPersistidos = (lista) => {
+  const base = (Array.isArray(lista) ? lista : []).map((i) => {
+    const nome = String(i.produto || "").trim().toUpperCase();
+    let etapa = i.etapa || "costura";
+    if (etapa === "corte") {
+      etapa = precisaCosturaAntesSublimacao(nome) || String(i.pedido) === "11089" ? "aguardando_costura" : "aguardando_sublimacao";
+    }
+    return { ...i, etapa, equipe: i.equipe || "Não decidido", feito: i.feito ?? false, conferido: i.conferido ?? false };
+  });
+
+  const vistos = new Set();
+  const semExatos = base.filter((i) => {
+    const chave = [i.pedido, String(i.produto || "").trim().toUpperCase(), i.etapa, i.qtd, i.cor || "", i.sublimador || "", i.equipe || ""].join("||");
+    if (vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  });
+
+  // Se o mesmo pedido/produto/quantidade já existe em etapa posterior,
+  // o registro equivalente do Pré-Corte é uma duplicação e deve sair.
+  const posteriores = new Set(
+    semExatos
+      .filter((i) => i.etapa !== "pre_corte")
+      .map((i) => `\${i.pedido}||\${String(i.produto || "").trim().toUpperCase()}||\${Number(i.qtd) || 0}`)
+  );
+
+  return semExatos.filter((i) => {
+    if (i.etapa !== "pre_corte") return true;
+    const chave = `\${i.pedido}||\${String(i.produto || "").trim().toUpperCase()}||\${Number(i.qtd) || 0}`;
+    return !posteriores.has(chave);
+  });
+};
+`;
   if (source.includes(storageAnchor)) source = source.replace(storageAnchor, storageAnchor + normalizador);
 }
 
@@ -47,8 +80,19 @@ if (source.includes(antigoCheck)) source = source.replace(antigoCheck, novoCheck
 source = source.replace('setErro(`O pedido #${numero} já possui ${produto} no pré-corte. Para evitar duplicação, altere a quantidade no lançamento existente.`);', 'setErro(`O pedido #${numero} já possui ${produto} em outra etapa. Para evitar duplicação, altere o lançamento existente.`);');
 
 // Carregamento: normaliza e persiste no Firebase antes de exibir as abas.
-const antigoCarregamento = `const migrados = carregados.map((i) => ({\n            ...i,\n            etapa: i.etapa || "costura",\n            equipe: i.equipe || "Não decidido",\n            feito: i.feito ?? false,\n            conferido: i.conferido ?? false,\n          }));\n          setItens(migrados);`;
-const novoCarregamento = `const migrados = normalizarItensPersistidos(carregados);\n          setItens(migrados);\n          if (JSON.stringify(migrados) !== JSON.stringify(carregados)) {\n            salvarValor(STORAGE_KEY, JSON.stringify(migrados)).catch(() => {});\n          }`;
+const antigoCarregamento = `const migrados = carregados.map((i) => ({
+            ...i,
+            etapa: i.etapa || "costura",
+            equipe: i.equipe || "Não decidido",
+            feito: i.feito ?? false,
+            conferido: i.conferido ?? false,
+          }));
+          setItens(migrados);`;
+const novoCarregamento = `const migrados = normalizarItensPersistidos(carregados);
+          setItens(migrados);
+          if (JSON.stringify(migrados) !== JSON.stringify(carregados)) {
+            salvarValor(STORAGE_KEY, JSON.stringify(migrados)).catch(() => {});
+          }`;
 if (source.includes(antigoCarregamento)) {
   source = source.replace(antigoCarregamento, novoCarregamento);
   log("normalização persistente de duplicações aplicada ao carregamento.");

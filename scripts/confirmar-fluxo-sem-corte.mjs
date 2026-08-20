@@ -6,7 +6,7 @@ const original = source;
 const log = (msg) => console.log(`NeoCooler: ${msg}`);
 
 const PRODUTOS_COSTURA_ANTES_SUBLIMACAO = ["TOALHA PERSONALIZADO 70X40", "TOALHA 80X30"];
-const precisaCosturaAntesSublimacao = (produtoNome) => PRODUTOS_COSTURA_ANTES_SUBLIMACAO.includes(String(produtoNome || "").trim().toUpperCase());
+const helperMarker = "// FLUXO_TOALHAS_COSTURA_V1";
 
 // Garante os dois produtos no cadastro.
 if (!source.includes('"TOALHA 80X30"')) {
@@ -20,8 +20,16 @@ if (!source.includes('"TOALHA PERSONALIZADO 70X40"')) {
   source = source.replace(anchor, `${anchor}"TOALHA PERSONALIZADO 70X40",`);
 }
 
+// Helper usado nas migrações e nas transições novas.
+if (!source.includes(helperMarker)) {
+  const anchor = 'const CORTADORES = ["Patrick"];';
+  if (!source.includes(anchor)) throw new Error("NeoCooler: âncora dos cortadores não encontrada.");
+  const helper = `${anchor}\n\n${helperMarker}\nconst PRODUTOS_COSTURA_ANTES_SUBLIMACAO = ["TOALHA PERSONALIZADO 70X40", "TOALHA 80X30"];\nconst precisaCosturaAntesSublimacao = (produtoNome) => PRODUTOS_COSTURA_ANTES_SUBLIMACAO.includes(String(produtoNome || "").trim().toUpperCase());`;
+  source = source.replace(anchor, helper);
+}
+
 // Migra registros antigos da antiga etapa Corte. O pedido 11089 e as duas
-// toalhas especiais devem entrar em Aguardando Costura; os demais vão para
+// toalhas especiais entram em Aguardando Costura; os demais vão para
 // Aguardando Sublimação.
 const oldLoadRegex = /etapa:\s*i\.etapa\s*===\s*["']corte["']\s*\?\s*["']aguardando_sublimacao["']\s*:\s*\(i\.etapa\s*\|\|\s*["']costura["']\),/;
 const oldLoadReplacement = 'etapa: i.etapa === "corte" ? ((String(i.pedido) === "11089" || precisaCosturaAntesSublimacao(i.produto)) ? "aguardando_costura" : "aguardando_sublimacao") : (i.etapa || "costura"),';
@@ -31,8 +39,8 @@ if (oldLoadRegex.test(source)) {
   source = source.replace('etapa: i.etapa || "costura",', oldLoadReplacement);
 }
 
-// Persiste a migração no Firebase para que o pedido 11089 não volte à antiga
-// etapa Corte em outro dispositivo.
+// Persiste a migração no Firebase para que 11089 não volte à antiga etapa
+// Corte em outro dispositivo.
 const persistOldMigration = '          setItens(migrados);';
 const persistNewMigration = `          const houveMigracaoEtapa = migrados.some((item, index) => item.etapa !== carregados[index]?.etapa);\n          setItens(migrados);\n          if (houveMigracaoEtapa) salvarValor(STORAGE_KEY, JSON.stringify(migrados)).catch(() => {});`;
 if (source.includes(persistOldMigration) && !source.includes("houveMigracaoEtapa")) {

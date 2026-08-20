@@ -11,24 +11,9 @@ const PRODUTOS_COSTURA_ANTES_SUBLIMACAO = [
   "TOALHA C/ CAPUZ G",
   "TOALHA C/ CAPUZ M",
 ];
-const helperMarker = "// FLUXO_TOALHAS_COSTURA_V2";
+const helperMarker = "// FLUXO_TOALHAS_COSTURA_V3";
 
-// Garante os produtos usados no fluxo especial no cadastro.
-const produtosExtras = [
-  "TOALHA PERSONALIZADO 70X40",
-  "TOALHA 80X30",
-];
-if (source.includes("const PRODUTOS = [")) {
-  for (const produto of produtosExtras) {
-    if (!source.includes(`"${produto}"`)) {
-      source = source.replace("const PRODUTOS = [", `const PRODUTOS = ["${produto}",`);
-      log(`${produto} adicionado à lista de produtos.`);
-    }
-  }
-}
-
-// Helper único para decidir quais produtos precisam passar pela Costura
-// antes de voltar para Aguardando Sublimação.
+// Helper primeiro: as migrações abaixo usam esta função.
 if (!source.includes(helperMarker)) {
   const anchor = 'const CORTADORES = ["Patrick"];';
   if (!source.includes(anchor)) throw new Error("NeoCooler: âncora dos cortadores não encontrada.");
@@ -36,91 +21,64 @@ if (!source.includes(helperMarker)) {
   source = source.replace(anchor, helper);
 }
 
-// Migra registros antigos que ainda estejam na antiga etapa Corte.
-// O pedido 11089, que estava no Corte, é tratado como item de toalha e vai
-// para Aguardando Costura. Os demais itens antigos de Corte vão direto para
-// Aguardando Sublimação.
-const oldLoadRegex = /etapa:\s*i\.etapa\s*===\s*["']corte["']\s*\?\s*["']aguardando_sublimacao["']\s*:\s*\(i\.etapa\s*\|\|\s*["']costura["']\),/;
-const oldLoadReplacement = 'etapa: i.etapa === "corte" ? ((String(i.pedido) === "11089" || precisaCosturaAntesSublimacao(i.produto)) ? "aguardando_costura" : "aguardando_sublimacao") : (i.etapa || "costura"),';
-if (oldLoadRegex.test(source)) {
-  source = source.replace(oldLoadRegex, oldLoadReplacement);
-} else if (source.includes('etapa: i.etapa === "corte" ? "aguardando_sublimacao" : (i.etapa || "costura"),')) {
-  source = source.replace(
-    'etapa: i.etapa === "corte" ? "aguardando_sublimacao" : (i.etapa || "costura"),',
-    oldLoadReplacement,
-  );
-} else if (source.includes('etapa: i.etapa || "costura",')) {
-  source = source.replace('etapa: i.etapa || "costura",', oldLoadReplacement);
-}
-
-// No carregamento, persiste a migração para o Firebase. Assim o 11089 e os
-// itens antigos não reaparecem na antiga etapa Corte em outro dispositivo.
-if (!source.includes("FLUXO_MIGRACAO_CORTE_PERSISTENTE_V2")) {
-  const loadLine = "          setItens(migrados);";
-  if (source.includes(loadLine)) {
-    const replacement = `          // FLUXO_MIGRACAO_CORTE_PERSISTENTE_V2\n          const migracaoNecessaria = carregados.some((item, index) => item.etapa !== migrados[index]?.etapa);\n          setItens(migrados);\n          if (migracaoNecessaria) salvarValor(STORAGE_KEY, JSON.stringify(migrados)).catch(() => {});`;
-    source = source.replace(loadLine, replacement);
+// Garante os dois produtos adicionais no cadastro.
+for (const produto of ["TOALHA 80X30", "TOALHA PERSONALIZADO 70X40"]) {
+  if (!source.includes(`"${produto}"`)) {
+    source = source.replace("const PRODUTOS = [", `const PRODUTOS = ["${produto}",`);
   }
 }
 
-// Patrick confirma o que realmente foi cortado. A antiga etapa Corte não é
-// mais criada. Toalhas especiais entram em Aguardando Costura; os demais
-// produtos entram diretamente em Aguardando Sublimação.
+// Corrige a migração de dados antigos do carregamento. Este caso é importante:
+// a versão anterior já tinha convertido Corte -> Aguardando Sublimação antes
+// de a regra especial das toalhas ser aplicada. Aqui fazemos a decisão final.
+const etapaLineRegex = /etapa:\s*i\.etapa\s*===\s*["']corte["']\s*\?\s*[^,]+,/;
+const etapaLineReplacement = 'etapa: i.etapa === "corte" ? ((String(i.pedido) === "11089" || precisaCosturaAntesSublimacao(i.produto)) ? "aguardando_costura" : "aguardando_sublimacao") : (i.etapa || "costura"),';
+if (etapaLineRegex.test(source)) {
+  source = source.replace(etapaLineRegex, etapaLineReplacement);
+} else if (source.includes('etapa: i.etapa || "costura",')) {
+  source = source.replace('etapa: i.etapa || "costura",', etapaLineReplacement);
+}
+
+// Migração persistente em runtime. Além de itens que ainda estão em Corte,
+// corrige o 11089 mesmo se algum build anterior já o tiver colocado em
+// Aguardando Sublimação. Não cria duplicação: somente altera etapa.
+const runtimeMarker = "// MIGRACAO_11089_RUNTIME_V3";
+if (!source.includes(runtimeMarker)) {
+  const anchor = '    const cancelarItens = inscrever(STORAGE_KEY, (raw, erroSnap) => {\n';
+  if (!source.includes(anchor)) throw new Error("NeoCooler: bloco de inscrição dos itens não encontrado.");
+  const oldBlock = `    const cancelarItens = inscrever(STORAGE_KEY, (raw, erroSnap) => {\n      if (erroSnap) {\n        setErro("Não foi possível conectar ao Firebase. Verifique as chaves no .env.");\n      } else if (raw) {\n        try {\n          const carregados = JSON.parse(raw);\n          const migrados = carregados.map((i) => ({\n            ...i,\n            etapa: i.etapa || "costura",\n            equipe: i.equipe || "Não decidido",\n            feito: i.feito ?? false,\n            conferido: i.conferido ?? false,\n          }));\n          setItens(migrados);\n        } catch (e) {}\n      }`;
+  const newBlock = `    ${runtimeMarker}\n    const cancelarItens = inscrever(STORAGE_KEY, (raw, erroSnap) => {\n      if (erroSnap) {\n        setErro("Não foi possível conectar ao Firebase. Verifique as chaves no .env.");\n      } else if (raw) {\n        try {\n          const carregados = JSON.parse(raw);\n          let migracaoFeita = false;\n          const migrados = carregados.map((i) => {\n            const etapaAntiga = i.etapa;\n            let etapaNova = i.etapa || "costura";\n            // 11089 está explicitamente na regra especial.\n            if (String(i.pedido) === "11089") etapaNova = "aguardando_costura";\n            else if (etapaAntiga === "corte") etapaNova = precisaCosturaAntesSublimacao(i.produto) ? "aguardando_costura" : "aguardando_sublimacao";\n            if (etapaNova !== etapaAntiga) migracaoFeita = true;\n            return {\n              ...i,\n              etapa: etapaNova,\n              equipe: i.equipe || "Não decidido",\n              feito: i.feito ?? false,\n              conferido: i.conferido ?? false,\n            };\n          });\n          setItens(migrados);\n          if (migracaoFeita) salvarValor(STORAGE_KEY, JSON.stringify(migrados)).catch(() => {});\n        } catch (e) {}\n      }`;
+  if (source.includes(oldBlock)) source = source.replace(oldBlock, newBlock);
+  else throw new Error("NeoCooler: estrutura esperada do carregamento mudou; migração runtime não foi aplicada.");
+}
+
+// Patrick confirma o que realmente cortou: sem etapa Corte.
 const marcarRegex = /  const marcarCortado = \(pedidoNum, produtoNome, restante\) => \{[\s\S]*?\n  \};/;
 const marcarNovo = `  const marcarCortado = (pedidoNum, produtoNome, restante) => {\n    const f = getCorteForm(pedidoNum, produtoNome, restante);\n    const qtdNum = Math.max(1, Math.min(Number(f.qtd) || 1, restante));\n    const destino = precisaCosturaAntesSublimacao(produtoNome) ? "aguardando_costura" : "aguardando_sublimacao";\n    const novo = {\n      id: uid(),\n      pedido: pedidoNum,\n      produto: produtoNome,\n      qtd: qtdNum,\n      etapa: destino,\n      origemPreCorte: true,\n      cortador: "Patrick",\n      dataCorte: f.data || hoje(),\n      criadoEm: Date.now(),\n    };\n    salvar([...itens, novo]);\n    setCorteForm((f2) => ({ ...f2, [chaveAloc(pedidoNum, produtoNome)]: { qtd: restante - qtdNum, data: f.data } }));\n  };`;
-if (marcarRegex.test(source)) {
-  source = source.replace(marcarRegex, marcarNovo);
-  log("Pré-Corte configurado: corte confirmado não cria mais registros na etapa Corte.");
-}
+if (marcarRegex.test(source)) source = source.replace(marcarRegex, marcarNovo);
 
-// Costura concluída: as quatro toalhas especiais retornam para Aguardando
-// Sublimação. Os demais itens de Costura seguem para Separação.
+// Ao concluir a Costura, as quatro toalhas retornam para Aguardando Sublimação.
 const moverRegex = /  const moverPedidoParaSeparacao = \(numero\) => \{[\s\S]*?\n  \};/;
 const moverNovo = `  const moverPedidoParaSeparacao = (numero) => {\n    salvar(itens.map((i) => {\n      if (i.pedido !== numero || i.etapa !== "costura") return i;\n      return precisaCosturaAntesSublimacao(i.produto)\n        ? { ...i, etapa: "aguardando_sublimacao", feito: false, conferido: false }\n        : { ...i, etapa: "separacao", feito: false, conferido: false };\n    }));\n  };`;
-if (moverRegex.test(source)) {
-  source = source.replace(moverRegex, moverNovo);
-  log("Costura configurada para devolver as quatro toalhas à Aguardando Sublimação.");
-}
+if (moverRegex.test(source)) source = source.replace(moverRegex, moverNovo);
 
-// Alguns builds anteriores podem usar onFinalizar em vez de
-// moverPedidoParaSeparacao. Ajusta também essa transição quando ela existir.
-const finalizarRegex = /  const onFinalizar = \(numero\) => \{[\s\S]*?\n  \};/;
-if (!moverRegex.test(original) && finalizarRegex.test(source)) {
-  const finalizarAtual = source.match(finalizarRegex)?.[0] || "";
-  if (!finalizarAtual.includes("precisaCosturaAntesSublimacao")) {
-    const corpoNovo = `  const onFinalizar = (numero) => {\n    salvar(itens.map((i) => {\n      if (i.pedido !== numero || i.etapa !== "costura") return i;\n      return precisaCosturaAntesSublimacao(i.produto)\n        ? { ...i, etapa: "aguardando_sublimacao", feito: false, conferido: false }\n        : { ...i, etapa: "separacao", feito: false, conferido: false };\n    }));\n  };`;
-    source = source.replace(finalizarRegex, corpoNovo);
-  }
-}
-
-// Remove Corte do conjunto de etapas e do layout, mesmo se algum script
-// anterior deixar uma referência residual.
-source = source.replace(
-  'const ETAPAS = ["pre_corte", "corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];',
-  'const ETAPAS = ["pre_corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];',
-);
-source = source.replace(/\s*corte:\s*["']Corte["'],/g, "");
+// Remove Corte do layout.
+source = source.replace('  corte: "Corte",\n', '');
 source = source.replace(/\s*<Stat label=["']corte["'] value=\{totalCorte\} \/>/g, "");
 source = source.replace(/\s*\{\s*id:\s*["']corte["'],\s*label:\s*["']Corte["'],\s*contagem:\s*\{totalCorte\}\s*\},/g, "");
-source = source.replace(/\s*\{id:\s*["']corte["'][\s\S]*?\},/g, "");
-
 const corteBlockStart = '        {loaded && aba === "corte" && (\n';
 const corteBlockEnd = '        {loaded && aba === "aguardando_sublimacao" && (\n';
 const start = source.indexOf(corteBlockStart);
 const end = source.indexOf(corteBlockEnd, start + corteBlockStart.length);
-if (start >= 0 && end > start) {
-  source = source.slice(0, start) + source.slice(end);
-  log("bloco visual da aba Corte removido.");
-}
+if (start >= 0 && end > start) source = source.slice(0, start) + source.slice(end);
 
 source = source.replaceAll("Corte → Costura", "Pré-Corte → Sublimação → Costura");
 source = source.replaceAll("Do corte até a expedição, pedido por pedido", "Do pré-corte até a expedição, pedido por pedido");
-source = source.replaceAll("item passa para a aba Corte", "item passa diretamente para a etapa definida pelo produto");
 source = source.replaceAll("Mova itens pela aba Corte.", "Os itens entram automaticamente na próxima etapa quando Patrick confirma o corte.");
 
 if (source !== original) {
   fs.writeFileSync(file, source, "utf8");
-  log("fluxo atualizado: sem aba Corte; 11089 migrado conforme a regra; 70x40, 80x30, Capuz G e Capuz M passam pela Costura antes da Sublimação.");
+  log("Migração 11089 persistente aplicada e etapa Corte removida.");
 } else {
-  log("fluxo final já estava aplicado.");
+  log("Nenhuma alteração necessária.");
 }

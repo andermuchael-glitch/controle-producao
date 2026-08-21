@@ -23,8 +23,9 @@ if (!source.includes("V18_MIGRACAO_TOALHAS_SEPARACAO")) {
   source = source.replace(loadedAnchor, loadedAnchor + efeito);
 }
 
-// Quando a sublimação pós-costura for enviada para Aguardando Costura,
-// marca que o retorno já foi concluído. Trata tanto lote inteiro quanto parcial.
+// Quando uma toalha que foi explicitamente enviada de Costura para Sublimação
+// voltar para Aguardando Costura, marca a sublimação pós-costura como concluída.
+// A primeira sublimação da toalha não recebe essa marca e não pula o retorno.
 if (!source.includes("V18_MARCA_SUBLIMACAO_POS_COSTURA")) {
   source = source.replace(
     'const moverParaAguardandoCostura = (id) => {',
@@ -32,11 +33,11 @@ if (!source.includes("V18_MARCA_SUBLIMACAO_POS_COSTURA")) {
   );
   source = source.replace(
     'i.id === id ? { ...i, etapa: "aguardando_costura" } : i',
-    'i.id === id ? { ...i, etapa: "aguardando_costura", ...(produtoToalhaPosCosturaV18(i.produto) ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {}) } : i'
+    'i.id === id ? { ...i, etapa: "aguardando_costura", ...(i.aguardaSublimacaoPosCostura === true ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {}) } : i'
   );
   source = source.replace(
     'etapa: "aguardando_costura",\n        criadoEm: Date.now(),',
-    'etapa: "aguardando_costura",\n        ...(produtoToalhaPosCosturaV18(item.produto) ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {}),\n        criadoEm: Date.now(),'
+    'etapa: "aguardando_costura",\n        ...(produtoToalhaPosCosturaV18(item.produto) && item.aguardaSublimacaoPosCostura === true ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {}),\n        criadoEm: Date.now(),'
   );
 }
 

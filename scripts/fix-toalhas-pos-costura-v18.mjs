@@ -14,8 +14,8 @@ if (!source.includes("FLUXO_TOALHAS_POS_COSTURA_V18")) {
   source = source.replace(helperAnchor, helperAnchor + helper);
 }
 
-// Migração independente do formato do carregamento anterior: corrige imediatamente
-// toalhas que já estejam em Separação sem ter concluído a sublimação pós-costura.
+// Migra registros antigos: toalhas que já chegaram à Separação sem concluir a
+// sublimação pós-costura retornam uma única vez para Aguardando Sublimação.
 if (!source.includes("V18_MIGRACAO_TOALHAS_SEPARACAO")) {
   const loadedAnchor = '  const [loaded, setLoaded] = useState(false);';
   const efeito = `\n\n  // V18_MIGRACAO_TOALHAS_SEPARACAO\n  useEffect(() => {\n    if (!loaded || !Array.isArray(itens) || !itens.length) return;\n    const corrigidos = itens.map((i) => {\n      const toalha = produtoToalhaPosCosturaV18(i.produto);\n      if (!toalha || i.etapa !== "separacao" || i.sublimacaoPosCosturaConcluida === true) return i;\n      return { ...i, etapa: "aguardando_sublimacao", aguardaSublimacaoPosCostura: true };\n    });\n    if (JSON.stringify(corrigidos) !== JSON.stringify(itens)) {\n      setItens(corrigidos);\n      salvarValor(STORAGE_KEY, JSON.stringify(corrigidos)).catch(() => {});\n    }\n  }, [loaded]);\n`;
@@ -23,21 +23,25 @@ if (!source.includes("V18_MIGRACAO_TOALHAS_SEPARACAO")) {
   source = source.replace(loadedAnchor, loadedAnchor + efeito);
 }
 
-// Depois da sublimação pós-costura, ao entrar em Aguardando Costura, encerra o retorno.
-if (!source.includes("sublimacaoPosCosturaConcluida: true")) {
-  const pattern = /  const moverParaAguardandoCostura = \(id\) => \{[\s\S]*?\n  \};/;
-  const match = source.match(pattern);
-  if (match) {
-    const bloco = match[0];
-    const corrigido = bloco.replace(
-      'etapa: "aguardando_costura"',
-      'etapa: "aguardando_costura",\n        ...(produtoToalhaPosCosturaV18(item.produto) ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {})'
-    );
-    source = source.replace(bloco, corrigido);
-  }
+// Quando a sublimação pós-costura for enviada para Aguardando Costura,
+// marca que o retorno já foi concluído. Trata tanto lote inteiro quanto parcial.
+if (!source.includes("V18_MARCA_SUBLIMACAO_POS_COSTURA")) {
+  source = source.replace(
+    'const moverParaAguardandoCostura = (id) => {',
+    '/* V18_MARCA_SUBLIMACAO_POS_COSTURA */\n  const moverParaAguardandoCostura = (id) => {'
+  );
+  source = source.replace(
+    'i.id === id ? { ...i, etapa: "aguardando_costura" } : i',
+    'i.id === id ? { ...i, etapa: "aguardando_costura", ...(produtoToalhaPosCosturaV18(i.produto) ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {}) } : i'
+  );
+  source = source.replace(
+    'etapa: "aguardando_costura",\n        criadoEm: Date.now(),',
+    'etapa: "aguardando_costura",\n        ...(produtoToalhaPosCosturaV18(item.produto) ? { aguardaSublimacaoPosCostura: false, sublimacaoPosCosturaConcluida: true } : {}),\n        criadoEm: Date.now(),'
+  );
 }
 
-// Costura -> próximo destino: toalhas voltam para Aguardando Sublimação na primeira passagem.
+// Costura -> próximo destino: toalhas retornam para Aguardando Sublimação na primeira passagem;
+// depois da segunda sublimação seguem normalmente para Separação.
 const oldSeparacao = `  const moverPedidoParaSeparacao = (numero) => {\n    salvar(itens.map((i) => (i.pedido === numero && i.etapa === "costura" ? { ...i, etapa: "separacao" } : i)));\n  };`;
 const newSeparacao = `  const moverPedidoParaSeparacao = (numero) => {\n    salvar(itens.map((i) => {\n      if (i.pedido !== numero || i.etapa !== "costura") return i;\n      if (produtoToalhaPosCosturaV18(i.produto) && i.sublimacaoPosCosturaConcluida !== true) {\n        return { ...i, etapa: "aguardando_sublimacao", aguardaSublimacaoPosCostura: true };\n      }\n      return { ...i, etapa: "separacao" };\n    }));\n  };`;
 if (source.includes(oldSeparacao)) source = source.replace(oldSeparacao, newSeparacao);

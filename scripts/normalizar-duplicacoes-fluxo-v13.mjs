@@ -11,8 +11,6 @@ if (!source.includes("normalizarDuplicacoesFluxoV13")) {
   const helper = `
 
 // normalizarDuplicacoesFluxoV13
-// Corrige registros antigos que ficaram simultaneamente em etapas diferentes.
-// O mesmo item físico só pode aparecer em uma etapa ativa do fluxo.
 const normalizarDuplicacoesFluxoV13 = (lista) => {
   if (!Array.isArray(lista)) return [];
   const src = lista.map((raw) => ({ ...raw, qtd: Number(raw.qtd) || 0 })).filter((i) => i.qtd > 0);
@@ -57,7 +55,8 @@ const normalizarDuplicacoesFluxoV13 = (lista) => {
 `;
   if (source.includes(anchor)) source = source.replace(anchor, anchor + helper);
 
-  const stateAnchor = '  const [itens, setItens] = useState([]);';
+  // O efeito fica depois da declaração de `loaded`, evitando TDZ no render.
+  const loadedAnchor = '  const [loaded, setLoaded] = useState(false);';
   const effect = `
 
   useEffect(() => {
@@ -68,7 +67,7 @@ const normalizarDuplicacoesFluxoV13 = (lista) => {
     salvarValor(STORAGE_KEY, JSON.stringify(limpos)).catch(() => {});
   }, [loaded]);
 `;
-  if (source.includes(stateAnchor)) source = source.replace(stateAnchor, stateAnchor + effect);
+  if (source.includes(loadedAnchor)) source = source.replace(loadedAnchor, loadedAnchor + effect);
 }
 
 if (source !== original) {

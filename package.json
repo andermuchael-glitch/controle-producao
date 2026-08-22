@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/corrigir-sintaxe-importacao-pdf.mjs && node scripts/corrigir-ancora-modal-importacao.mjs && node scripts/adicionar-produto-toalha-esportiva-80x30.mjs && node scripts/restaurar-importacao-pdf-v3.mjs && node scripts/sanitize-importacao-divergentes.mjs && node scripts/ajuste-importacao-divergentes.mjs && node scripts/ajuste-data-importacao-pdf-v2.mjs && node scripts/corrigir-ancora-restauracao-costura-v2.mjs && node scripts/restaurar-cores-costura.mjs && node scripts/fix-jsx.mjs && node scripts/restaurar-producao-sublimadores.mjs && node scripts/restaurar-edicao-pre-corte.mjs && vite build",
+    "build": "node scripts/corrigir-sintaxe-importacao-pdf.mjs && node scripts/corrigir-ancora-modal-importacao.mjs && node scripts/adicionar-produto-toalha-esportiva-80x30.mjs && node scripts/restaurar-importacao-pdf-v3.mjs && node scripts/sanitize-importacao-divergentes.mjs && node scripts/ajuste-importacao-divergentes.mjs && node scripts/ajuste-data-importacao-pdf-v2.mjs && node scripts/restaurar-cores-costura.mjs && node scripts/fix-jsx.mjs && node scripts/restaurar-producao-sublimadores.mjs && node scripts/restaurar-edicao-pre-corte.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

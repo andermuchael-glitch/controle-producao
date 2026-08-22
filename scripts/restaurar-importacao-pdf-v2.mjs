@@ -4,9 +4,9 @@ const path = "scripts/restaurar-importacao-pdf.mjs";
 let source = fs.readFileSync(path, "utf8");
 
 const correcoes = [
-  ["descricao = limparDescricaoPdf(`${descricao} ${continuacoes.join(\" \")}`);", "descricao = limparDescricaoPdf(\\`${descricao} ${continuacoes.join(\" \")}\\`);"],
-  ["textoOriginal: `${codigo} — ${descricao}`", "textoOriginal: \\`${codigo} — ${descricao}\\`"],
-  ["const chave = `${pedidoPdf}||${produtoPdf}`;", "const chave = \\`${pedidoPdf}||${produtoPdf}\\`;"],
+  ["descricao = limparDescricaoPdf(`${descricao} ${continuacoes.join(\" \")}`);", "descricao = limparDescricaoPdf(\\`\\${descricao} \\${continuacoes.join(\" \")}\\`);"],
+  ["textoOriginal: `${codigo} — ${descricao}`", "textoOriginal: \\`\\${codigo} — \\${descricao}\\`"],
+  ["const chave = `${pedidoPdf}||${produtoPdf}`;", "const chave = \\`\\${pedidoPdf}||\\${produtoPdf}\\`;"],
 ];
 
 for (const [antes, depois] of correcoes) source = source.split(antes).join(depois);

@@ -4,19 +4,46 @@ const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
 
 // Restaura o fluxo de cores + quantidade por cor em Aguardando Costura.
-// A alteração é aplicada durante o build para não sobrescrever os demais ajustes do App.
 if (!source.includes("const [costuraForm, setCosturaForm]")) {
   const stateAnchor = '  const [corteForm, setCorteForm] = useState({});';
-  const stateInsert = `${stateAnchor}\n  const [costuraForm, setCosturaForm] = useState({});`;
   if (!source.includes(stateAnchor)) throw new Error("Âncora de estado da costura não encontrada.");
-  source = source.replace(stateAnchor, stateInsert);
+  source = source.replace(stateAnchor, `${stateAnchor}\n  const [costuraForm, setCosturaForm] = useState({});`);
 }
 
+// As cores devem ser escolhidas em Aguardando Costura, não herdadas da Sublimação.
+const oldMove = '  const moverParaAguardandoCostura = (id) => salvar(itens.map((i) => i.id === id ? { ...i, etapa: "aguardando_costura" } : i));';
+const newMove = `  const moverParaAguardandoCostura = (id) => salvar(itens.map((i) => {
+    if (i.id !== id) return i;
+    const { cor, ...semCor } = i;
+    return { ...semCor, etapa: "aguardando_costura" };
+  }));`;
+if (source.includes(oldMove)) source = source.replace(oldMove, newMove);
+
 if (!source.includes("const getCosturaForm = (id, restante) =>")) {
-  const anchor = '  const moverParaAguardandoCostura = (id) => salvar(itens.map((i) => i.id === id ? { ...i, etapa: "aguardando_costura" } : i));';
-  const helper = `  const getCosturaForm = (id, restante, corAtual = "") => costuraForm[id] || { cor: corAtual || "", qtd: restante, equipe: EQUIPES[0] };\n  const setCosturaFormCampo = (id, restante, campo, valor, corAtual = "") => {\n    setCosturaForm((f) => ({ ...f, [id]: { ...getCosturaForm(id, restante, corAtual), [campo]: valor } }));\n  };\n  const enviarParcialParaCostura = (id) => {\n    const origem = itens.find((i) => i.id === id && i.etapa === "aguardando_costura");\n    if (!origem) return;\n    const f = getCosturaForm(id, origem.qtd, origem.cor || "");\n    if (!f.cor) { setErro("Selecione a cor antes de enviar para a costura."); return; }\n    const qtdEnviar = Math.max(1, Math.min(Number(f.qtd) || 1, Number(origem.qtd) || 0));\n    const restantes = Math.max(0, Number(origem.qtd) - qtdEnviar);\n    const novo = { ...origem, id: uid(), qtd: qtdEnviar, cor: f.cor, equipe: f.equipe || EQUIPES[0], etapa: "costura", feito: false, conferido: false, criadoEm: Date.now() };\n    const base = itens.filter((i) => i.id !== id);\n    if (restantes > 0) base.push({ ...origem, qtd: restantes, cor: origem.cor || "" });\n    salvar([...base, novo]);\n    setCosturaForm((f2) => ({ ...f2, [id]: { cor: "", qtd: restantes || 1, equipe: f.equipe || EQUIPES[0] } }));\n  };\n`;
-  if (!source.includes(anchor)) throw new Error("Âncora da etapa Aguardando Costura não encontrada.");
-  source = source.replace(anchor, anchor + "\n" + helper);
+  const anchor = '  const moverParaAguardandoCostura = (id) =>';
+  const pos = source.indexOf(anchor);
+  if (pos === -1) throw new Error("Âncora da etapa Aguardando Costura não encontrada.");
+  const fim = source.indexOf('\n  };', pos);
+  if (fim === -1) throw new Error("Função de Aguardando Costura não encontrada.");
+  const helper = `\n  const getCosturaForm = (id, restante, corAtual = "") => costuraForm[id] || { cor: corAtual || "", qtd: restante, equipe: EQUIPES[0] };
+  const setCosturaFormCampo = (id, restante, campo, valor, corAtual = "") => {
+    setCosturaForm((f) => ({ ...f, [id]: { ...getCosturaForm(id, restante, corAtual), [campo]: valor } }));
+  };
+  const enviarParcialParaCostura = (id) => {
+    const origem = itens.find((i) => i.id === id && i.etapa === "aguardando_costura");
+    if (!origem) return;
+    const f = getCosturaForm(id, origem.qtd, origem.cor || "");
+    if (!f.cor) { setErro("Selecione a cor antes de enviar para a costura."); return; }
+    const qtdEnviar = Math.max(1, Math.min(Number(f.qtd) || 1, Number(origem.qtd) || 0));
+    const restantes = Math.max(0, Number(origem.qtd) - qtdEnviar);
+    const novo = { ...origem, id: uid(), qtd: qtdEnviar, cor: f.cor, equipe: f.equipe || EQUIPES[0], etapa: "costura", feito: false, conferido: false, criadoEm: Date.now() };
+    const base = itens.filter((i) => i.id !== id);
+    if (restantes > 0) base.push({ ...origem, qtd: restantes, cor: "" });
+    salvar([...base, novo]);
+    setCosturaForm((f2) => ({ ...f2, [id]: { cor: "", qtd: restantes || 1, equipe: f.equipe || EQUIPES[0] } }));
+  };
+`;
+  source = source.slice(0, fim + 4) + helper + source.slice(fim + 4);
 }
 
 const inicio = source.indexOf('{loaded && aba === "aguardando_costura" && <section style={styles.listWrap}>');

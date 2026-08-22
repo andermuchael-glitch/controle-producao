@@ -16,5 +16,10 @@ proteger("const addBloco = `", "`;\nsource = source.slice(0, addInicio)");
 proteger("const importBloco = `", "`;\nsource = source.slice(0, importInicio)");
 proteger("const modal = `", "`;\n  source = source.replace(modalAnchor");
 
+source = source.replace(
+  'const importFim = source.indexOf(\'\\n\\n  const exportarXLSX\', importInicio);',
+  'const importFim = source.indexOf(\'\\n\\n  // ---- Chave comum\', importInicio);'
+);
+
 fs.writeFileSync(path, source, "utf8");
-console.log("NeoCooler: templates do restaurador PDF protegidos.");
+console.log("NeoCooler: templates e âncoras do restaurador PDF protegidos.");

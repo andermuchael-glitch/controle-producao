@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/restaurar-importacao-pdf.mjs && node scripts/restaurar-cores-costura.mjs && node scripts/fix-jsx.mjs && vite build",
+    "build": "node scripts/restaurar-importacao-pdf-v2.mjs && node scripts/restaurar-cores-costura.mjs && node scripts/fix-jsx.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

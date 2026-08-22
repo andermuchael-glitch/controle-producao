@@ -3,14 +3,12 @@ import fs from "node:fs";
 const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
 
-// Restaura o fluxo de cores + quantidade por cor em Aguardando Costura.
 if (!source.includes("const [costuraForm, setCosturaForm]")) {
   const stateAnchor = '  const [corteForm, setCorteForm] = useState({});';
   if (!source.includes(stateAnchor)) throw new Error("Âncora de estado da costura não encontrada.");
   source = source.replace(stateAnchor, `${stateAnchor}\n  const [costuraForm, setCosturaForm] = useState({});`);
 }
 
-// As cores devem ser escolhidas em Aguardando Costura, não herdadas da Sublimação.
 const oldMove = '  const moverParaAguardandoCostura = (id) => salvar(itens.map((i) => i.id === id ? { ...i, etapa: "aguardando_costura" } : i));';
 const newMove = `  const moverParaAguardandoCostura = (id) => salvar(itens.map((i) => {
     if (i.id !== id) return i;
@@ -43,7 +41,7 @@ if (!source.includes("const getCosturaForm = (id, restante) =>")) {
     setCosturaForm((f2) => ({ ...f2, [id]: { cor: "", qtd: restantes || 1, equipe: f.equipe || EQUIPES[0] } }));
   };
 `;
-  source = source.slice(0, fim + 4) + helper + source.slice(fim + 4);
+  source = source.slice(0, fim + 5) + helper + source.slice(fim + 5);
 }
 
 const inicio = source.indexOf('{loaded && aba === "aguardando_costura" && <section style={styles.listWrap}>');

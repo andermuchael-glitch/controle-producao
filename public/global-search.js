@@ -1,18 +1,14 @@
 (() => {
-  const STAGES = [
-    ['pre_corte', 'Pré-Corte'],
-    ['aguardando_sublimacao', 'Aguard. Sublimação'],
-    ['sublimacao', 'Sublimação'],
-    ['aguardando_costura', 'Aguard. Costura'],
-    ['costura', 'Costura'],
-    ['separacao', 'Separação'],
-  ];
-
   const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   const norm = (v) => String(v || '').toLowerCase().trim();
 
   function getTabs() {
     return Array.from(document.querySelectorAll('.tabs-row .tab-btn'));
+  }
+
+  function getActiveTabIndex(tabs) {
+    const index = tabs.findIndex((b) => getComputedStyle(b).backgroundColor === 'rgb(216, 98, 44)');
+    return index >= 0 ? index : 0;
   }
 
   function textMatches(el, term) {
@@ -67,14 +63,14 @@
       const token = ++scanToken;
       const tabsNow = getTabs();
       if (!tabsNow.length) return;
-      originalTab = Math.max(0, tabsNow.findIndex((b) => b.getAttribute('style')?.includes('#d8622c')));
+      originalTab = getActiveTabIndex(tabsNow);
       const found = [];
       scanning = true;
       for (let i = 0; i < tabsNow.length; i++) {
         if (token !== scanToken) return;
         const b = tabsNow[i];
         b.click();
-        await sleep(90);
+        await sleep(100);
         const els = findOrderElements(term);
         if (els.length) {
           const stage = stageLabelFromButton(b);
@@ -92,7 +88,7 @@
       if (token !== scanToken) return;
       scanning = false;
       getTabs()[originalTab]?.click();
-      await sleep(90);
+      await sleep(100);
       showResults(found);
     }
 
@@ -101,7 +97,7 @@
       resultsBox.hidden = true;
       input.value = '';
       getTabs()[result.stageIndex]?.click();
-      await sleep(120);
+      await sleep(130);
       const term = norm(result.pedido);
       let el = Array.from(document.querySelectorAll('[data-pedido]')).find((x) => norm(x.dataset.pedido) === term);
       if (!el) el = Array.from(document.querySelectorAll('.pedido-card, .item-linha, .diaGrupo')).find((x) => textMatches(x, '#' + term));

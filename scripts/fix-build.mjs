@@ -25,8 +25,10 @@ replaceAll(
   'const ETAPAS = ["pre_corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];',
   "etapa Corte removida"
 );
-
 replaceAll("etapa: \"corte\"", "etapa: \"aguardando_sublimacao\"", "registros antigos de Corte migrados");
+replaceAll('<h1 style={styles.title}>Corte → Costura</h1>', '<h1 style={styles.title}>Pré-Corte → Sublimação → Costura</h1>', "título do fluxo corrigido");
+replaceAll('Do corte até a expedição, pedido por pedido', 'Do pré-corte até a expedição, pedido por pedido', "subtítulo do fluxo corrigido");
+replaceAll('            <Stat label="corte" value={totalCorte} />\n', '', "contador Corte removido do cabeçalho");
 
 replaceOnce(
   'setConfirmarLimpeza(false);const exportarXLSX = () => {',
@@ -92,7 +94,6 @@ if (!source.includes("const existentePosterior = itens.find((i) => i.pedido === 
   replaceOnce(alvo, bloco, "bloqueio de duplicação entre etapas instalado");
 }
 
-// Permite corrigir a cor de itens que chegaram à costura sem cor definida.
 if (!source.includes("const setCorItem = (id, cor) =>")) {
   const alvo = '  const setEquipeItem = (id, eq) => {\n    salvar(itens.map((i) => (i.id === id ? { ...i, equipe: eq } : i)));\n  };';
   const bloco = `${alvo}
@@ -106,13 +107,9 @@ const seletorCor = `<select style={{ ...styles.equipeSelect, minWidth: 118, bord
                           <option value="">Selecionar cor</option>
                           {CORES.map((c) => <option key={c.nome} value={c.nome}>{c.nome}</option>)}
                         </select>`;
-
 const aguardandoCosturaMarker = '<select style={styles.equipeSelect} value={it.equipe} onChange={(e) => setEquipeItem(it.id, e.target.value)}>';
 if (source.includes(aguardandoCosturaMarker) && !source.includes('aria-label={"Cor de " + it.produto}')) {
-  source = source.replace(
-    aguardandoCosturaMarker,
-    seletorCor + '\n                        ' + aguardandoCosturaMarker
-  );
+  source = source.replace(aguardandoCosturaMarker, seletorCor + '\n                        ' + aguardandoCosturaMarker);
   changed = true;
   console.log("NeoCooler: cor disponível em Aguardando Costura");
 }
@@ -179,7 +176,7 @@ if (!source.includes("function EtapasNoTopo({ itens, aba, setAba }) {")) {
 }
 
 `;
-  source = source.replace("export default function App() {", topTabs + "export default function App() {");
+  source = source.replace("export default function App() {", topTabs + "\nexport default function App() {");
   changed = true;
   console.log("NeoCooler: abas funcionais movidas para o topo azul");
 }
@@ -194,11 +191,7 @@ if (oldTabsStart >= 0) {
   }
 }
 
-replaceAll(
-  '    { id: "corte", label: "Corte", contagem: totalCorte },\n',
-  '',
-  "aba Corte removida do array original"
-);
+replaceAll('    { id: "corte", label: "Corte", contagem: totalCorte },\n', '', "aba Corte removida do array original");
 
 const topTabsCall = '<EtapasNoTopo itens={itens} aba={aba} setAba={setAba} />';
 replaceAll(topTabsCall + '\n        ', '', "posição antiga das abas limpa");
@@ -216,7 +209,6 @@ replaceOnce(
   '<GlobalOrderSearch itens={itens} onSelectStage={(etapa, numero) => { setAba(etapa); setFiltroPedido(numero); }} />',
   "pesquisa ligada ao filtro da etapa"
 );
-
 if (!source.includes("<GlobalOrderSearch")) {
   replaceOnce(
     '      <main style={styles.main} className="app-main">',
@@ -225,7 +217,6 @@ if (!source.includes("<GlobalOrderSearch")) {
   );
 }
 
-// Âncoras de pedido para a pesquisa global: cartões de todas as etapas recebem data-pedido.
 replaceAll(
   '<div key={p.numero} style={styles.pedidoCard}',
   '<div key={p.numero} data-pedido={String(p.numero)} style={styles.pedidoCard}',

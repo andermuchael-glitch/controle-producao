@@ -100,12 +100,12 @@ if (inicio !== -1 && fim !== -1) {
           if (/^(?:Valor líquido|Total|Condição de pagamento|Forma de pagamento|Página)\\b/i.test(linhasTabela[j])) break;
           if (linhasTabela[j] && !/^\\d+[\\s]/.test(linhasTabela[j])) continuacoes.push(linhasTabela[j]);
         }
-        if (continuacoes.length) descricao = limparDescricaoPdf(\`\${descricao} \${continuacoes.join(" ")}\`);
+        if (continuacoes.length) descricao = limparDescricaoPdf(descricao + " " + continuacoes.join(" "));
 
         const produtoSugerido = sugerirProdutoPdf(descricao, codigo);
         const confianca = produtoSugerido === "__MANUAL__" ? "revisar" : (equivalenciasCodigoPdf[codigo] ? "confirmado" : "provavel");
         encontrados.push({
-          id: uid(), pedido: pedidoPadrao, textoOriginal: \`\${codigo} — \${descricao}\`, codigoPdf: codigo,
+          id: uid(), pedido: pedidoPadrao, textoOriginal: codigo + " — " + descricao, codigoPdf: codigo,
           produto: produtoSugerido, produtoManual: "", qtd: qtdItem, dataEntrega: "", passaPeloCorte: true,
           incluir: true, confianca,
         });
@@ -119,7 +119,7 @@ if (inicio !== -1 && fim !== -1) {
       setMostrarImportacaoPdf(true);
     } catch (e) {
       console.error(e);
-      setErro("Não foi possível ler este PDF. Tente novamente ou envie o PDF aqui para ajustarmos o formato.");
+      setErro("Não foi possível ler este PDF. Tente novamente ou verifique o formato do arquivo.");
     } finally { setImportandoPdf(false); }
   };
 `;

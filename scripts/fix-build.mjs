@@ -107,7 +107,6 @@ const seletorCor = `<select style={{ ...styles.equipeSelect, minWidth: 118, bord
                           {CORES.map((c) => <option key={c.nome} value={c.nome}>{c.nome}</option>)}
                         </select>`;
 
-// Aguardando Costura: itens sem cor passam a ter seleção de cor diretamente no cartão.
 const aguardandoCosturaMarker = '<select style={styles.equipeSelect} value={it.equipe} onChange={(e) => setEquipeItem(it.id, e.target.value)}>';
 if (source.includes(aguardandoCosturaMarker) && !source.includes('aria-label={"Cor de " + it.produto}')) {
   source = source.replace(
@@ -185,7 +184,6 @@ if (!source.includes("function EtapasNoTopo({ itens, aba, setAba }) {")) {
   console.log("NeoCooler: abas funcionais movidas para o topo azul");
 }
 
-// Remove completamente as abas antigas da área bege para não duplicar a navegação.
 const oldTabsStart = source.indexOf('        <div style={styles.tabs} className="tabs-row">');
 if (oldTabsStart >= 0) {
   const oldTabsEnd = source.indexOf('        <div style={styles.listHeader}', oldTabsStart);
@@ -227,11 +225,28 @@ if (!source.includes("<GlobalOrderSearch")) {
   );
 }
 
+// Âncoras de pedido para a pesquisa global: cartões de todas as etapas recebem data-pedido.
+replaceAll(
+  '<div key={p.numero} style={styles.pedidoCard}',
+  '<div key={p.numero} data-pedido={String(p.numero)} style={styles.pedidoCard}',
+  "âncoras dos cartões instaladas"
+);
+replaceAll(
+  '<div key={p.numero} style={{ ...styles.pedidoCard,',
+  '<div key={p.numero} data-pedido={String(p.numero)} style={{ ...styles.pedidoCard,',
+  "âncoras dos cartões com estado instaladas"
+);
+replaceOnce(
+  '<div style={{ ...styles.pedidoCard, ...(pedido.completo ? styles.pedidoCompleto : {}) }} className="card pedido-card">',
+  '<div data-pedido={String(pedido.numero)} style={{ ...styles.pedidoCard, ...(pedido.completo ? styles.pedidoCompleto : {}) }} className="card pedido-card">',
+  "âncora do cartão de costura instalada"
+);
+
 if (!source.includes('data-pedido={String(item.pedido)}')) {
   source = source.replace(/<div([^>]*?)key=\{item\.id\}([^>]*?)>/g, '<div$1key={item.id} data-pedido={String(item.pedido)}$2>');
   source = source.replace(/<article([^>]*?)key=\{item\.id\}([^>]*?)>/g, '<article$1key={item.id} data-pedido={String(item.pedido)}$2>');
   changed = true;
-  console.log("NeoCooler: âncoras de pedido instaladas");
+  console.log("NeoCooler: âncoras de item instaladas");
 }
 
 if (changed) fs.writeFileSync(path, source, "utf8");

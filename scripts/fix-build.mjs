@@ -33,6 +33,25 @@ replaceAllText(
 // Nunca mais gravar uma etapa Corte. Registros antigos são convertidos.
 replaceAllText('etapa: "corte"', 'etapa: "aguardando_sublimacao"', "transição Corte -> Aguardando Sublimação corrigida");
 
+// Correção estrutural: uma alteração anterior deixou a função limparTudo sem a chave de fechamento.
+replaceAllText(
+  'setConfirmarLimpeza(false);const exportarXLSX = () => {',
+  'setConfirmarLimpeza(false);\n  };\n\n  const exportarXLSX = () => {',
+  "fechamento de limparTudo corrigido"
+);
+
+// Corte não aparece mais como aba nem como contador no cabeçalho. A etapa Separação permanece.
+replaceAllText(
+  '    { id: "corte", label: "Corte", contagem: totalCorte },\n',
+  '',
+  "aba Corte removida da navegação"
+);
+replaceAllText(
+  '            <Stat label="corte" value={totalCorte} />\n',
+  '',
+  "contador Corte removido do cabeçalho"
+);
+
 const normalizador = [
   "",
   "const normalizarItensPersistidos = (lista) => {",

@@ -1,0 +1,50 @@
+name: Reparar build do App
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Remover declaração duplicada
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('src/App.jsx')
+          text = p.read_text(encoding='utf-8')
+          needle = '  const limparTudo = async () => { await salvar([]); await salvarMeta({}); setConfirmarLimpeza(false); };\n'
+          count = text.count(needle)
+          print(f'declaracoes encontradas: {count}')
+          if count > 1:
+              pos = text.find(needle)
+              text = text[:pos] + text[pos + len(needle):]
+              p.write_text(text, encoding='utf-8')
+              print('Primeira declaração duplicada removida.')
+          elif count == 1:
+              print('Nenhuma duplicação encontrada.')
+          else:
+              raise SystemExit('Declaração esperada não encontrada.')
+          PY
+
+      - name: Validar build
+        run: npm ci && npm run build
+
+      - name: Gravar correção e remover reparo temporário
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/App.jsx
+          git rm .github/workflows/fix-app-build.yml
+          git diff --cached --quiet && echo "Nenhuma alteração necessária." || git commit -m "Corrigir declaração duplicada no App e validar build"
+          git push

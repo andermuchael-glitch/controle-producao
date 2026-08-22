@@ -46,5 +46,14 @@ const uiBlock = `{loaded && aba === "sublimacao" && <section style={styles.listW
           </div>`;
 source = source.replace(anchorUi, uiBlock);
 
+const anchorStyle = '  painelProducao: {';
+if (!source.includes(anchorStyle)) throw new Error("NeoCooler: estilo painelProducao não encontrado.");
+const styleBlock = `  producaoGrid: { display: "grid", gridTemplateColumns: "1.5fr 1fr 1fr", border: "1px solid #e4dbc8", borderRadius: 10, overflow: "hidden", background: "#fffdf8" },
+  producaoColHead: { padding: "8px 10px", background: "#f2ede2", color: "#6f6658", fontSize: 11, fontWeight: 800, textTransform: "uppercase", borderBottom: "1px solid #e4dbc8" },
+  producaoNome: { padding: "9px 10px", fontSize: 13.5, fontWeight: 700, borderBottom: "1px solid #eee7da" },
+  producaoValor: { padding: "9px 10px", fontSize: 14, fontWeight: 800, color: "#d8622c", textAlign: "center", borderBottom: "1px solid #eee7da" },
+`;
+source = source.replace(anchorStyle, styleBlock + anchorStyle);
+
 fs.writeFileSync(path, source, "utf8");
 console.log("NeoCooler: total sublimado por sublimador restaurado (hoje e mês).");

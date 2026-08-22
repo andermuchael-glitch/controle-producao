@@ -33,17 +33,41 @@ const fixes = [
     "migrar-itens-legados-de-corte",
     '            etapa: i.etapa || "costura",',
     '            etapa: i.etapa === "corte" ? "aguardando_sublimacao" : (i.etapa || "costura"),'
+  ],
+  [
+    "marcar-cortado-direto-aguardando-sublimacao",
+    '      etapa: "corte",\n      cortador: "Patrick",',
+    '      etapa: "aguardando_sublimacao",\n      cortador: "Patrick",'
+  ],
+  [
+    "texto-pre-corte-sem-aba-corte",
+    'Pedidos lançados aqui aguardam corte. Conforme o Patrick for cortando, marque a quantidade e o dia — o item passa para a aba Corte.',
+    'Pedidos lançados aqui aguardam corte. Conforme o Patrick for cortando, marque a quantidade e o dia — o item passa diretamente para Aguardando Sublimação.'
+  ],
+  [
+    "texto-aguardando-sem-aba-corte",
+    'Nada aguardando sublimação. Mova itens pela aba Corte.',
+    'Nada aguardando sublimação. Marque os itens como cortados no Pré-Corte.'
+  ],
+  [
+    "remover-corte-do-migrador-de-aguardando",
+    'if (it.etapa === "corte" || it.etapa === "aguardando_sublimacao") continue;',
+    'if (it.etapa === "corte" || it.etapa === "aguardando_sublimacao") continue;'
   ]
 ];
 
 let changed = false;
 for (const [name, from, to] of fixes) {
-  if (source.includes(from)) {
+  if (source.includes(from) && from !== to) {
     source = source.replace(from, to);
     changed = true;
     console.log(`NeoCooler: correção ${name} aplicada.`);
   }
 }
+
+// Garantia estrutural: mesmo que uma versão futura do código reintroduza a aba Corte,
+// ela não deve aparecer na navegação principal.
+source = source.replace(/\n\s*\{ id: "corte", label: "Corte", contagem: totalCorte \},/g, "");
 
 if (changed) fs.writeFileSync(path, source, "utf8");
 console.log("NeoCooler: preparação do build concluída.");

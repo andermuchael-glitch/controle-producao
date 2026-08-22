@@ -20,24 +20,20 @@ const replaceAll = (from, to, label) => {
   return true;
 };
 
-// Fluxo definitivo: não existe mais a etapa/aba Corte.
 replaceAll(
   'const ETAPAS = ["pre_corte", "corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];',
   'const ETAPAS = ["pre_corte", "aguardando_sublimacao", "sublimacao", "aguardando_costura", "costura", "separacao"];',
   "etapa Corte removida"
 );
 
-// Registros antigos em Corte passam a Aguardando Sublimação.
 replaceAll("etapa: \"corte\"", "etapa: \"aguardando_sublimacao\"", "registros antigos de Corte migrados");
 
-// Corrige o fechamento que já causou falha de build em versões anteriores.
 replaceOnce(
   'setConfirmarLimpeza(false);const exportarXLSX = () => {',
   'setConfirmarLimpeza(false);\n  };\n\n  const exportarXLSX = () => {',
   "fechamento de limparTudo corrigido"
 );
 
-// Normalização persistente: remove duplicações idênticas e nunca deixa Corte voltar.
 if (!source.includes("const normalizarItensPersistidos = (lista) =>")) {
   const normalizador = `
 const normalizarItensPersistidos = (lista) => {
@@ -74,7 +70,6 @@ const normalizarItensPersistidos = (lista) => {
   console.log("NeoCooler: normalizador instalado");
 }
 
-// Aplicar a normalização no carregamento do Firebase.
 if (source.includes("const carregados = JSON.parse(raw);") && !source.includes("const normalizados = normalizarItensPersistidos(carregados);")) {
   source = source.replace(
     "const carregados = JSON.parse(raw);",
@@ -86,7 +81,6 @@ if (source.includes("const carregados = JSON.parse(raw);") && !source.includes("
   console.log("NeoCooler: normalização automática ao carregar instalada");
 }
 
-// Bloqueia criação de outro item do mesmo pedido/produto enquanto ele já estiver em qualquer etapa.
 if (!source.includes("const existentePosterior = itens.find((i) => i.pedido === numero && i.produto === produto && i.etapa !== \"pre_corte\");")) {
   const alvo = 'const existente = itens.find((i) => i.pedido === numero && i.produto === produto && i.etapa === "pre_corte");';
   const bloco = `${alvo}
@@ -98,7 +92,32 @@ if (!source.includes("const existentePosterior = itens.find((i) => i.pedido === 
   replaceOnce(alvo, bloco, "bloqueio de duplicação entre etapas instalado");
 }
 
-// Pesquisa global: clicar no resultado muda a etapa, aplica o número no filtro da etapa e leva o usuário ao conteúdo.
+// Permite corrigir a cor de itens que chegaram à costura sem cor definida.
+if (!source.includes("const setCorItem = (id, cor) =>")) {
+  const alvo = '  const setEquipeItem = (id, eq) => {\n    salvar(itens.map((i) => (i.id === id ? { ...i, equipe: eq } : i)));\n  };';
+  const bloco = `${alvo}
+  const setCorItem = (id, cor) => {
+    salvar(itens.map((i) => (i.id === id ? { ...i, cor } : i)));
+  };`;
+  replaceOnce(alvo, bloco, "seletor de cor para itens sem cor instalado");
+}
+
+const seletorCor = `<select style={{ ...styles.equipeSelect, minWidth: 118, borderRadius: 8 }} value={it.cor || ""} onChange={(e) => setCorItem(it.id, e.target.value)} aria-label={"Cor de " + it.produto}>
+                          <option value="">Selecionar cor</option>
+                          {CORES.map((c) => <option key={c.nome} value={c.nome}>{c.nome}</option>)}
+                        </select>`;
+
+// Aguardando Costura: itens sem cor passam a ter seleção de cor diretamente no cartão.
+const aguardandoCosturaMarker = '<select style={styles.equipeSelect} value={it.equipe} onChange={(e) => setEquipeItem(it.id, e.target.value)}>';
+if (source.includes(aguardandoCosturaMarker) && !source.includes('aria-label={"Cor de " + it.produto}')) {
+  source = source.replace(
+    aguardandoCosturaMarker,
+    seletorCor + '\n                        ' + aguardandoCosturaMarker
+  );
+  changed = true;
+  console.log("NeoCooler: cor disponível em Aguardando Costura");
+}
+
 const searchStart = source.indexOf("function GlobalOrderSearch({ itens, onSelectStage }) {");
 if (searchStart >= 0) {
   const appStart = source.indexOf("export default function App() {", searchStart);
@@ -144,7 +163,6 @@ if (searchStart >= 0) {
   }
 }
 
-// Abas funcionais no cabeçalho azul. Corte não é exibido; Separação permanece.
 if (!source.includes("function EtapasNoTopo({ itens, aba, setAba }) {")) {
   const topTabs = `function EtapasNoTopo({ itens, aba, setAba }) {
   const etapas = [
@@ -167,7 +185,33 @@ if (!source.includes("function EtapasNoTopo({ itens, aba, setAba }) {")) {
   console.log("NeoCooler: abas funcionais movidas para o topo azul");
 }
 
-// A chamada da pesquisa precisa controlar também o filtro da etapa encontrada.
+// Remove completamente as abas antigas da área bege para não duplicar a navegação.
+const oldTabsStart = source.indexOf('        <div style={styles.tabs} className="tabs-row">');
+if (oldTabsStart >= 0) {
+  const oldTabsEnd = source.indexOf('        <div style={styles.listHeader}', oldTabsStart);
+  if (oldTabsEnd > oldTabsStart) {
+    source = source.slice(0, oldTabsStart) + source.slice(oldTabsEnd);
+    changed = true;
+    console.log("NeoCooler: abas antigas da área bege removidas");
+  }
+}
+
+replaceAll(
+  '    { id: "corte", label: "Corte", contagem: totalCorte },\n',
+  '',
+  "aba Corte removida do array original"
+);
+
+const topTabsCall = '<EtapasNoTopo itens={itens} aba={aba} setAba={setAba} />';
+replaceAll(topTabsCall + '\n        ', '', "posição antiga das abas limpa");
+if (!source.includes(topTabsCall)) {
+  replaceOnce(
+    '          <div style={styles.stats} className="stats-row">',
+    `          ${topTabsCall}\n          <div style={styles.stats} className="stats-row">`,
+    "abas colocadas no cabeçalho azul"
+  );
+}
+
 const chamadaPesquisa = '<GlobalOrderSearch itens={itens} onSelectStage={setAba} />';
 replaceOnce(
   chamadaPesquisa,
@@ -175,15 +219,14 @@ replaceOnce(
   "pesquisa ligada ao filtro da etapa"
 );
 
-// Inserir as novas abas imediatamente após o título no cabeçalho azul.
-const titulo = '<h1 style={styles.title}>Pré-Corte → Sublimação → Costura</h1>';
-if (source.includes(titulo) && !source.includes('<EtapasNoTopo itens={itens} aba={aba} setAba={setAba} />')) {
-  source = source.replace(titulo, titulo + '\n        <EtapasNoTopo itens={itens} aba={aba} setAba={setAba} />');
-  changed = true;
-  console.log("NeoCooler: abas colocadas no cabeçalho");
+if (!source.includes("<GlobalOrderSearch")) {
+  replaceOnce(
+    '      <main style={styles.main} className="app-main">',
+    '      <GlobalOrderSearch itens={itens} onSelectStage={(etapa, numero) => { setAba(etapa); setFiltroPedido(numero); }} />\n      <main style={styles.main} className="app-main">',
+    "pesquisa global adicionada ao topo"
+  );
 }
 
-// Adiciona um identificador aos cartões/listagens mais comuns para permitir scroll direto ao pedido.
 if (!source.includes('data-pedido={String(item.pedido)}')) {
   source = source.replace(/<div([^>]*?)key=\{item\.id\}([^>]*?)>/g, '<div$1key={item.id} data-pedido={String(item.pedido)}$2>');
   source = source.replace(/<article([^>]*?)key=\{item\.id\}([^>]*?)>/g, '<article$1key={item.id} data-pedido={String(item.pedido)}$2>');
@@ -191,6 +234,5 @@ if (!source.includes('data-pedido={String(item.pedido)}')) {
   console.log("NeoCooler: âncoras de pedido instaladas");
 }
 
-// Fallback visual: qualquer elemento de pedido com id conhecido também pode ser encontrado pelo scroll.
 if (changed) fs.writeFileSync(path, source, "utf8");
 console.log("NeoCooler: fix-build concluído com sucesso.");

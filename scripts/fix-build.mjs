@@ -60,12 +60,8 @@ for (const [name, from, to] of fixes) {
   }
 }
 
-// Corte não faz mais parte do fluxo visual. Dados antigos em Corte são tratados
-// como Aguardando Sublimação para não fazer o pedido voltar para o Pré-Corte.
 source = source.replace(/\n\s*\{ id: "corte", label: "Corte", contagem: totalCorte \},/g, "");
 
-// Pesquisa global: procura o pedido em TODOS os itens, independentemente da aba
-// atualmente selecionada, e mostra imediatamente a etapa encontrada.
 const globalSearchComponent = `
 
 function GlobalOrderSearch({ itens, onSelectStage }) {
@@ -128,16 +124,11 @@ if (!source.includes("function GlobalOrderSearch({ itens, onSelectStage })")) {
   changed = true;
 }
 
-// Renderiza a busca no cabeçalho, antes do título, para que ela fique sempre disponível.
 const headerAnchor = '<h1 style={styles.title}>Pré-Corte → Sublimação → Costura</h1>';
 if (source.includes(headerAnchor) && !source.includes('<GlobalOrderSearch itens={itens} onSelectStage={setAba} />')) {
   source = source.replace(headerAnchor, '<GlobalOrderSearch itens={itens} onSelectStage={setAba} />\n' + headerAnchor);
   changed = true;
 }
-
-if (changed) fs.writeFileSync(path, source, "utf8");
-console.log("NeoCooler: preparação do build concluída.");
-`;
 
 if (changed) fs.writeFileSync(path, source, "utf8");
 console.log("NeoCooler: preparação do build concluída.");

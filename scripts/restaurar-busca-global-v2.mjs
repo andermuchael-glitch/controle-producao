@@ -3,6 +3,19 @@ import fs from "node:fs";
 const path = "src/App.jsx";
 let source = fs.readFileSync(path, "utf8");
 
+// Garante que estados injetados por versões anteriores do restaurador existam apenas uma vez.
+const buscaState = '  const [buscaGlobal, setBuscaGlobal] = useState("");';
+const buscaLines = source.split("\\n").filter((line) => line.trim() === buscaState.trim());
+if (buscaLines.length > 1) {
+  let first = true;
+  source = source.split("\\n").filter((line) => {
+    if (line.trim() !== buscaState.trim()) return true;
+    if (first) { first = false; return true; }
+    return false;
+  }).join("\\n");
+}
+
+
 if (!source.includes('const [buscaGlobal, setBuscaGlobal]')) {
   const a = '  const [corteForm, setCorteForm] = useState({});';
   if (!source.includes(a)) throw new Error("NeoCooler: estado base não encontrado.");

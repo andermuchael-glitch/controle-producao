@@ -114,6 +114,7 @@ export default function App() {
   const [telaCheia, setTelaCheia] = useState(false);
   const [alocForm, setAlocForm] = useState({});
   const [corteForm, setCorteForm] = useState({});
+  const [buscaGlobal, setBuscaGlobal] = useState("");
   const [pdfGerando, setPdfGerando] = useState(false);
   const [confirmarLimpeza, setConfirmarLimpeza] = useState(false);
 
@@ -178,6 +179,25 @@ export default function App() {
     salvar([...itens, novo]);
     if (dataEntregaForm) definirDataEntrega(numero, dataEntregaForm);
     setQtd(1);
+  };
+
+  const resultadosBuscaGlobal = useMemo(() => {
+    const termo = String(buscaGlobal || "").trim().toLowerCase();
+    if (!termo) return [];
+    return itens.filter((it) => {
+      const texto = [it.pedido, it.produto, it.cor, it.equipe, it.sublimador, ETAPA_LABEL[it.etapa] || it.etapa].filter(Boolean).join(" ").toLowerCase();
+      return texto.includes(termo);
+    }).slice(0, 20);
+  }, [itens, buscaGlobal]);
+  const abrirResultadoBuscaGlobal = (it) => {
+    const etapa = it.etapa === "corte" ? "aguardando_sublimacao" : it.etapa;
+    setAba(etapa);
+    setFiltroPedido(String(it.pedido));
+    setBuscaGlobal("");
+    setTimeout(() => {
+      const el = document.querySelector('[data-pedido="' + String(it.pedido).replace(/"/g, "") + '"]');
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }, 200);
   };
 
   const chaveAloc = (p, prod) => `${p}||${prod}`;
@@ -296,6 +316,14 @@ export default function App() {
           </div>
         </div>
       </header>
+      <div data-global-search-direct="true" style={{position:"relative",margin:"0 auto 12px",maxWidth:900,zIndex:40}}>
+        <input value={buscaGlobal} onChange={(e)=>setBuscaGlobal(e.target.value)} placeholder="Buscar pedido ou produto em todas as etapas..." aria-label="Buscar pedido ou produto em todas as etapas" style={{...styles.filtroInput,width:"100%",boxSizing:"border-box",fontSize:14,padding:"10px 12px",background:"#fffdf8"}} />
+        {buscaGlobal.trim() && <div style={{position:"absolute",left:0,right:0,top:"calc(100% + 4px)",background:"#fffdf8",border:"1px solid #d8cfbd",borderRadius:10,boxShadow:"0 10px 28px rgba(0,0,0,.2)",maxHeight:360,overflowY:"auto"}}>
+          {resultadosBuscaGlobal.length ? resultadosBuscaGlobal.map((it)=><button key={it.id} type="button" onClick={()=>abrirResultadoBuscaGlobal(it)} style={{display:"block",width:"100%",padding:"10px 12px",border:0,borderBottom:"1px solid #eee5d2",background:"transparent",textAlign:"left",cursor:"pointer",color:"#26384a"}}>
+            <b>#{it.pedido} · {it.produto}</b><div style={{fontSize:11,marginTop:3,color:"#6b7280"}}>{ETAPA_LABEL[it.etapa] || it.etapa} · {it.qtd} un{it.cor ? " · " + it.cor : ""}</div>
+          </button>) : <div style={{padding:12,color:"#777"}}>Nenhum resultado encontrado.</div>}
+        </div>}
+      </div>
       <main style={styles.main} className="app-main">
         {erro && <p style={styles.erro}>{erro}</p>}
         <section style={styles.formCard} className="card form-card">

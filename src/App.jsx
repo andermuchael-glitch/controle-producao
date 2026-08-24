@@ -181,7 +181,7 @@ export default function App() {
       if (!encontrados.length) { setErro("PDF lido, mas nenhum produto foi reconhecido. Verifique o formato do PDF."); return; }
       const resumo = encontrados.map((x) => x.produto + " — " + x.qtd + "un").join("\n");
       if (!window.confirm("Pedido #" + pedidoPadrao + "\n\n" + resumo + "\n\nImportar estes itens para o Pré-Corte?")) return;
-      const novos = encontrados.filter((x) => !itens.some((i) => i.pedido === pedidoPadrao && i.produto === x.produto && (i.etapa === "pre_corte" || i.etapa !== "pre_corte")));
+      const novos = encontrados.filter((x) => !itens.some((i) => i.pedido === pedidoPadrao && i.produto === x.produto));
       if (!novos.length) { setErro("Nenhum item novo foi importado. Duplicados foram ignorados."); return; }
       await salvar([...itens, ...novos.map((x) => ({ id: uid(), pedido: pedidoPadrao, produto: x.produto, qtd: x.qtd, etapa: "pre_corte", criadoEm: Date.now() }))]);
     } catch (e) {

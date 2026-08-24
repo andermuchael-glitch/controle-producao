@@ -3,7 +3,7 @@ import * as XLSX from "xlsx";
 import { inscrever, salvarValor, registrarAuditoria, inscreverAuditoria } from "./storage.js";
 import { auth, firebaseConfigurado } from "./firebase.js";
 
-const PRODUTOS = ["LATA 350ML","LATA 473ML","LATA PALITO 269ML","LATA PALITO 350ML","LONG NECK","GFA 600ML","GFA 1000ML","PORTA COPOS","COOLER TÉRMICO PEQUENO","COOLER TÉRMICO GRANDE","PORTA ÁGUA/ISOTÔNICO","PORTA SQUEEZE","600ML DE MESA","BARMAT GRANDE","BARMAT PADRÃO","COOLER TÉRMICO LATERAL","PORTA VINHO SIMPLES","PORTA VINHO DUPLO","PORTA VINHO DUPLO COM BOLSA","ESPUMANTES","ESTEIRA DE PRAIA","MATEIRA MEDIA","MATEIRA GRANDE","MINI BAG PEQUENA TRANSVERSAL","CASE TABLET","CASE NOTEBOOK","MOUSEPAD PADRÃO","MOUSEPAD GAMER","POCHETE","PORTA ÓCULOS","VISEIRA","MUNHEQUEIRA","TAPA OLHOS","CASE CELULAR","TAG MALA","LUVA COM APARADOR","CORRENTE ÓCULOS","NECESSAIRE GRANDE","MÁSCARA","PROTETOR FACIAL","MOCHILA TRANSVERSAL","BOLSA DE OMBRO","BOLSA MEIA LUA","MINI BAG","CARTEIRA FEMININA","LIXEIRA","MOEDEIRO","NECESSAIRE","LANCHEIRA","ESTOJO","MOCHILA TÉRMICA","MOCHILA INFANTIL","LATA CAMISA","LONG NECK CAMISA","PORTA UTILIDADES","WINE BAG","WINE CASE DELUXE","MARMITEIRA","CANGA DE PRAIA","SUPORTE DE COPO","TOLHA DE BANHO","TOALHA C/ CAPUZ G","TOALHA C/ CAPUZ M","BOLSA TOALHA","CANGA DE PRAIA GRANDE","CAPA P/ MALA GRANDE","CAPA P/ MALA MÉDIA","CAPA P/ MALA PEQUENA","MOCHILA IMPERMEÁVEL","VISEIRA TURBANTE"];
+const PRODUTOS = ["LATA 350ML","LATA 473ML","LATA PALITO 269ML","LATA PALITO 350ML","LONG NECK","GFA 600ML","GFA 1000ML","PORTA COPOS","COOLER TÉRMICO PEQUENO","COOLER TÉRMICO GRANDE","PORTA ÁGUA/ISOTÔNICO","PORTA SQUEEZE","600ML DE MESA","BARMAT GRANDE","BARMAT PADRÃO","COOLER TÉRMICO LATERAL","PORTA VINHO SIMPLES","PORTA VINHO DUPLO","PORTA VINHO DUPLO COM BOLSA","ESPUMANTES","ESTEIRA DE PRAIA","MATEIRA MEDIA","MATEIRA GRANDE","MINI BAG PEQUENA TRANSVERSAL","CASE TABLET","CASE NOTEBOOK","MOUSEPAD PADRÃO","MOUSEPAD GAMER","POCHETE","PORTA ÓCULOS","VISEIRA","MUNHEQUEIRA","TAPA OLHOS","CASE CELULAR","TAG MALA","LUVA COM APARADOR","CORRENTE ÓCULOS","NECESSAIRE GRANDE","MÁSCARA","PROTETOR FACIAL","MOCHILA TRANSVERSAL","BOLSA DE OMBRO","BOLSA MEIA LUA","MINI BAG","CARTEIRA FEMININA","LIXEIRA","MOEDEIRO","NECESSAIRE","LANCHEIRA","ESTOJO","MOCHILA TÉRMICA","MOCHILA INFANTIL","LATA CAMISA","LONG NECK CAMISA","PORTA UTILIDADES","WINE BAG","WINE CASE DELUXE","MARMITEIRA","CANGA DE PRAIA","SUPORTE DE COPO","TOLHA DE BANHO","TOALHA C/ CAPUZ G","TOALHA C/ CAPUZ M","BOLSA TOALHA","CANGA DE PRAIA GRANDE","CAPA P/ MALA GRANDE","CAPA P/ MALA MÉDIA","CAPA P/ MALA PEQUENA","MOCHILA IMPERMEÁVEL","VISEIRA TURBANTE","TOALHA ESPORTIVA 80X30","TOALHA PERSONALIZADA 70X40"];
 
 const CORES = [
   { nome: "Preto", hex: "#1a1a1a" },
@@ -117,6 +117,7 @@ export default function App() {
   const [costuraForm, setCosturaForm] = useState({});
   const [buscaGlobal, setBuscaGlobal] = useState("");
   const [pdfGerando, setPdfGerando] = useState(false);
+  const [importandoPdf, setImportandoPdf] = useState(false);
   const [confirmarLimpeza, setConfirmarLimpeza] = useState(false);
 
   useEffect(() => {
@@ -124,6 +125,71 @@ export default function App() {
     document.addEventListener("fullscreenchange", onFsChange);
     return () => document.removeEventListener("fullscreenchange", onFsChange);
   }, []);
+  const normalizarTextoPdf = (v) => String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const equivalenciasCodigoPdf = { LTA: "LATA 350ML", NECG: "NECESSAIRE GRANDE", NEC: "NECESSAIRE", MDR: "MOEDEIRO" };
+  const carregarPdfJs = async () => {
+    if (window.pdfjsLib) return window.pdfjsLib;
+    const script = document.createElement("script");
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+    await new Promise((resolve, reject) => { script.onload = resolve; script.onerror = reject; document.head.appendChild(script); });
+    return window.pdfjsLib;
+  };
+  const importarPdf = async (arquivo) => {
+    if (!arquivo) return;
+    setImportandoPdf(true); setErro("");
+    try {
+      const pdfjs = await carregarPdfJs();
+      pdfjs.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+      const pdf = await pdfjs.getDocument({ data: await arquivo.arrayBuffer() }).promise;
+      const linhas = [];
+      for (let pagina = 1; pagina <= pdf.numPages; pagina++) {
+        const page = await pdf.getPage(pagina);
+        const content = await page.getTextContent();
+        const porY = {};
+        for (const item of content.items) {
+          const y = Math.round(item.transform?.[5] || 0);
+          if (!porY[y]) porY[y] = [];
+          porY[y].push({ x: item.transform?.[4] || 0, texto: item.str || "" });
+        }
+        Object.keys(porY).sort((a,b) => Number(b)-Number(a)).forEach((y) => {
+          const texto = porY[y].sort((a,b) => a.x-b.x).map((x) => x.texto).join(" ").replace(/\s+/g, " ").trim();
+          if (texto) linhas.push(texto);
+        });
+      }
+      const texto = linhas.join("\n");
+      const venda = texto.match(/\bVenda\s+(\d+)\b/i);
+      const pedidoPadrao = venda ? venda[1] : "";
+      const encontrados = [];
+      const mapaProduto = (descricao, codigo) => {
+        const cod = String(codigo || "").toUpperCase();
+        if (equivalenciasCodigoPdf[cod]) return equivalenciasCodigoPdf[cod];
+        const alvo = normalizarTextoPdf(descricao);
+        const exato = PRODUTOS.find((p) => normalizarTextoPdf(p) === alvo);
+        if (exato) return exato;
+        const parcial = PRODUTOS.find((p) => alvo.includes(normalizarTextoPdf(p)) || normalizarTextoPdf(p).includes(alvo));
+        return parcial || "";
+      };
+      for (const linha of linhas) {
+        const m = linha.match(/^(\d+)\s+([A-Z0-9]{2,10})\s*-\s*NEO\s*-\s*(.+?)\s+(\d+[,.]\d{2})\s+[\d.]+[,.]\d{2}\s*$/i);
+        if (!m) continue;
+        const qtdItem = Math.max(1, Number(m[1]) || 1);
+        const produtoPdf = mapaProduto(m[3].replace(/\bNEO\b/gi, "").replace(/\s+/g, " ").trim(), m[2]);
+        if (!produtoPdf || !pedidoPadrao) continue;
+        const chave = pedidoPadrao + "||" + produtoPdf.toUpperCase();
+        if (!encontrados.some((x) => x.chave === chave)) encontrados.push({ chave, produto: produtoPdf, qtd: qtdItem });
+      }
+      if (!encontrados.length) { setErro("PDF lido, mas nenhum produto foi reconhecido. Verifique o formato do PDF."); return; }
+      const resumo = encontrados.map((x) => x.produto + " — " + x.qtd + "un").join("\n");
+      if (!window.confirm("Pedido #" + pedidoPadrao + "\n\n" + resumo + "\n\nImportar estes itens para o Pré-Corte?")) return;
+      const novos = encontrados.filter((x) => !itens.some((i) => i.pedido === pedidoPadrao && i.produto === x.produto && (i.etapa === "pre_corte" || i.etapa !== "pre_corte")));
+      if (!novos.length) { setErro("Nenhum item novo foi importado. Duplicados foram ignorados."); return; }
+      await salvar([...itens, ...novos.map((x) => ({ id: uid(), pedido: pedidoPadrao, produto: x.produto, qtd: x.qtd, etapa: "pre_corte", criadoEm: Date.now() }))]);
+    } catch (e) {
+      console.error("NeoCooler importar PDF", e);
+      setErro("Não foi possível ler o PDF.");
+    } finally { setImportandoPdf(false); }
+  };
+
   const alternarTelaCheia = () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
     else document.exitFullscreen?.().catch(() => {});
@@ -367,6 +433,7 @@ export default function App() {
         <section style={styles.exportRow} className="export-row">
           <button style={styles.exportBtn} onClick={exportarXLSX} disabled={!itens.length}>⬇ Baixar planilha (.xlsx)</button>
           <button style={styles.exportBtn} onClick={exportarPDF} disabled={!itens.length || pdfGerando}>{pdfGerando ? "Gerando PDF..." : "📄 Baixar PDF"}</button>
+          <label style={{...styles.exportBtn,display:"inline-flex",alignItems:"center",justifyContent:"center",cursor:importandoPdf?"wait":"pointer",opacity:importandoPdf?0.65:1}}>{importandoPdf ? "Lendo PDF..." : "📥 Importar PDF"}<input type="file" accept="application/pdf,.pdf" style={{display:"none"}} disabled={importandoPdf} onChange={(e)=>{const f=e.target.files?.[0];e.target.value="";importarPdf(f);}} /></label>
           <button style={styles.exportBtnOutline} onClick={()=>setMostrarDrive(true)}>Salvar no Google Drive</button>
           {auth?.currentUser?.email?.toLowerCase()===AUDIT_ADMIN_EMAIL && <button style={styles.exportBtnOutline} onClick={()=>setMostrarAuditoria(true)}>🕘 Histórico</button>}
           <button style={styles.limparBtn} onClick={()=>setConfirmarLimpeza(true)} disabled={!itens.length}>🗑 Limpar tudo</button>

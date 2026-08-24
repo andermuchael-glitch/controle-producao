@@ -9,8 +9,17 @@ const fixed = 'onClick={()=>enviarParaSublimacao(p.numero,linha.produto)}>Enviar
 
 if (s.includes(broken)) {
   s = s.replace(broken, fixed);
-  await writeFile(path, s, "utf8");
   console.log("JSX corrigido automaticamente antes do build.");
-} else {
-  console.log("Nenhuma correção JSX necessária.");
 }
+
+// Corrige o erro de tela branca causado pelo uso de alternarTelaCheia
+// sem a função existir no componente App.
+const marker = 'return <div style={styles.page}>';
+const fullscreenFn = 'const alternarTelaCheia=()=>{try{if(document.fullscreenElement){document.exitFullscreen?.()}else{document.documentElement.requestFullscreen?.()}}catch(e){console.warn("Fullscreen indisponível",e)}};\n  ';
+if (!s.includes('const alternarTelaCheia=')) {
+  if (!s.includes(marker)) throw new Error('Marcador de renderização do App não encontrado.');
+  s = s.replace(marker, fullscreenFn + marker);
+  console.log("Função de tela cheia restaurada.");
+}
+
+await writeFile(path, s, "utf8");

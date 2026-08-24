@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/restaurar-cores-costura.mjs && node scripts/adicionar-salvar-cor-costura.mjs && node scripts/restaurar-busca-global.mjs && node scripts/fix-jsx-syntax-build.mjs && vite build",
+    "build": "node scripts/restaurar-cores-costura.mjs && node scripts/adicionar-salvar-cor-costura.mjs && node scripts/restaurar-busca-global-v2.mjs && node scripts/fix-jsx-syntax-build.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

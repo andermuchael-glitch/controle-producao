@@ -614,3 +614,76 @@ body{margin:0;background:#eef2f7;font-family:Inter,ui-sans-serif,system-ui,-appl
     font-size:13px!important;
   }
 }
+
+
+/* Fundo visual: amanhecer estilizado na produção */
+html,body{
+  min-height:100%;
+  background:#162536;
+}
+body{
+  background-image:
+    linear-gradient(180deg,rgba(245,248,252,.28),rgba(16,28,43,.18)),
+    url("/sunrise-production.svg");
+  background-position:center top;
+  background-size:cover;
+  background-attachment:fixed;
+  background-repeat:no-repeat;
+}
+.neocooler-app{
+  min-height:100vh!important;
+  background-image:
+    linear-gradient(180deg,rgba(244,247,252,.18) 0%,rgba(255,255,255,.08) 34%,rgba(15,26,43,.18) 100%),
+    url("/sunrise-production.svg")!important;
+  background-position:center top!important;
+  background-size:cover!important;
+  background-attachment:fixed!important;
+  background-repeat:no-repeat!important;
+}
+
+/* Mantém os conteúdos legíveis sobre a paisagem */
+.neocooler-app .formCard,
+.neocooler-app .form-card,
+.neocooler-app .pedidoCard,
+.neocooler-app .pedido-card,
+.neocooler-app .dia-group,
+.neocooler-app .painelProducao,
+.neocooler-app .painel-producao{
+  background-color:rgba(255,255,255,.93)!important;
+  backdrop-filter:blur(8px);
+}
+.neocooler-app .kanban-column{
+  background:rgba(236,239,244,.78)!important;
+  backdrop-filter:blur(8px);
+  box-shadow:0 12px 30px rgba(17,28,43,.18)!important;
+}
+.neocooler-app .kanbanColumnHead{
+  background:rgba(248,249,247,.9)!important;
+}
+.neocooler-app .kanban-card{
+  background:rgba(255,255,255,.94)!important;
+  box-shadow:0 4px 14px rgba(20,31,48,.12)!important;
+}
+.neocooler-app .quadroTitle,
+.neocooler-app .quadro-title{
+  color:#fff!important;
+  text-shadow:0 2px 10px rgba(13,23,37,.48);
+}
+.neocooler-app .quadroSubtitle,
+.neocooler-app .quadro-subtitle{
+  color:rgba(255,255,255,.92)!important;
+  text-shadow:0 1px 6px rgba(13,23,37,.5);
+}
+.neocooler-app .quadroHint,
+.neocooler-app .quadro-hint{
+  background:rgba(255,255,255,.84)!important;
+  color:#49586a!important;
+  box-shadow:0 4px 14px rgba(17,28,43,.14);
+}
+@media(max-width:760px){
+  body,
+  .neocooler-app{
+    background-attachment:scroll!important;
+    background-position:center top!important;
+  }
+}

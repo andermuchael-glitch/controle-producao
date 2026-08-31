@@ -12,9 +12,11 @@ if (s.includes(broken)) {
 }
 
 // Compatibilidade com o botão de tela cheia.
-// A versão moderna usa className no container principal, por isso não dependemos
-// mais de um marcador único de return.
-if (!s.includes('const alternarTelaCheia=')) {
+// Nunca duplicar state ou função quando eles já existem com espaçamentos diferentes.
+const hasFullscreenState = /const\s*\[\s*telaCheia\s*,\s*setTelaCheia\s*\]\s*=\s*useState/.test(s);
+const hasFullscreenFn = /const\s+alternarTelaCheia\s*=/.test(s);
+
+if (!hasFullscreenState || !hasFullscreenFn) {
   const markers = [
     'return <div className="neocooler-app" style={styles.page}>',
     'return <div style={styles.page}>'
@@ -22,16 +24,15 @@ if (!s.includes('const alternarTelaCheia=')) {
   const marker = markers.find(m => s.includes(m));
 
   if (!marker) {
-    console.warn("Marcador de renderização não encontrado; nenhuma injeção de tela cheia foi necessária.");
+    console.warn("Marcador de renderização não encontrado; compatibilidade de tela cheia ignorada.");
   } else {
-    const fullscreenState = s.includes('const [telaCheia,setTelaCheia]')
-      ? ''
-      : 'const [telaCheia,setTelaCheia]=useState(false);\n  ';
+    const prefix = [
+      !hasFullscreenState ? 'const [telaCheia,setTelaCheia]=useState(false);' : '',
+      !hasFullscreenFn ? 'const alternarTelaCheia=()=>{try{if(document.fullscreenElement){document.exitFullscreen?.();setTelaCheia(false)}else{document.documentElement.requestFullscreen?.();setTelaCheia(true)}}catch(e){console.warn("Fullscreen indisponível",e)}};' : ''
+    ].filter(Boolean).join('\n  ');
 
-    const fullscreenFn = `const alternarTelaCheia=()=>{try{if(document.fullscreenElement){document.exitFullscreen?.();setTelaCheia(false)}else{document.documentElement.requestFullscreen?.();setTelaCheia(true)}}catch(e){console.warn("Fullscreen indisponível",e)}};\n  `;
-
-    s = s.replace(marker, fullscreenState + fullscreenFn + marker);
-    console.log("Compatibilidade de tela cheia aplicada.");
+    s = s.replace(marker, prefix + (prefix ? '\n  ' : '') + marker);
+    console.log("Compatibilidade de tela cheia verificada.");
   }
 }
 

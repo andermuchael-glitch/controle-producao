@@ -250,3 +250,22 @@ body{margin:0;background:#eef2f7;font-family:Inter,ui-sans-serif,system-ui,-appl
   .neocooler-app .quantity-input{min-width:88px!important;font-size:19px!important}
   .neocooler-app .date-input{font-size:13px!important}
 }
+
+
+/* Quadro geral inspirado em ferramentas Kanban: no celular as colunas
+   permanecem lado a lado e o usuário percorre horizontalmente. */
+.kanban-board{width:100%;min-width:0}
+.kanban-scroller{width:100%;min-width:0;overscroll-behavior-x:contain;scroll-snap-type:x mandatory!important;scrollbar-width:thin}
+.kanban-column{scroll-snap-align:start!important}
+@media(max-width:760px){
+  .neocooler-app .kanban-board{margin-left:-12px;margin-right:-12px;width:calc(100% + 24px)}
+  .neocooler-app .quadroIntro{padding:0 12px}
+  .neocooler-app .kanban-scroller{gap:10px!important;padding:4px 10px 18px!important;align-items:stretch!important}
+  .neocooler-app .kanban-column{flex:0 0 238px!important;min-width:238px!important;max-height:calc(100vh - 190px)!important;min-height:420px!important;border-radius:10px!important}
+  .neocooler-app .kanbanColumnHead{padding:10px!important;font-size:11px!important}
+  .neocooler-app .kanbanCards{padding:7px!important;gap:7px!important}
+  .neocooler-app .kanban-card{padding:9px!important;border-radius:8px!important}
+  .neocooler-app .kanbanProduto{font-size:12px!important;line-height:1.25!important}
+  .neocooler-app .kanbanQtd{font-size:19px!important;font-weight:900!important}
+  .neocooler-app .kanbanUrgencia{font-size:9px!important;padding:3px 6px!important}
+}

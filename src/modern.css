@@ -743,3 +743,181 @@ body{
     border-radius:13px!important;
   }
 }
+
+
+
+/* Gráfico vertical moderno: total pendente por produto */
+.neocooler-app .painel-producao-corte{
+  width:100%;
+  margin:0 0 18px;
+  padding:20px;
+  border-radius:20px;
+  background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(247,249,252,.92));
+  border:1px solid rgba(210,220,232,.92);
+  box-shadow:0 14px 34px rgba(19,32,50,.16);
+  backdrop-filter:blur(12px);
+}
+.neocooler-app .corte-chart-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:16px;
+}
+.neocooler-app .corte-chart-head h3{
+  margin:3px 0 4px;
+  color:#1d3047;
+  font-size:18px;
+  letter-spacing:-.02em;
+}
+.neocooler-app .corte-chart-head p{
+  margin:0;
+  color:#6d7b8c;
+  font-size:12px;
+}
+.neocooler-app .corte-chart-kicker{
+  display:block;
+  color:#d8622c;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+.neocooler-app .corte-chart-total{
+  flex:0 0 auto;
+  min-width:82px;
+  padding:10px 14px;
+  border-radius:15px;
+  background:#1e3048;
+  color:#fff;
+  font-size:24px;
+  line-height:1;
+  font-weight:900;
+  text-align:center;
+  box-shadow:0 8px 20px rgba(30,48,72,.18);
+}
+.neocooler-app .corte-chart-total span{
+  margin-left:3px;
+  font-size:11px;
+  font-weight:700;
+  opacity:.78;
+}
+.neocooler-app .corte-chart-scroll{
+  width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  padding:4px 2px 8px;
+  scrollbar-width:thin;
+}
+.neocooler-app .corte-chart{
+  min-width:max-content;
+  height:300px;
+  display:flex;
+  align-items:flex-end;
+  gap:10px;
+  padding:4px 6px 0;
+}
+.neocooler-app .corte-chart-item{
+  width:88px;
+  min-width:88px;
+  height:100%;
+  padding:0;
+  border:0;
+  background:transparent;
+  cursor:pointer;
+  display:grid;
+  grid-template-rows:30px 1fr 34px 18px;
+  align-items:end;
+  gap:4px;
+  text-align:center;
+  color:#26384a;
+  transition:transform .18s ease,filter .18s ease;
+}
+.neocooler-app .corte-chart-item:hover{transform:translateY(-4px)}
+.neocooler-app .corte-chart-item.ativo{filter:drop-shadow(0 8px 10px rgba(216,98,44,.24))}
+.neocooler-app .corte-chart-value{
+  align-self:end;
+  color:#d8622c;
+  font-size:18px;
+  line-height:1;
+  font-weight:900;
+}
+.neocooler-app .corte-chart-value small{
+  margin-left:2px;
+  font-size:9px;
+  font-weight:800;
+  color:#7c8795;
+}
+.neocooler-app .corte-chart-plot{
+  position:relative;
+  height:100%;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:14px 14px 8px 8px;
+  background:
+    repeating-linear-gradient(to top,rgba(41,61,82,.08) 0 1px,transparent 1px 25%);
+}
+.neocooler-app .corte-chart-bar{
+  width:58%;
+  min-height:8%;
+  border-radius:11px 11px 5px 5px;
+  background:linear-gradient(180deg,#f59a45,#d8622c);
+  box-shadow:0 8px 16px rgba(216,98,44,.28);
+  transition:height .35s ease,filter .18s ease,width .18s ease;
+}
+.neocooler-app .corte-chart-item:hover .corte-chart-bar,
+.neocooler-app .corte-chart-item.ativo .corte-chart-bar{
+  width:72%;
+  filter:saturate(1.18) brightness(1.03);
+}
+.neocooler-app .corte-chart-item.ativo .corte-chart-bar{
+  background:linear-gradient(180deg,#355f9d,#1e3048);
+}
+.neocooler-app .corte-chart-label{
+  align-self:start;
+  display:-webkit-box;
+  overflow:hidden;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  color:#24364a;
+  font-size:10px;
+  line-height:1.18;
+  font-weight:850;
+  text-transform:uppercase;
+}
+.neocooler-app .corte-chart-orders{
+  align-self:start;
+  color:#8793a1;
+  font-size:9px;
+  font-weight:700;
+}
+.neocooler-app .corte-chart-clear{
+  margin-top:6px;
+  border:1px solid #d7dee7;
+  background:#fff;
+  color:#526171;
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:11px;
+  font-weight:800;
+  cursor:pointer;
+}
+.neocooler-app .corte-chart-clear:hover{border-color:#d8622c;color:#c75524}
+@media(max-width:760px){
+  .neocooler-app .painel-producao-corte{
+    margin-bottom:14px;
+    padding:15px 12px;
+    border-radius:16px;
+  }
+  .neocooler-app .corte-chart-head{gap:10px;margin-bottom:10px}
+  .neocooler-app .corte-chart-head h3{font-size:15px}
+  .neocooler-app .corte-chart-head p{font-size:10px;line-height:1.25}
+  .neocooler-app .corte-chart-total{min-width:66px;padding:8px 9px;font-size:19px}
+  .neocooler-app .corte-chart{height:240px;gap:7px}
+  .neocooler-app .corte-chart-item{width:66px;min-width:66px;grid-template-rows:25px 1fr 31px 16px}
+  .neocooler-app .corte-chart-value{font-size:15px}
+  .neocooler-app .corte-chart-label{font-size:8px}
+  .neocooler-app .corte-chart-orders{font-size:8px}
+  .neocooler-app .corte-chart-bar{width:62%}
+}

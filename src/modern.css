@@ -921,3 +921,62 @@ body{
   .neocooler-app .corte-chart-orders{font-size:8px}
   .neocooler-app .corte-chart-bar{width:62%}
 }
+
+
+/* Painel de produção: gráfico ocupa toda a largura e pedidos ficam abaixo */
+.neocooler-app .production-grid{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  align-items:flex-start !important;
+  gap:18px !important;
+}
+.neocooler-app .production-grid .painel-producao-corte{
+  flex:0 0 100% !important;
+  width:100% !important;
+  max-width:none !important;
+  order:-1 !important;
+  margin-bottom:0 !important;
+}
+.neocooler-app .production-grid > .pedido-card{
+  flex:1 1 280px !important;
+  min-width:280px !important;
+  max-width:360px !important;
+}
+.neocooler-app .painel-producao-corte .corte-chart-scroll{
+  padding-bottom:12px;
+}
+.neocooler-app .painel-producao-corte .corte-chart{
+  width:100%;
+  min-width:1180px;
+  justify-content:space-between;
+  gap:14px;
+  padding:8px 16px 0;
+}
+.neocooler-app .painel-producao-corte .corte-chart-item{
+  flex:1 1 0;
+  width:auto;
+  min-width:82px;
+  max-width:125px;
+}
+@media(max-width:760px){
+  .neocooler-app .production-grid{
+    display:block !important;
+  }
+  .neocooler-app .production-grid .painel-producao-corte{
+    width:100% !important;
+    margin-bottom:14px !important;
+  }
+  .neocooler-app .production-grid > .pedido-card{
+    width:100% !important;
+    max-width:none !important;
+    min-width:0 !important;
+    margin-bottom:12px !important;
+  }
+  .neocooler-app .painel-producao-corte .corte-chart{
+    min-width:760px;
+    width:max-content;
+    justify-content:flex-start;
+    padding-left:6px;
+    padding-right:6px;
+  }
+}

@@ -687,3 +687,59 @@ body{
     background-position:center top!important;
   }
 }
+
+
+/* Contraste do conteúdo sobre o nascer do sol: nenhum texto solto fica
+   diretamente sobre a imagem sem uma superfície de leitura. */
+.neocooler-app .quadroIntro,
+.neocooler-app .quadro-intro{
+  background:rgba(255,255,255,.92)!important;
+  border:1px solid rgba(255,255,255,.68)!important;
+  border-radius:16px!important;
+  padding:13px 16px!important;
+  box-shadow:0 10px 28px rgba(14,24,39,.24)!important;
+  backdrop-filter:blur(10px) saturate(1.05)!important;
+}
+.neocooler-app .quadroIntro h1,
+.neocooler-app .quadroIntro h2,
+.neocooler-app .quadroIntro h3,
+.neocooler-app .quadroIntro p,
+.neocooler-app .quadro-intro h1,
+.neocooler-app .quadro-intro h2,
+.neocooler-app .quadro-intro h3,
+.neocooler-app .quadro-intro p,
+.neocooler-app .quadroIntro .quadroTitle,
+.neocooler-app .quadro-intro .quadro-title,
+.neocooler-app .quadroIntro .quadroSubtitle,
+.neocooler-app .quadro-intro .quadro-subtitle{
+  color:#1e3048!important;
+  text-shadow:none!important;
+}
+.neocooler-app .quadroIntro .quadroHint,
+.neocooler-app .quadro-intro .quadro-hint{
+  background:rgba(30,48,72,.08)!important;
+  color:#26384a!important;
+  border:1px solid rgba(30,48,72,.12)!important;
+  box-shadow:none!important;
+}
+
+/* Seções e textos auxiliares que aparecem fora dos cards recebem contraste
+   consistente sem esconder a arte do amanhecer. */
+.neocooler-app .quadroWrap,
+.neocooler-app .quadro-wrap{
+  position:relative;
+}
+.neocooler-app .quadroWrap > .quadroIntro,
+.neocooler-app .quadro-wrap > .quadro-intro{
+  margin-bottom:14px!important;
+}
+
+/* No celular o painel permanece compacto e mantém leitura mesmo sobre as
+   áreas mais claras da ilustração. */
+@media(max-width:760px){
+  .neocooler-app .quadroIntro,
+  .neocooler-app .quadro-intro{
+    padding:11px 12px!important;
+    border-radius:13px!important;
+  }
+}

@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#14233b"/>
+      <stop offset=".28" stop-color="#2b3a58"/>
+      <stop offset=".52" stop-color="#d76b3f"/>
+      <stop offset=".68" stop-color="#ffae55"/>
+      <stop offset="1" stop-color="#6d4454"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".58" r=".32">
+      <stop offset="0" stop-color="#fff7b0" stop-opacity=".98"/>
+      <stop offset=".28" stop-color="#ffd66d" stop-opacity=".78"/>
+      <stop offset="1" stop-color="#ff9d49" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mist" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ffe0a8" stop-opacity=".34"/>
+      <stop offset=".5" stop-color="#fff0cc" stop-opacity=".12"/>
+      <stop offset="1" stop-color="#ffd19a" stop-opacity=".28"/>
+    </linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="22"/></filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+  <ellipse cx="800" cy="510" rx="560" ry="320" fill="url(#glow)"/>
+
+  <g fill="#2a3144" opacity=".34">
+    <path d="M0 340 C90 300 150 370 260 320 C370 270 430 330 540 290 C650 250 710 330 830 300 C960 260 1040 330 1160 290 C1300 240 1430 320 1600 250 V520 H0Z"/>
+  </g>
+  <g fill="#2a3040" opacity=".48">
+    <path d="M0 500 C130 440 250 520 370 470 C500 420 590 500 710 450 C850 390 940 490 1060 450 C1190 405 1320 470 1600 400 V690 H0Z"/>
+  </g>
+
+  <circle cx="800" cy="510" r="92" fill="#fff4b5"/>
+  <circle cx="800" cy="510" r="118" fill="#ffe39a" opacity=".16" filter="url(#blur)"/>
+
+  <g fill="none" stroke="#3b2b34" stroke-width="4" stroke-linecap="round" opacity=".75">
+    <path d="M970 392 q13 -12 26 0 q13 -12 26 0"/>
+    <path d="M1040 430 q11 -10 22 0 q11 -10 22 0"/>
+    <path d="M1120 370 q12 -11 24 0 q12 -11 24 0"/>
+  </g>
+
+  <g fill="#5b3942" opacity=".66">
+    <path d="M0 610 C150 560 250 640 390 590 C510 545 640 640 780 580 C930 520 1060 620 1200 570 C1360 515 1480 580 1600 545 V900 H0Z"/>
+  </g>
+  <g fill="#293244" opacity=".86">
+    <path d="M0 710 C120 650 240 735 370 680 C500 625 610 760 760 690 C920 615 1030 750 1180 675 C1320 605 1460 690 1600 640 V900 H0Z"/>
+  </g>
+  <path d="M0 760 C250 690 450 790 680 720 C910 650 1130 770 1600 690 V900 H0Z" fill="#172536" opacity=".9"/>
+  <rect y="610" width="1600" height="180" fill="url(#mist)" opacity=".45"/>
+</svg>

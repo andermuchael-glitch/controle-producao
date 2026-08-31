@@ -349,3 +349,58 @@ body{margin:0;background:#eef2f7;font-family:Inter,ui-sans-serif,system-ui,-appl
   }
   .neocooler-app .kanban-wide .kanban-card{padding:8px!important}
 }
+
+
+/* Quadro: a altura deve acompanhar o conteúdo. Não deixar colunas vazias
+   ocupando toda a altura da tela quando não existem pedidos abaixo. */
+.neocooler-app .kanban-board{
+  min-height:0!important;
+  display:block!important;
+}
+.neocooler-app .kanban-scroller{
+  flex:none!important;
+  min-height:0!important;
+  align-items:flex-start!important;
+}
+.neocooler-app .kanban-column{
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  align-self:flex-start!important;
+}
+.neocooler-app .kanbanCards{
+  flex:none!important;
+  min-height:0!important;
+}
+.neocooler-app .kanban-empty-column{
+  min-height:0!important;
+}
+.neocooler-app .kanban-empty-column .kanbanCards{
+  padding-bottom:10px!important;
+}
+.neocooler-app .kanban-empty-column .kanbanVazio{
+  padding:14px 10px!important;
+  min-height:0!important;
+}
+
+/* O lançamento fica antes da visão geral, logo após a busca. */
+.neocooler-app .launch-bar{
+  margin:0 0 16px!important;
+}
+.neocooler-app .form-card{
+  margin-bottom:18px!important;
+}
+
+@media(max-width:760px){
+  .neocooler-app .kanban-board{
+    min-height:0!important;
+  }
+  .neocooler-app .kanban-scroller{
+    align-items:flex-start!important;
+  }
+  .neocooler-app .kanban-column{
+    height:auto!important;
+    min-height:0!important;
+    max-height:none!important;
+  }
+}

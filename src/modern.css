@@ -269,3 +269,36 @@ body{margin:0;background:#eef2f7;font-family:Inter,ui-sans-serif,system-ui,-appl
   .neocooler-app .kanbanQtd{font-size:19px!important;font-weight:900!important}
   .neocooler-app .kanbanUrgencia{font-size:9px!important;padding:3px 6px!important}
 }
+
+/* Lançamento compacto: o formulário só ocupa espaço quando necessário */
+.neocooler-app .launch-bar{display:flex;justify-content:flex-end;margin:0 0 12px}
+.neocooler-app .launch-pedido-btn{
+  display:inline-flex!important;align-items:center!important;gap:10px!important;
+  border:1px solid #f06a2f!important;background:#fff!important;color:#1e3048!important;
+  border-radius:16px!important;padding:9px 16px!important;cursor:pointer!important;
+  box-shadow:0 6px 18px #17203310!important;text-align:left!important
+}
+.neocooler-app .launch-pedido-btn:hover{box-shadow:0 12px 24px #f06a2f22!important}
+.neocooler-app .launch-pedido-btn b{display:block;font-size:14px}
+.neocooler-app .launch-pedido-btn small{display:block;font-size:10.5px;color:#718096;margin-top:2px}
+.neocooler-app .launchIcon{
+  width:36px;height:36px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#f06a2f,#d8622c);color:#fff;font-size:25px;line-height:1;font-weight:500
+}
+.neocooler-app .formTitleRow{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.neocooler-app .formCloseBtn{width:32px;height:32px;border:1px solid #dfe7f1;background:#fff;border-radius:10px;color:#64748b;font-size:22px;cursor:pointer}
+
+/* O quadro passa a aproveitar a área vertical disponível, deixando as fases mais preenchidas */
+.neocooler-app .kanban-board{min-height:calc(100vh - 210px);display:flex;flex-direction:column}
+.neocooler-app .kanban-scroller{flex:1;min-height:0;align-items:stretch!important;padding-bottom:10px!important}
+.neocooler-app .kanban-column{height:auto!important;min-height:560px!important;max-height:none!important;flex:0 0 310px!important}
+.neocooler-app .kanbanCards{flex:1!important;min-height:0!important}
+.neocooler-app .kanban-column:only-child{flex-basis:min(100%,420px)!important}
+
+@media(max-width:760px){
+  .neocooler-app .launch-bar{justify-content:stretch;margin:0 0 10px}
+  .neocooler-app .launch-pedido-btn{width:100%!important;justify-content:center!important;padding:10px 14px!important}
+  .neocooler-app .kanban-board{min-height:calc(100vh - 170px)}
+  .neocooler-app .kanban-scroller{flex:none!important;min-height:0!important}
+  .neocooler-app .kanban-column{min-height:calc(100vh - 250px)!important;height:calc(100vh - 250px)!important;max-height:none!important;flex-basis:258px!important}
+}

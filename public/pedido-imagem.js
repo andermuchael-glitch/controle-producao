@@ -1,24 +1,43 @@
-/* Experimento: imagem vinculada ao pedido.
- * A primeira versão usa localStorage para testar a UX sem alterar o Firebase.
- * Fotos são redimensionadas/comprimidas antes de serem salvas.
+/* Teste: imagem vinculada ao pedido.
+ * Mantido separado do React/Firebase para permitir rollback simples.
  */
 (() => {
   const PREFIX = "controleProducao:pedidoImagem:";
   const MARK = "data-pedido-imagem-ui";
+  const THUMB = "data-pedido-imagem-thumb";
 
   const norm = (v) => String(v || "").trim();
   const keyFor = (pedido) => PREFIX + norm(pedido);
 
-  function getPedidoInput() {
-    const inputs = [...document.querySelectorAll("input")];
-    return inputs.find((el) => {
-      const hint = `${el.name || ""} ${el.placeholder || ""} ${el.getAttribute("aria-label") || ""}`.toLowerCase();
-      return /pedido|n[úu]mero.*pedido|n[ºo].*pedido/.test(hint);
-    }) || inputs.find((el) => /^\d{2,}$/.test(norm(el.value)));
+  function getForm() {
+    const all = [...document.querySelectorAll("div,section,form,article")];
+    const titled = all.filter((el) => /lan[cç]ar novo pedido/i.test(norm(el.innerText)));
+    for (const el of titled.sort((a, b) => a.innerText.length - b.innerText.length)) {
+      const inputs = el.querySelectorAll("input,select,textarea");
+      if (inputs.length >= 3) return el;
+    }
+    return null;
   }
 
-  function getCurrentPedido() {
-    return norm(getPedidoInput()?.value);
+  function getPedidoInput(form) {
+    if (!form) return null;
+    const inputs = [...form.querySelectorAll("input")];
+    return inputs.find((el) => {
+      const hint = `${el.name || ""} ${el.placeholder || ""} ${el.getAttribute("aria-label") || ""}`.toLowerCase();
+      return /pedido|n[úu]mero.*pedido|n[ºo].*pedido/.test(hint) || /ex\.?\s*:\s*1042/.test(hint);
+    }) || inputs.find((el) => /^\d{2,}$/.test(norm(el.value))) || inputs[0];
+  }
+
+  function getCurrentPedido(form) {
+    return norm(getPedidoInput(form)?.value);
+  }
+
+  function loadImage(pedido) {
+    if (!pedido) return null;
+    try {
+      const raw = localStorage.getItem(keyFor(pedido));
+      return raw ? JSON.parse(raw) : null;
+    } catch { return null; }
   }
 
   function resizeImage(file) {
@@ -44,23 +63,34 @@
     });
   }
 
-  function findModal() {
-    const candidates = [...document.querySelectorAll('[role="dialog"], .modal, .modal-overlay, [class*="modal"], [class*="dialog"]')];
-    return candidates.find((el) => /pedido|produto|quantidade/i.test(el.innerText || "")) || null;
+  function updatePreview(box, pedido) {
+    const status = box.querySelector("[data-pedido-image-status]");
+    const preview = box.querySelector("[data-pedido-image-preview]");
+    const data = loadImage(pedido);
+    if (data?.data) {
+      preview.src = data.data;
+      preview.style.display = "block";
+      status.textContent = `Imagem vinculada ao pedido ${pedido}. Você pode trocar pela câmera ou galeria.`;
+    } else {
+      preview.removeAttribute("src");
+      preview.style.display = "none";
+      status.textContent = "Você pode tirar uma foto ou escolher uma imagem.";
+    }
   }
 
-  function injectIntoModal() {
-    const modal = findModal();
-    if (!modal || modal.querySelector(`[${MARK}]`)) return;
+  function injectIntoForm() {
+    const form = getForm();
+    if (!form || form.querySelector(`[${MARK}]`)) return;
 
     const box = document.createElement("div");
     box.setAttribute(MARK, "1");
-    box.style.cssText = "margin-top:12px;padding:12px;border:1px dashed #b8a98c;border-radius:12px;background:#faf7ef";
+    box.style.cssText = "display:block!important;box-sizing:border-box;width:100%;margin:12px 0;padding:14px;border:1px dashed #b8a98c;border-radius:12px;background:#faf7ef;color:inherit;position:relative;z-index:5";
     box.innerHTML = `
-      <div style="font-weight:700;margin-bottom:7px">📷 Imagem do pedido <span style="font-weight:400;opacity:.7">(opcional)</span></div>
-      <input type="file" accept="image/*" capture="environment" data-pedido-image-input style="display:block;width:100%;font-size:14px" />
-      <div data-pedido-image-status style="margin-top:6px;font-size:12px;opacity:.7">Você pode tirar uma foto ou escolher uma imagem.</div>
-      <img data-pedido-image-preview alt="Prévia do pedido" style="display:none;max-width:180px;max-height:140px;margin-top:8px;border-radius:10px;object-fit:cover" />
+      <div style="font-weight:700;margin-bottom:7px;font-size:14px">📷 Imagem do pedido <span style="font-weight:400;opacity:.7">(opcional)</span></div>
+      <div style="font-size:12px;opacity:.75;margin-bottom:8px">Anexe uma foto do pedido, modelo ou referência.</div>
+      <input type="file" accept="image/*" capture="environment" data-pedido-image-input style="display:block!important;width:100%;box-sizing:border-box;font-size:14px;cursor:pointer" />
+      <div data-pedido-image-status style="margin-top:7px;font-size:12px;opacity:.75">Você pode tirar uma foto ou escolher uma imagem.</div>
+      <img data-pedido-image-preview alt="Prévia da imagem do pedido" style="display:none;max-width:180px;max-height:140px;margin-top:9px;border-radius:10px;object-fit:cover;border:1px solid #d8cbb5;cursor:pointer" />
     `;
 
     const input = box.querySelector("[data-pedido-image-input]");
@@ -69,33 +99,45 @@
 
     input.addEventListener("change", async () => {
       const file = input.files?.[0];
-      const pedido = getCurrentPedido();
+      const pedido = getCurrentPedido(form);
       if (!file) return;
       if (!pedido) {
-        status.textContent = "Informe o número do pedido antes de escolher a imagem.";
+        status.textContent = "⚠️ Informe o número do pedido antes de escolher a imagem.";
+        input.value = "";
+        return;
+      }
+      if (!file.type.startsWith("image/")) {
+        status.textContent = "⚠️ Escolha um arquivo de imagem.";
         input.value = "";
         return;
       }
       try {
         status.textContent = "Processando imagem…";
         const data = await resizeImage(file);
-        try {
-          localStorage.setItem(keyFor(pedido), JSON.stringify({ data, nome: file.name, atualizadoEm: Date.now() }));
-        } catch (e) {
-          status.textContent = "Não foi possível guardar a imagem neste navegador.";
-          return;
-        }
+        localStorage.setItem(keyFor(pedido), JSON.stringify({ data, nome: file.name, atualizadoEm: Date.now() }));
         preview.src = data;
         preview.style.display = "block";
-        status.textContent = `Imagem vinculada ao pedido ${pedido}.`;
+        status.textContent = `✅ Imagem vinculada ao pedido ${pedido}.`;
+        decorateCards();
       } catch (e) {
-        status.textContent = "Não foi possível processar essa imagem.";
+        status.textContent = "❌ Não foi possível guardar essa imagem neste navegador.";
       }
     });
 
-    const anchor = [...modal.querySelectorAll("input,select,textarea")].at(-1)?.parentElement;
-    if (anchor?.parentElement) anchor.parentElement.appendChild(box);
-    else modal.appendChild(box);
+    preview.addEventListener("click", () => {
+      if (!preview.src) return;
+      const w = window.open();
+      if (w) w.document.write(`<img src="${preview.src}" style="max-width:95vw;max-height:95vh;display:block;margin:auto"/>`);
+    });
+
+    const submit = [...form.querySelectorAll("button")].find((b) => /adicionar.*pr[eé]-?corte|adicionar ao pr[eé]/i.test(norm(b.innerText))) || [...form.querySelectorAll("button")].at(-1);
+    if (submit?.parentElement) {
+      submit.parentElement.parentElement?.insertBefore(box, submit.parentElement);
+    } else {
+      form.appendChild(box);
+    }
+
+    updatePreview(box, getCurrentPedido(form));
   }
 
   function decorateCards() {
@@ -112,11 +154,13 @@
       let data;
       try { data = JSON.parse(raw); } catch { return; }
       if (!data?.data) return;
-      const matches = elements.filter((el) => norm(el.textContent) === pedido || new RegExp(`(^|\\D)${pedido}(\\D|$)`).test(el.textContent || ""));
-      const card = matches.sort((a,b) => (a.innerText.length || 999999) - (b.innerText.length || 999999))[0];
-      if (!card || card.querySelector(`[${MARK}-thumb]`)) return;
+      const escaped = pedido.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = new RegExp(`(^|\\D)${escaped}(\\D|$)`);
+      const matches = elements.filter((el) => norm(el.textContent) === pedido || re.test(el.textContent || ""));
+      const card = matches.sort((a, b) => (a.innerText.length || 999999) - (b.innerText.length || 999999))[0];
+      if (!card || card.querySelector(`[${THUMB}]`)) return;
       const img = document.createElement("img");
-      img.setAttribute(`${MARK}-thumb`, "1");
+      img.setAttribute(THUMB, "1");
       img.src = data.data;
       img.alt = `Imagem do pedido ${pedido}`;
       img.title = `Imagem do pedido ${pedido}`;
@@ -130,16 +174,15 @@
     });
   }
 
-  const observer = new MutationObserver(() => {
-    injectIntoModal();
-    decorateCards();
-  });
-
   function start() {
-    injectIntoModal();
+    injectIntoForm();
     decorateCards();
+    const observer = new MutationObserver(() => {
+      injectIntoForm();
+      decorateCards();
+    });
     observer.observe(document.body, { childList: true, subtree: true });
-    setInterval(() => { injectIntoModal(); decorateCards(); }, 1200);
+    setInterval(() => { injectIntoForm(); decorateCards(); }, 1000);
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start, { once: true });

@@ -1,72 +1,31 @@
-/* Grade compacta dos cartões das etapas de produção.
-   O Quadro Geral usa .kanban-board e permanece inalterado. */
-.neocooler-app .production-grid{
-  display:grid!important;
-  grid-template-columns:repeat(5,minmax(0,1fr))!important;
-  gap:14px!important;
-  align-items:start!important;
-  width:100%!important;
-  overflow:visible!important;
-}
-
-.neocooler-app .production-grid>.pedido-card,
-.neocooler-app .production-grid>.dia-group{
-  min-width:0!important;
-  width:100%!important;
-  height:auto!important;
-  min-height:0!important;
-  padding:14px!important;
-  border-radius:18px!important;
-}
-
-.neocooler-app .production-grid .pedidoTop{
-  min-width:0!important;
-  gap:6px!important;
-}
-
-.neocooler-app .production-grid .pedidoTop>*{
-  min-width:0!important;
-}
-
-.neocooler-app .production-grid .itemLinha{
-  min-width:0!important;
-  width:100%!important;
-}
-
-.neocooler-app .production-grid .itemTexto{
-  min-width:0!important;
-  overflow-wrap:anywhere!important;
-}
-
-/* A ordem dos cartões segue a ordem já calculada pelo sistema:
-   primeiro os pedidos com entrega mais próxima. */
-
-@media(max-width:1250px){
-  .neocooler-app .production-grid{
-    grid-template-columns:repeat(4,minmax(0,1fr))!important;
-  }
-}
-
-@media(max-width:1050px){
-  .neocooler-app .production-grid{
-    grid-template-columns:repeat(3,minmax(0,1fr))!important;
-  }
-}
-
-@media(max-width:780px){
-  .neocooler-app .production-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr))!important;
-    gap:10px!important;
-  }
-  .neocooler-app .production-grid>.pedido-card,
-  .neocooler-app .production-grid>.dia-group{
-    padding:11px!important;
-    border-radius:15px!important;
-  }
-}
-
-@media(max-width:500px){
-  .neocooler-app .production-grid{
-    grid-template-columns:1fr!important;
-  }
-}
+/* Grade dos cartões das etapas de produção. O Quadro Geral permanece inalterado. */
+.neocooler-app main.app-main:not(.quadro-main){max-width:1500px!important;width:100%!important}
+.neocooler-app .production-grid{display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:14px!important;align-items:start!important;width:100%!important;overflow:visible!important}
+.neocooler-app .production-grid>p,.neocooler-app .production-grid>.painel-producao-corte{grid-column:1/-1!important}
+.neocooler-app .production-grid>.pedido-card,.neocooler-app .production-grid>.dia-group{min-width:0!important;width:100%!important;height:auto!important;min-height:0!important;padding:12px!important;border-radius:16px!important;overflow:visible!important}
+.neocooler-app .production-grid .pedidoTop{min-width:0!important;gap:6px!important;align-items:flex-start!important}
+.neocooler-app .production-grid .pedidoTop>*{min-width:0!important}
+.neocooler-app .production-grid .pedidoNumWrap{min-width:0!important;flex:1 1 auto!important}
+.neocooler-app .production-grid .pedidoTop>div:last-child{min-width:0!important}
+.neocooler-app .production-grid .pedidoTop>div:last-child button{min-width:0!important;flex:1 1 auto!important;white-space:normal!important;padding:6px 7px!important;font-size:10px!important}
+.neocooler-app .production-grid .itemTexto,.neocooler-app .production-grid .pedidoNum,.neocooler-app .production-grid .badgeUrgencia,.neocooler-app .production-grid .equipePill,.neocooler-app .production-grid .sublimadorPill{min-width:0!important;max-width:100%!important;overflow-wrap:anywhere!important;white-space:normal!important}
+.neocooler-app .production-grid .corteLinha{padding:8px!important}
+.neocooler-app .production-grid .corteLinhaTopo{align-items:flex-start!important}
+.neocooler-app .production-grid .corteFormGrid.corte-form-grid{grid-template-columns:minmax(58px,.55fr) minmax(0,1fr)!important;gap:6px!important}
+.neocooler-app .production-grid .corteFormGrid.corte-form-grid .enviarBtn{grid-column:1/-1!important;width:100%!important;white-space:normal!important;padding:8px 6px!important;font-size:11px!important}
+.neocooler-app .production-grid .alocGrid.aloc-grid{grid-template-columns:minmax(0,1fr) minmax(58px,.55fr)!important;gap:6px!important}
+.neocooler-app .production-grid .alocGrid.aloc-grid .corSelectWrap,.neocooler-app .production-grid .alocGrid.aloc-grid>select,.neocooler-app .production-grid .alocGrid.aloc-grid>.date-input{min-width:0!important;width:100%!important}
+.neocooler-app .production-grid .alocGrid.aloc-grid>.date-input{grid-column:1/-1!important}
+.neocooler-app .production-grid .alocGrid.aloc-grid .enviarBtn{grid-column:1/-1!important;width:100%!important;white-space:normal!important;padding:8px 6px!important;font-size:11px!important}
+.neocooler-app .production-grid>.dia-group .itemLinha{min-width:0!important;width:100%!important;grid-template-columns:auto minmax(0,1fr) auto!important;gap:6px!important;align-items:center!important;overflow:visible!important}
+.neocooler-app .production-grid>.dia-group .itemLinha .enviarBtn{grid-column:1/-1!important;width:100%!important;white-space:normal!important}
+.neocooler-app .production-grid>.pedido-card .corteLinha>div[style*="grid-template-columns"]{min-width:0!important;width:100%!important}
+.neocooler-app .production-grid>.pedido-card .equipeSelect,.neocooler-app .production-grid>.pedido-card select,.neocooler-app .production-grid>.pedido-card input{min-width:0!important;max-width:100%!important}
+.neocooler-app .production-grid .costura-item-linha{grid-template-columns:auto auto minmax(0,1fr)!important}
+.neocooler-app .production-grid .costura-item-linha .costura-cor-select,.neocooler-app .production-grid .costura-item-linha .costura-equipe-select{grid-column:1/-1!important;width:100%!important;min-width:0!important}
+.neocooler-app .production-grid .costura-item-linha .removerBtn{grid-column:3!important;grid-row:1!important}
+/* A sequência dos cartões é definida pelo React pela data de entrega. */
+@media(max-width:1350px){.neocooler-app main.app-main:not(.quadro-main){max-width:1300px!important}.neocooler-app .production-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:1050px){.neocooler-app main.app-main:not(.quadro-main){max-width:100%!important}.neocooler-app .production-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:780px){.neocooler-app .production-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.neocooler-app .production-grid>.pedido-card,.neocooler-app .production-grid>.dia-group{padding:10px!important;border-radius:14px!important}.neocooler-app .production-grid .pedidoTop>div:last-child{width:100%!important;flex-basis:100%!important}}
+@media(max-width:500px){.neocooler-app .production-grid{grid-template-columns:1fr!important}}

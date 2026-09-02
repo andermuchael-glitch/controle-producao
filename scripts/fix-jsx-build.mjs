@@ -54,4 +54,32 @@ for (const {from,to} of patches) {
   }
 }
 
+// Os cartões são estreitos por natureza quando há 5 por linha. Os campos de
+// quantidade/data não podem disputar espaço com o botão na mesma linha.
+// Mantemos dois campos lado a lado e o botão ocupando toda a largura abaixo.
+const corteGridFrom = 'corteFormGrid:{display:"grid",gridTemplateColumns:"1fr 1fr auto",gap:8,alignItems:"center",marginTop:8}';
+const corteGridTo = 'corteFormGrid:{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:9,alignItems:"center",marginTop:9}';
+if (s.includes(corteGridFrom)) {
+  s = s.replace(corteGridFrom, corteGridTo);
+  console.log("Campos de quantidade e data ampliados no Pré-Corte.");
+}
+
+// Garante no próprio JSX que o botão de corte fique abaixo dos campos, mesmo
+// se uma folha de estilo externa estiver atrasada no carregamento.
+const marcarCortadoFrom = '<button style={styles.enviarBtn} onClick={()=>marcarCortado(p.numero,linha.produto,linha.restante)}>Marcar como cortado</button>';
+const marcarCortadoTo = '<button style={{...styles.enviarBtn,gridColumn:"1/-1",width:"100%"}} onClick={()=>marcarCortado(p.numero,linha.produto,linha.restante)}>Marcar como cortado</button>';
+if (s.includes(marcarCortadoFrom)) {
+  s = s.replace(marcarCortadoFrom, marcarCortadoTo);
+  console.log("Botão Marcar como cortado ajustado para os novos campos.");
+}
+
+// Na Aguardando Sublimação, organiza Cor + Quantidade / Sublimador + Data,
+// deixando Enviar p/ sublimação em largura total.
+const alocGridFrom = 'alocGrid:{display:"grid",gridTemplateColumns:"1.2fr .6fr 1fr 1fr auto",gap:8,alignItems:"center",marginTop:8}';
+const alocGridTo = 'alocGrid:{display:"grid",gridTemplateColumns:"minmax(0,1.25fr) minmax(78px,.75fr)",gap:9,alignItems:"center",marginTop:9}';
+if (s.includes(alocGridFrom)) {
+  s = s.replace(alocGridFrom, alocGridTo);
+  console.log("Campos da Aguardando Sublimação reorganizados.");
+}
+
 await writeFile(path, s, "utf8");

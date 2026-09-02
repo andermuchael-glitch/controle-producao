@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fix-jsx-build.mjs && vite build",
+    "build": "node scripts/fix-jsx-build.mjs && node scripts/restore-flow-and-edit.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {

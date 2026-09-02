@@ -1,0 +1,72 @@
+/* Grade compacta dos cartões das etapas de produção.
+   O Quadro Geral usa .kanban-board e permanece inalterado. */
+.neocooler-app .production-grid{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:14px!important;
+  align-items:start!important;
+  width:100%!important;
+  overflow:visible!important;
+}
+
+.neocooler-app .production-grid>.pedido-card,
+.neocooler-app .production-grid>.dia-group{
+  min-width:0!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  padding:14px!important;
+  border-radius:18px!important;
+}
+
+.neocooler-app .production-grid .pedidoTop{
+  min-width:0!important;
+  gap:6px!important;
+}
+
+.neocooler-app .production-grid .pedidoTop>*{
+  min-width:0!important;
+}
+
+.neocooler-app .production-grid .itemLinha{
+  min-width:0!important;
+  width:100%!important;
+}
+
+.neocooler-app .production-grid .itemTexto{
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+}
+
+/* A ordem dos cartões segue a ordem já calculada pelo sistema:
+   primeiro os pedidos com entrega mais próxima. */
+
+@media(max-width:1250px){
+  .neocooler-app .production-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  }
+}
+
+@media(max-width:1050px){
+  .neocooler-app .production-grid{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+
+@media(max-width:780px){
+  .neocooler-app .production-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  .neocooler-app .production-grid>.pedido-card,
+  .neocooler-app .production-grid>.dia-group{
+    padding:11px!important;
+    border-radius:15px!important;
+  }
+}
+
+@media(max-width:500px){
+  .neocooler-app .production-grid{
+    grid-template-columns:1fr!important;
+  }
+}

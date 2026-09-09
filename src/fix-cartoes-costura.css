@@ -1,0 +1,79 @@
+/* Correção aplicada no bundle principal: evita sobreposição dos controles da Aguardando Costura. */
+.neocooler-app .production-grid,
+.neocooler-app .production-grid > .pedido-card,
+.neocooler-app .production-grid > .dia-group,
+.neocooler-app .production-grid .corteLinha,
+.neocooler-app .production-grid .corteLinha > div{min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+
+/* Linha que contém equipe + Salvar cor + Enviar p/ costura. */
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3){
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:8px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  margin-top:8px!important;
+  align-items:stretch!important;
+  overflow:hidden!important;
+}
+
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) .equipeSelect{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:40px!important;
+  min-height:40px!important;
+  box-sizing:border-box!important;
+}
+
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) button{
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:40px!important;
+  min-height:40px!important;
+  margin:0!important;
+  padding:6px 5px!important;
+  box-sizing:border-box!important;
+  display:block!important;
+  position:static!important;
+  float:none!important;
+  transform:none!important;
+  white-space:normal!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  overflow-wrap:anywhere!important;
+  line-height:1.15!important;
+}
+
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) button:nth-of-type(1){grid-column:1!important;grid-row:2!important}
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) button:nth-of-type(2){grid-column:2!important;grid-row:2!important}
+
+/* Impede que os controles de cor e quantidade criem largura extra. */
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(2){
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(72px,.45fr)!important;
+  gap:8px!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(2) .corSelectWrap,
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(2) select,
+.neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(2) input{min-width:0!important;max-width:100%!important;width:100%!important}
+
+@media(max-width:500px){
+  .neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3){
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+  }
+  .neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) .equipeSelect,
+  .neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) button:nth-of-type(1),
+  .neocooler-app .production-grid > .pedido-card .corteLinha > div:nth-child(3) button:nth-of-type(2){
+    grid-column:1!important;
+    grid-row:auto!important;
+    width:100%!important;
+  }
+}

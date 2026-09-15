@@ -5,5 +5,9 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-// Não intercepta requisições: o aplicativo continua usando a rede normalmente,
-// evitando servir dados antigos. O service worker existe para habilitar o modo PWA.
+// Mantém a rede como fonte principal para evitar dados antigos.
+// O handler também atende ao requisito de PWA em navegadores Android mais antigos.
+self.addEventListener("fetch", (event) => {
+  if (event.request.method !== "GET") return;
+  event.respondWith(fetch(event.request));
+});

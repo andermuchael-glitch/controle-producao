@@ -142,6 +142,19 @@ function ComunicacaoInterna() {
     return () => window.removeEventListener("neo-chat-lidas", evento);
   }, [autenticado]);
 
+  useEffect(() => {
+    const liberarAudio = () => {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioContextRef.current) audioContextRef.current = new AudioCtx();
+        if (audioContextRef.current.state === "suspended") audioContextRef.current.resume().catch(() => {});
+      } catch {}
+    };
+    window.addEventListener("pointerdown", liberarAudio, { once: true });
+    return () => window.removeEventListener("pointerdown", liberarAudio);
+  }, []);
+
   if (!autenticado || !db) return null;
 
   const abrirMensagens = async () => {

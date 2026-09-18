@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   addDoc,
   collection,
@@ -24,6 +24,18 @@ export default function Mensagens({ onClose }) {
   const [mensagens, setMensagens] = useState([]);
   const [texto, setTexto] = useState("");
   const [erro, setErro] = useState("");
+  const fimChatRef = useRef(null);
+
+  useEffect(() => {
+    if (!db || !usuarioAtual) return;
+    const perfil = {
+      email: usuarioAtual.email || "",
+      nome: usuarioAtual.displayName || usuarioAtual.email || "Usuário",
+      displayName: usuarioAtual.displayName || "",
+      atualizadoEm: serverTimestamp(),
+    };
+    setDoc(doc(db, "usuarios", usuarioAtual.uid), perfil, { merge: true }).catch(() => {});
+  }, [usuarioAtual?.uid]);
 
   useEffect(() => {
     if (!db || !usuarioAtual) return;
@@ -31,7 +43,8 @@ export default function Mensagens({ onClose }) {
     return onSnapshot(q, (snap) => {
       const lista = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
-        .filter((u) => u.id !== usuarioAtual.uid);
+        .filter((u) => u.id !== usuarioAtual.uid)
+        .sort((a, b) => String(a.nome || a.email || "").localeCompare(String(b.nome || b.email || ""), "pt-BR"));
       setUsuarios(lista);
     }, () => setErro("Não foi possível carregar os usuários."));
   }, [usuarioAtual?.uid]);
@@ -41,6 +54,7 @@ export default function Mensagens({ onClose }) {
       setMensagens([]);
       return;
     }
+    setErro("");
     const conversaId = chaveConversa(usuarioAtual.uid, selecionado.id);
     const q = query(
       collection(db, "conversas", conversaId, "mensagens"),
@@ -51,6 +65,10 @@ export default function Mensagens({ onClose }) {
       setMensagens(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
     }, () => setErro("Não foi possível carregar esta conversa."));
   }, [usuarioAtual?.uid, selecionado?.id]);
+
+  useEffect(() => {
+    fimChatRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensagens.length]);
 
   const nomeSelecionado = useMemo(() => {
     if (!selecionado) return "";
@@ -76,28 +94,28 @@ export default function Mensagens({ onClose }) {
       });
       setTexto("");
     } catch {
-      setErro("Não foi possível enviar a mensagem.");
+      setErro("Não foi possível enviar a mensagem. Verifique as regras do Firebase.");
     }
   };
 
   if (!db || !usuarioAtual) return null;
 
   return (
-    <div className="mensagens-overlay">
+    <div className="mensagens-overlay" role="dialog" aria-modal="true" aria-label="Mensagens internas">
       <section className="mensagens-modal">
         <header className="mensagens-header">
-          <div><strong>💬 Mensagens</strong><small>Comunicação interna</small></div>
-          <button onClick={onClose} aria-label="Fechar">✕</button>
+          <div><strong>💬 Mensagens</strong><small>Chat interno em tempo real</small></div>
+          <button type="button" onClick={onClose} aria-label="Fechar">✕</button>
         </header>
 
         <div className="mensagens-corpo">
           <aside className="mensagens-usuarios">
             <h3>Usuários</h3>
-            {usuarios.length === 0 && <p className="mensagens-vazio">Nenhum outro usuário encontrado.</p>}
+            {usuarios.length === 0 && <p className="mensagens-vazio">Nenhum outro usuário encontrado. Abra o chat em cada conta para cadastrá-la na lista.</p>}
             {usuarios.map((u) => {
               const nome = u.nome || u.displayName || u.email || "Usuário";
               return (
-                <button key={u.id} className={selecionado?.id === u.id ? "usuario ativo" : "usuario"} onClick={() => setSelecionado(u)}>
+                <button type="button" key={u.id} className={selecionado?.id === u.id ? "usuario ativo" : "usuario"} onClick={() => setSelecionado(u)}>
                   <span className="avatar">{nome.charAt(0).toUpperCase()}</span>
                   <span><b>{nome}</b><small>{u.email || ""}</small></span>
                 </button>
@@ -116,11 +134,23 @@ export default function Mensagens({ onClose }) {
                   {mensagens.map((m) => {
                     const minha = m.remetenteId === usuarioAtual.uid;
                     const data = m.criadoEm?.toDate ? m.criadoEm.toDate() : null;
-                    return <div key={m.id} className={minha ? "bolha minha" : "bolha"}><div>{m.texto}</div><small>{data ? data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "agora"}</small></div>;
+                    return (
+                      <div key={m.id} className={minha ? "bolha minha" : "bolha"}>
+                        <div>{m.texto}</div>
+                        <small>{data ? data.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) : "agora"}</small>
+                      </div>
+                    );
                   })}
+                  <div ref={fimChatRef} />
                 </div>
                 <form className="chat-envio" onSubmit={enviar}>
-                  <input value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Digite uma mensagem..." maxLength={2000} />
+                  <input
+                    value={texto}
+                    onChange={(e) => setTexto(e.target.value)}
+                    placeholder="Digite uma mensagem..."
+                    maxLength={2000}
+                    autoComplete="off"
+                  />
                   <button type="submit" disabled={!texto.trim()}>Enviar</button>
                 </form>
               </>

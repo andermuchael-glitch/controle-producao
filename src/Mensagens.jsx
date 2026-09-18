@@ -76,6 +76,18 @@ export default function Mensagens({ onClose }) {
   }, [usuarioAtual?.uid]);
 
   useEffect(() => {
+    const evento = (e) => {
+      const nome = e.detail?.nome || "Usuário";
+      const resumo = e.detail?.resumo || "Nova mensagem";
+      setNovaMensagem(nome + ": " + resumo);
+      window.clearTimeout(window.__neoChatNovaMsgTimer);
+      window.__neoChatNovaMsgTimer = window.setTimeout(() => setNovaMensagem(""), 6000);
+    };
+    window.addEventListener("neo-chat-nova", evento);
+    return () => window.removeEventListener("neo-chat-nova", evento);
+  }, []);
+
+  useEffect(() => {
     if (!db || !usuarioAtual || !selecionado) {
       setMensagens([]);
       return;
@@ -197,7 +209,10 @@ export default function Mensagens({ onClose }) {
               <div className="mensagens-vazio grande">Selecione um usuário para iniciar uma conversa.</div>
             ) : (
               <>
-                <div className="chat-top"><b>{nomeSelecionado}</b><span>{selecionado.email || ""}</span></div>
+                <div className="chat-top">
+                  <div><b>{nomeSelecionado}</b><span>{selecionado.email || ""}</span></div>
+                  <button type="button" className="chat-fechar" onClick={onClose} aria-label="Fechar chat" title="Fechar chat">✕</button>
+                </div>
                 <div className="chat-lista">
                   {mensagens.length === 0 && <div className="mensagens-vazio">Nenhuma mensagem ainda.</div>}
                   {mensagens.map((m) => {

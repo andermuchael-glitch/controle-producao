@@ -25,7 +25,10 @@ export default function Mensagens({ onClose }) {
   const [texto, setTexto] = useState("");
   const [erro, setErro] = useState("");
   const [naoLidas, setNaoLidas] = useState({});
+  const [novaMensagem, setNovaMensagem] = useState("");
   const fimChatRef = useRef(null);
+  const ultimaMensagemChatRef = useRef(null);
+  const chatInicializadoRef = useRef(false);
 
   useEffect(() => {
     if (!db || !usuarioAtual) return;
@@ -78,6 +81,9 @@ export default function Mensagens({ onClose }) {
       return;
     }
     setErro("");
+    setNovaMensagem("");
+    ultimaMensagemChatRef.current = null;
+    chatInicializadoRef.current = false;
     const conversaId = chaveConversa(usuarioAtual.uid, selecionado.id);
     const q = query(
       collection(db, "conversas", conversaId, "mensagens"),
@@ -86,6 +92,22 @@ export default function Mensagens({ onClose }) {
     );
     return onSnapshot(q, (snap) => {
       const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const ultimaMensagem = lista[lista.length - 1];
+      if (
+        chatInicializadoRef.current &&
+        ultimaMensagem &&
+        ultimaMensagem.id !== ultimaMensagemChatRef.current &&
+        ultimaMensagem.remetenteId !== usuarioAtual.uid
+      ) {
+        setNovaMensagem(
+          (ultimaMensagem.remetenteEmail || nomeSelecionado || "Usuário") +
+          ": " + (ultimaMensagem.texto || "Nova mensagem")
+        );
+        window.clearTimeout(window.__neoChatNovaMsgTimer);
+        window.__neoChatNovaMsgTimer = window.setTimeout(() => setNovaMensagem(""), 6000);
+      }
+      ultimaMensagemChatRef.current = ultimaMensagem?.id || null;
+      chatInicializadoRef.current = true;
       setMensagens(lista);
       const conversaIdAtual = chaveConversa(usuarioAtual.uid, selecionado.id);
       localStorage.setItem("neo-chat-lida-" + conversaIdAtual, String(Date.now()));
@@ -170,6 +192,7 @@ export default function Mensagens({ onClose }) {
           </aside>
 
           <div className="mensagens-chat">
+            {novaMensagem && <div className="chat-nova-mensagem" role="status"><span>🔔</span><b>Nova mensagem</b><small>{novaMensagem}</small><button type="button" onClick={() => setNovaMensagem("")} aria-label="Fechar aviso">✕</button></div>}
             {!selecionado ? (
               <div className="mensagens-vazio grande">Selecione um usuário para iniciar uma conversa.</div>
             ) : (

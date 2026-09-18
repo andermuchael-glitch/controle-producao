@@ -6,6 +6,7 @@
   display:flex;align-items:center;justify-content:center;padding:18px;
 }
 .mensagens-modal{
+  position:relative;
   width:min(1080px,100%);height:min(740px,94vh);
   background:#f7f9fc;border:1px solid rgba(255,255,255,.55);
   border-radius:24px;overflow:hidden;
@@ -31,7 +32,22 @@
 }
 .mensagens-header button:hover{background:#bd4720;transform:scale(1.04)}
 .mensagens-fechar{width:auto!important;min-width:92px;padding:0 11px;display:flex!important;gap:6px;align-items:center;justify-content:center}
+.mensagens-fechar{
+  position:absolute!important;right:16px;top:16px;z-index:20;
+}
 .mensagens-fechar span{font-size:11px;font-weight:800}
+.chat-nova-mensagem{
+  position:absolute;left:50%;top:78px;transform:translateX(-50%);z-index:15;
+  display:flex;align-items:center;gap:8px;max-width:calc(100% - 36px);
+  padding:9px 11px;border:1px solid #ffd8ca;border-radius:12px;
+  background:#fff7f3;color:#6d321f;box-shadow:0 8px 22px rgba(50,40,30,.16);
+  animation:neoChatEntrada .2s ease-out;
+}
+.chat-nova-mensagem>span{font-size:17px}.chat-nova-mensagem b{font-size:11px;white-space:nowrap}
+.chat-nova-mensagem small{font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:300px}
+.chat-nova-mensagem button{
+  border:0;background:transparent;color:#8b5a48;cursor:pointer;font-weight:900;font-size:14px;padding:2px 4px;
+}
 
 .mensagens-corpo{display:grid;grid-template-columns:310px minmax(0,1fr);min-height:0;flex:1}
 .mensagens-usuarios{
@@ -129,7 +145,7 @@
   .mensagens-modal{height:100vh;border-radius:0;border:0}
   .mensagens-header{min-height:64px;padding:11px 12px 11px 15px}
   .mensagens-header strong{font-size:16px}
-  .mensagens-fechar{min-width:40px!important;width:40px!important;padding:0!important}
+  .mensagens-fechar{right:10px;top:10px;min-width:40px!important;width:40px!important;padding:0!important}
   .mensagens-fechar span{display:none}
   .mensagens-corpo{grid-template-columns:1fr}
   .mensagens-usuarios{max-height:190px;border-right:0;border-bottom:1px solid #e1e7ed;padding:10px}

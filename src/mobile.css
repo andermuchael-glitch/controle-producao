@@ -1,0 +1,295 @@
+/* NeoCooler — otimização específica para celular.
+   Não altera a lógica nem o Quadro Geral; apenas melhora encaixe, toque e leitura. */
+
+@media (max-width: 760px){
+  html,body,#root{
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+  }
+
+  .neocooler-app{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    overflow-x:hidden!important;
+  }
+
+  /* Cabeçalho */
+  .neocooler-app .app-header{
+    padding:12px 10px 14px!important;
+  }
+  .neocooler-app .app-header>div{
+    width:100%!important;
+    max-width:none!important;
+    min-width:0!important;
+  }
+  .neocooler-app .app-header .brandRow{
+    gap:9px!important;
+    margin-bottom:10px!important;
+    align-items:center!important;
+  }
+  .neocooler-app .app-header .official-neocooler-logo{
+    width:34px!important;
+    height:34px!important;
+    flex:0 0 34px!important;
+    object-fit:contain!important;
+  }
+  .neocooler-app .app-header .brandRow>div{
+    min-width:0!important;
+  }
+  .neocooler-app .app-header h1{
+    font-size:16px!important;
+    line-height:1.15!important;
+    margin:0!important;
+    white-space:normal!important;
+  }
+  .neocooler-app .app-header .subtitle{
+    font-size:10px!important;
+    line-height:1.25!important;
+    margin-top:3px!important;
+  }
+  .neocooler-app .app-header .fsBtn{
+    width:34px!important;
+    min-width:34px!important;
+    height:34px!important;
+    flex:0 0 34px!important;
+    font-size:15px!important;
+  }
+
+  /* Abas: uma faixa horizontal confortável para o dedo */
+  .neocooler-app .tabs-row{
+    width:calc(100% + 4px)!important;
+    margin:0 -2px!important;
+    display:flex!important;
+    flex-wrap:nowrap!important;
+    gap:6px!important;
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    padding:2px 2px 7px!important;
+    -webkit-overflow-scrolling:touch!important;
+    scrollbar-width:none!important;
+  }
+  .neocooler-app .tabs-row::-webkit-scrollbar{display:none!important}
+  .neocooler-app .tab-btn{
+    flex:0 0 auto!important;
+    min-height:40px!important;
+    min-width:max-content!important;
+    padding:8px 11px!important;
+    border-radius:11px!important;
+    font-size:11px!important;
+    white-space:nowrap!important;
+  }
+
+  /* Indicadores */
+  .neocooler-app .stats-row{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:6px!important;
+    width:100%!important;
+  }
+  .neocooler-app .stats-row>*{
+    min-width:0!important;
+    width:100%!important;
+    padding:7px 6px!important;
+    border-radius:9px!important;
+  }
+  .neocooler-app .stats-row .statValue{
+    font-size:16px!important;
+  }
+  .neocooler-app .stats-row .statLabel{
+    font-size:8px!important;
+    line-height:1.1!important;
+    overflow-wrap:anywhere!important;
+  }
+
+  /* Busca global */
+  .neocooler-app [data-global-search-direct="true"]{
+    width:100%!important;
+    max-width:none!important;
+    padding:8px 10px 0!important;
+    margin:0 auto 8px!important;
+    box-sizing:border-box!important;
+  }
+  .neocooler-app [data-global-search-direct="true"]>input{
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    font-size:16px!important;
+    padding:10px 12px!important;
+    border-radius:11px!important;
+  }
+  .neocooler-app [data-global-search-direct="true"]>div{
+    max-width:100%!important;
+    max-height:55vh!important;
+  }
+
+  /* Conteúdo */
+  .neocooler-app main.app-main{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    padding:8px 10px 28px!important;
+    box-sizing:border-box!important;
+  }
+
+  .neocooler-app .launch-bar{
+    width:100%!important;
+    margin-bottom:9px!important;
+  }
+  .neocooler-app .launch-pedido-btn{
+    width:100%!important;
+    min-height:48px!important;
+    padding:8px 11px!important;
+    border-radius:13px!important;
+  }
+  .neocooler-app .launchIcon{
+    width:34px!important;
+    height:34px!important;
+    flex:0 0 34px!important;
+    border-radius:10px!important;
+    font-size:22px!important;
+  }
+  .neocooler-app .launch-pedido-btn b{font-size:13px!important}
+  .neocooler-app .launch-pedido-btn small{font-size:9px!important}
+
+  /* Formulários */
+  .neocooler-app .form-card,
+  .neocooler-app .formCard{
+    padding:13px!important;
+    border-radius:14px!important;
+  }
+  .neocooler-app .formTitle{
+    font-size:16px!important;
+  }
+  .neocooler-app .form-grid{
+    grid-template-columns:1fr!important;
+    gap:9px!important;
+  }
+  .neocooler-app .form-grid input,
+  .neocooler-app .form-grid select{
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    font-size:16px!important;
+  }
+  .neocooler-app .form-card .addBtn,
+  .neocooler-app .formCard .addBtn{
+    min-height:46px!important;
+  }
+
+  /* Ações/exportação: sem botões espremidos ou saindo da tela */
+  .neocooler-app .export-row{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    margin-bottom:12px!important;
+  }
+  .neocooler-app .export-row>*{
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    min-height:44px!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+
+  /* Filtros das etapas */
+  .neocooler-app .list-header{
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    gap:7px!important;
+    margin-bottom:9px!important;
+    padding:0!important;
+    position:static!important;
+  }
+  .neocooler-app .list-header>*{
+    width:100%!important;
+    min-width:0!important;
+    min-height:44px!important;
+    font-size:16px!important;
+  }
+
+  /* Cartões de produção */
+  .neocooler-app .production-grid{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+  }
+  .neocooler-app .production-grid>.pedido-card,
+  .neocooler-app .production-grid>.dia-group{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  .neocooler-app .pedidoTop{
+    min-width:0!important;
+  }
+  .neocooler-app .pedidoNumWrap,
+  .neocooler-app .pedidoTop>div{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  .neocooler-app .pedidoNum{
+    font-size:16px!important;
+  }
+  .neocooler-app .pctText{
+    font-size:16px!important;
+  }
+  .neocooler-app .itemTexto{
+    min-width:0!important;
+    overflow-wrap:anywhere!important;
+    line-height:1.3!important;
+  }
+
+  /* Botões e campos com área mínima adequada ao toque */
+  .neocooler-app .production-grid button,
+  .neocooler-app .production-grid select,
+  .neocooler-app .production-grid input{
+    touch-action:manipulation;
+  }
+  .neocooler-app .production-grid select{
+    font-size:16px!important;
+  }
+
+  /* Painel de totais */
+  .neocooler-app .painelProducao{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    padding:11px!important;
+    border-radius:15px!important;
+  }
+  .neocooler-app .resumoLinha{
+    min-width:0!important;
+  }
+
+  /* Modais internos ocupam a tela útil sem criar rolagem horizontal */
+  .neocooler-app [style*="position: fixed"][style*="inset"]{
+    padding:10px!important;
+  }
+}
+
+@media (max-width: 390px){
+  .neocooler-app .stats-row{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .neocooler-app .app-header h1{
+    font-size:15px!important;
+  }
+  .neocooler-app .tab-btn{
+    padding:8px 10px!important;
+    font-size:10.5px!important;
+  }
+  .neocooler-app main.app-main{
+    padding-left:8px!important;
+    padding-right:8px!important;
+  }
+  .neocooler-app [data-global-search-direct="true"]{
+    padding-left:8px!important;
+    padding-right:8px!important;
+  }
+}
+
+/* Mensagens: o CSS próprio continua responsável pelo modal do chat. */

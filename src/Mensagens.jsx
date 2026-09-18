@@ -122,7 +122,10 @@ export default function Mensagens({ onClose }) {
       chatInicializadoRef.current = true;
       setMensagens(lista);
       const conversaIdAtual = chaveConversa(usuarioAtual.uid, selecionado.id);
-      localStorage.setItem("neo-chat-lida-" + conversaIdAtual, String(Date.now()));
+      const ultimaLida = lista[lista.length - 1];
+      const ultimaLidaMs = ultimaLida?.criadoEm?.toMillis ? ultimaLida.criadoEm.toMillis() : Date.now();
+      if (ultimaLida?.id) localStorage.setItem("neo-chat-lida-id-" + conversaIdAtual, ultimaLida.id);
+      localStorage.setItem("neo-chat-lida-" + conversaIdAtual, String(ultimaLidaMs));
       window.dispatchEvent(new CustomEvent("neo-chat-lidas", {
         detail: { conversaId: conversaIdAtual },
       }));
@@ -153,21 +156,22 @@ export default function Mensagens({ onClose }) {
       if (!mensagem) return;
 
       const resumo = mensagem;
-      await setDoc(doc(db, "conversas", conversaId), {
-        participantes: [usuarioAtual.uid, selecionado.id],
-        atualizadoEm: serverTimestamp(),
-        ultimaMensagemEm: serverTimestamp(),
-        ultimaMensagemRemetenteId: usuarioAtual.uid,
-        ultimaMensagemRemetenteEmail: usuarioAtual.email || "",
-        ultimaMensagemResumo: resumo.slice(0, 120),
-      }, { merge: true });
-
-      await addDoc(collection(db, "conversas", conversaId, "mensagens"), {
+      const mensagemRef = await addDoc(collection(db, "conversas", conversaId, "mensagens"), {
         texto: mensagem,
         remetenteId: usuarioAtual.uid,
         remetenteEmail: usuarioAtual.email || "",
         criadoEm: serverTimestamp(),
       });
+
+      await setDoc(doc(db, "conversas", conversaId), {
+        participantes: [usuarioAtual.uid, selecionado.id],
+        atualizadoEm: serverTimestamp(),
+        ultimaMensagemEm: serverTimestamp(),
+        ultimaMensagemId: mensagemRef.id,
+        ultimaMensagemRemetenteId: usuarioAtual.uid,
+        ultimaMensagemRemetenteEmail: usuarioAtual.email || "",
+        ultimaMensagemResumo: resumo.slice(0, 120),
+      }, { merge: true });
       setTexto("");
     } catch {
       setErro("Não foi possível enviar. Verifique o Firebase e tente novamente.");

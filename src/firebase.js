@@ -1,6 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { getStorage } from "firebase/storage";
 
 // Configuração do aplicativo Web Firebase.
 // No Netlify, os valores são fornecidos pelas variáveis VITE_FIREBASE_*.
@@ -30,3 +31,4 @@ export const app = firebaseConfigurado
 
 export const db = firebaseConfigurado ? getFirestore(app) : null;
 export const auth = firebaseConfigurado ? getAuth(app) : null;
+export const storage = firebaseConfigurado ? getStorage(app) : null;

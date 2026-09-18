@@ -69,13 +69,15 @@ function ComunicacaoInterna() {
       const ultima = data.ultimaMensagemEm?.toMillis
         ? data.ultimaMensagemEm.toMillis()
         : 0;
-      const lida = Number(
-        localStorage.getItem("neo-chat-lida-" + data.id) || 0
-      );
+      const lidaId = localStorage.getItem("neo-chat-lida-id-" + data.id) || "";
+      const lida = Number(localStorage.getItem("neo-chat-lida-" + data.id) || 0);
+      const naoLidaPorId = data.ultimaMensagemId
+        ? data.ultimaMensagemId !== lidaId
+        : ultima > lida;
       if (
         data.ultimaMensagemRemetenteId &&
         data.ultimaMensagemRemetenteId !== uid &&
-        ultima > lida
+        naoLidaPorId
       ) {
         novas += 1;
       }

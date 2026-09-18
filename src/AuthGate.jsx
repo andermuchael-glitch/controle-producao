@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
+import { db } from "./firebase.js";
 import { auth, firebaseConfigurado } from "./firebase.js";
 
 export default function AuthGate({ children }) {
@@ -19,6 +21,16 @@ export default function AuthGate({ children }) {
     return onAuthStateChanged(auth, (user) => {
       setUsuario(user);
       setCarregando(false);
+
+      if (user && db) {
+        setDoc(doc(db, "usuarios", user.uid), {
+          uid: user.uid,
+          email: user.email || "",
+          nome: user.displayName || user.email || "Usuário",
+          displayName: user.displayName || "",
+          atualizadoEm: serverTimestamp(),
+        }, { merge: true }).catch(() => {});
+      }
     });
   }, []);
 

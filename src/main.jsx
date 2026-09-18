@@ -1,36 +1,187 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import AuthGate from "./AuthGate.jsx";
 import Mensagens from "./Mensagens.jsx";
 import { auth, db } from "./firebase.js";
+import {
+  collection,
+  limit,
+  onSnapshot,
+  query,
+} from "firebase/firestore";
 import "../public/grid-cartoes-etapas.css";
 import "./fix-cartoes-costura.css";
+
+function chaveConversa(a, b) {
+  return [a, b].sort().join("__");
+}
+
+function tocarAviso() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(660, ctx.currentTime + 0.12);
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.12, ctx.currentTime + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.18);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+    setTimeout(() => ctx.close().catch(() => {}), 350);
+  } catch {}
+}
+
+function notificarNavegador(nome, resumo) {
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification("Nova mensagem — NeoCooler", {
+        body: resumo ? nome + ": " + resumo : "Nova mensagem de " + nome,
+        tag: "neocooler-mensagem",
+      });
+    }
+  } catch {}
+}
 
 function ComunicacaoInterna() {
   const [aberto, setAberto] = useState(false);
   const [autenticado, setAutenticado] = useState(Boolean(auth?.currentUser));
+  const [naoLidas, setNaoLidas] = useState(0);
+  const ultimaMensagemRef = useRef(new Map());
+  const inicializadoRef = useRef(false);
 
   useEffect(() => {
     if (!auth) return;
-    return auth.onAuthStateChanged((user) => setAutenticado(Boolean(user)));
+    return auth.onAuthStateChanged((user) => {
+      setAutenticado(Boolean(user));
+      ultimaMensagemRef.current = new Map();
+      inicializadoRef.current = false;
+      setNaoLidas(0);
+    });
   }, []);
 
+  useEffect(() => {
+    if (!db || !auth?.currentUser) return;
+
+    const uid = auth.currentUser.uid;
+    const q = query(collection(db, "conversas"), limit(100));
+
+    return onSnapshot(q, (snap) => {
+      let novas = 0;
+
+      snap.docs.forEach((d) => {
+        const data = d.data();
+        if (!data.participantes?.includes(uid)) return;
+
+        const ultima = data.ultimaMensagemEm?.toMillis
+          ? data.ultimaMensagemEm.toMillis()
+          : 0;
+        const anterior = ultimaMensagemRef.current.get(d.id) || 0;
+
+        if (
+          inicializadoRef.current &&
+          ultima > 0 &&
+          ultima > anterior &&
+          data.ultimaMensagemRemetenteId &&
+          data.ultimaMensagemRemetenteId !== uid
+        ) {
+          const nome = data.ultimaMensagemRemetenteEmail || "Usuário";
+          tocarAviso();
+          notificarNavegador(nome, data.ultimaMensagemResumo || "");
+        }
+
+        ultimaMensagemRef.current.set(d.id, ultima);
+
+        const lida = Number(
+          localStorage.getItem("neo-chat-lida-" + d.id) || 0
+        );
+        if (
+          data.ultimaMensagemRemetenteId &&
+          data.ultimaMensagemRemetenteId !== uid &&
+          ultima > lida
+        ) {
+          novas += 1;
+        }
+      });
+
+      inicializadoRef.current = true;
+      setNaoLidas(novas);
+    }, () => {});
+  }, [autenticado]);
+
+  useEffect(() => {
+    const atualizar = () => {
+      if (!db || !auth?.currentUser) return;
+      const uid = auth.currentUser.uid;
+      const q = query(collection(db, "conversas"), limit(100));
+      return onSnapshot(q, (snap) => {
+        let novas = 0;
+        snap.docs.forEach((d) => {
+          const data = d.data();
+          if (!data.participantes?.includes(uid)) return;
+          const ultima = data.ultimaMensagemEm?.toMillis
+            ? data.ultimaMensagemEm.toMillis()
+            : 0;
+          const lida = Number(
+            localStorage.getItem("neo-chat-lida-" + d.id) || 0
+          );
+          if (
+            data.ultimaMensagemRemetenteId &&
+            data.ultimaMensagemRemetenteId !== uid &&
+            ultima > lida
+          ) {
+            novas += 1;
+          }
+        });
+        setNaoLidas(novas);
+      }, () => {});
+    };
+
+    const evento = () => {
+      atualizar();
+    };
+
+    window.addEventListener("neo-chat-lidas", evento);
+    return () => window.removeEventListener("neo-chat-lidas", evento);
+  }, [autenticado]);
+
   if (!autenticado || !db) return null;
+
+  const abrirMensagens = async () => {
+    try {
+      if ("Notification" in window && Notification.permission === "default") {
+        await Notification.requestPermission();
+      }
+    } catch {}
+    setAberto(true);
+  };
 
   return (
     <>
       <button
         type="button"
         className="neo-mensagens-fab"
-        onClick={() => setAberto(true)}
+        onClick={abrirMensagens}
         aria-label="Abrir mensagens internas"
-        title="Mensagens internas"
+        title={naoLidas ? "Você tem " + naoLidas + " nova(s) mensagem(ns)" : "Mensagens internas"}
       >
         <span>💬</span>
         <b>Mensagens</b>
+        {naoLidas > 0 && (
+          <i className="neo-mensagens-badge" aria-label={naoLidas + " novas mensagens"}>
+            {naoLidas > 99 ? "99+" : naoLidas}
+          </i>
+        )}
       </button>
+
       {aberto && <Mensagens onClose={() => setAberto(false)} />}
+
       <style>{`
         .neo-mensagens-fab{
           position:fixed;
@@ -55,6 +206,19 @@ function ComunicacaoInterna() {
           box-shadow:0 12px 28px rgba(20,34,52,.3);
         }
         .neo-mensagens-fab span{font-size:18px;line-height:1}
+        .neo-mensagens-badge{
+          display:inline-grid;
+          place-items:center;
+          min-width:20px;
+          height:20px;
+          padding:0 6px;
+          border-radius:999px;
+          background:#d8622c;
+          color:#fff;
+          font-size:11px;
+          font-style:normal;
+          line-height:1;
+        }
         @media(max-width:600px){
           .neo-mensagens-fab{
             right:12px;
@@ -66,6 +230,11 @@ function ComunicacaoInterna() {
           }
           .neo-mensagens-fab b{display:none}
           .neo-mensagens-fab span{font-size:21px}
+          .neo-mensagens-badge{
+            position:absolute;
+            right:-2px;
+            top:-2px;
+          }
         }
       `}</style>
     </>

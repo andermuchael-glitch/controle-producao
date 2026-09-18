@@ -54,7 +54,34 @@ function ComunicacaoInterna() {
   const [autenticado, setAutenticado] = useState(Boolean(auth?.currentUser));
   const [naoLidas, setNaoLidas] = useState(0);
   const ultimaMensagemRef = useRef(new Map());
+  const conversasRef = useRef([]);
   const inicializadoRef = useRef(false);
+
+  const recalcularNaoLidas = () => {
+    const uid = auth?.currentUser?.uid;
+    if (!uid) {
+      setNaoLidas(0);
+      return;
+    }
+    let novas = 0;
+    conversasRef.current.forEach((data) => {
+      if (!data.participantes?.includes(uid)) return;
+      const ultima = data.ultimaMensagemEm?.toMillis
+        ? data.ultimaMensagemEm.toMillis()
+        : 0;
+      const lida = Number(
+        localStorage.getItem("neo-chat-lida-" + data.id) || 0
+      );
+      if (
+        data.ultimaMensagemRemetenteId &&
+        data.ultimaMensagemRemetenteId !== uid &&
+        ultima > lida
+      ) {
+        novas += 1;
+      }
+    });
+    setNaoLidas(novas);
+  };
 
   useEffect(() => {
     if (!auth) return;
@@ -73,7 +100,8 @@ function ComunicacaoInterna() {
     const q = query(collection(db, "conversas"), limit(100));
 
     return onSnapshot(q, (snap) => {
-      let novas = 0;
+      const conversas = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      conversasRef.current = conversas;
 
       snap.docs.forEach((d) => {
         const data = d.data();
@@ -97,56 +125,15 @@ function ComunicacaoInterna() {
         }
 
         ultimaMensagemRef.current.set(d.id, ultima);
-
-        const lida = Number(
-          localStorage.getItem("neo-chat-lida-" + d.id) || 0
-        );
-        if (
-          data.ultimaMensagemRemetenteId &&
-          data.ultimaMensagemRemetenteId !== uid &&
-          ultima > lida
-        ) {
-          novas += 1;
-        }
       });
 
       inicializadoRef.current = true;
-      setNaoLidas(novas);
+      recalcularNaoLidas();
     }, () => {});
   }, [autenticado]);
 
   useEffect(() => {
-    const atualizar = () => {
-      if (!db || !auth?.currentUser) return;
-      const uid = auth.currentUser.uid;
-      const q = query(collection(db, "conversas"), limit(100));
-      return onSnapshot(q, (snap) => {
-        let novas = 0;
-        snap.docs.forEach((d) => {
-          const data = d.data();
-          if (!data.participantes?.includes(uid)) return;
-          const ultima = data.ultimaMensagemEm?.toMillis
-            ? data.ultimaMensagemEm.toMillis()
-            : 0;
-          const lida = Number(
-            localStorage.getItem("neo-chat-lida-" + d.id) || 0
-          );
-          if (
-            data.ultimaMensagemRemetenteId &&
-            data.ultimaMensagemRemetenteId !== uid &&
-            ultima > lida
-          ) {
-            novas += 1;
-          }
-        });
-        setNaoLidas(novas);
-      }, () => {});
-    };
-
-    const evento = () => {
-      atualizar();
-    };
-
+    const evento = () => recalcularNaoLidas();
     window.addEventListener("neo-chat-lidas", evento);
     return () => window.removeEventListener("neo-chat-lidas", evento);
   }, [autenticado]);

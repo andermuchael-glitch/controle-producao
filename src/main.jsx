@@ -123,7 +123,9 @@ function ComunicacaoInterna() {
           const resumo = data.ultimaMensagemResumo || "Nova mensagem";
           tocarAviso(audioContextRef.current);
           notificarNavegador(nome, resumo);
+          const detalhe = { nome, resumo };
           setAviso(nome + ": " + resumo);
+          window.dispatchEvent(new CustomEvent("neo-chat-nova", { detail: detalhe }));
           window.clearTimeout(window.__neoChatAvisoTimer);
           window.__neoChatAvisoTimer = window.setTimeout(() => setAviso(""), 5000);
         }

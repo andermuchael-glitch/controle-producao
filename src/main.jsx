@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import "../public/grid-cartoes-etapas.css";
 import "./fix-cartoes-costura.css";
+import "./mobile.css";
 
 function chaveConversa(a, b) {
   return [a, b].sort().join("__");

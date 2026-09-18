@@ -149,7 +149,7 @@ export default function Mensagens({ onClose }) {
       <section className="mensagens-modal">
         <header className="mensagens-header">
           <div><strong>💬 Mensagens {totalNaoLidas > 0 && <span className="mensagens-badge">{totalNaoLidas}</span>}</strong><small>Chat interno em tempo real</small></div>
-          <button type="button" onClick={onClose} aria-label="Fechar">✕</button>
+          <button className="mensagens-fechar" type="button" onClick={onClose} aria-label="Fechar chat" title="Fechar chat">✕ <span>Fechar</span></button>
         </header>
 
         <div className="mensagens-corpo">

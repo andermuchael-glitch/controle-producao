@@ -1,6 +1,8 @@
 {
   "name": "NeoCooler — Controle de Produção",
   "short_name": "NeoCooler",
+  "id": "/",
+  "prefer_related_applications": false,
   "description": "Controle de produção da NeoCooler: Pré-Corte, Sublimação, Costura e Separação.",
   "lang": "pt-BR",
   "start_url": "/",

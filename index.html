@@ -11,6 +11,13 @@
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="icon" href="/icone-neocooler.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icone-neocooler.svg" />
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch(() => {});
+        });
+      }
+    </script>
     <title>Controle de Produção — Pré-Corte → Sublimação → Costura</title>
   </head>
   <body>

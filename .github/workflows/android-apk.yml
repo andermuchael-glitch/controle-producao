@@ -49,10 +49,3 @@ jobs:
           name: neocooler-test-apk
           path: android-twa/app-release-signed.apk
           if-no-files-found: error
-
-      - name: Upload AAB
-        uses: actions/upload-artifact@v4
-        with:
-          name: neocooler-test-aab
-          path: android-twa/app-release-bundle.aab
-          if-no-files-found: error

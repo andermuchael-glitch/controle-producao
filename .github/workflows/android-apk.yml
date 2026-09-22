@@ -1,0 +1,56 @@
+name: Build NeoCooler Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  android-apk:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build web app
+        run: npm ci && npm run build
+
+      - name: Install Bubblewrap
+        run: npm install -g @bubblewrap/cli
+
+      - name: Initialize TWA project
+        run: |
+          rm -rf android-twa
+          mkdir -p android-twa
+          yes "" | bubblewrap init --manifest=https://neocooler.netlify.app/manifest.webmanifest --directory=android-twa
+
+      - name: Create temporary test signing key
+        run: |
+          keytool -genkeypair -v             -keystore neocooler-test.jks             -alias neocooler             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
+
+      - name: Build signed test APK
+        working-directory: android-twa
+        env:
+          BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
+          BUBBLEWRAP_KEY_PASSWORD: changeit
+        run: |
+          bubblewrap build             --skipPwaValidation             --signingKeyPath=../neocooler-test.jks             --signingKeyAlias=neocooler
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: neocooler-test-apk
+          path: android-twa/app-release-signed.apk
+          if-no-files-found: error
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: neocooler-test-aab
+          path: android-twa/app-release-bundle.aab
+          if-no-files-found: error

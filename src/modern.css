@@ -9,7 +9,29 @@ body{margin:0;background:#eef2f7;font-family:Inter,ui-sans-serif,system-ui,-appl
 .neocooler-app button:hover{transform:translateY(-2px);filter:brightness(1.03)}
 .neocooler-app button:active{transform:translateY(0)}
 .neocooler-app input,.neocooler-app select{background:#fff!important;border-color:#d9e1ec!important;box-shadow:0 1px 2px #17203308!important}
-.neocooler-app input:focus,.neocooler-app select:focus{outline:none!important;border-color:#f06a2f!important;box-shadow:0 0 0 4px #f06a2f18!important}
+.neocooler-app input:focus,.neocooler-app select:focus{border-color:#f06a2f!important;box-shadow:0 0 0 4px #f06a2f18!important}
+.neocooler-app button:focus-visible,
+.neocooler-app a:focus-visible,
+.neocooler-app input:focus-visible,
+.neocooler-app select:focus-visible,
+.neocooler-app textarea:focus-visible,
+.neocooler-app [tabindex]:focus-visible{
+  outline:3px solid #f06a2f!important;
+  outline-offset:3px!important;
+}
+.neocooler-app button:focus-visible{
+  box-shadow:0 0 0 4px #f06a2f2e!important;
+}
+@media(prefers-reduced-motion:reduce){
+  .neocooler-app *,
+  .neocooler-app *::before,
+  .neocooler-app *::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
 
 /* Área útil maior em computador, sem perder a adaptação ao celular */
 .neocooler-app main{max-width:1240px!important;width:100%!important}

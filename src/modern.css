@@ -1355,3 +1355,36 @@ body{
     flex-direction:column;
   }
 }
+
+/* Avanço parcial Costura -> Separação */
+.neocooler-app .costura-separacao-qtd{
+  width:90px!important;
+  min-width:70px!important;
+  min-height:38px!important;
+  box-sizing:border-box!important;
+  text-align:center;
+  border:1px solid #ddd3bd;
+  border-radius:8px;
+  padding:8px;
+  background:#fff;
+  font-weight:700;
+}
+.neocooler-app .costura-separacao-btn{
+  min-height:38px!important;
+  white-space:nowrap;
+}
+@media(max-width:760px){
+  .neocooler-app .costura-card .costura-item-linha{
+    grid-template-columns:auto auto minmax(0,1fr)!important;
+    width:100%!important;
+  }
+  .neocooler-app .costura-card .costura-item-linha .costura-cor-select,
+  .neocooler-app .costura-card .costura-item-linha .costura-equipe-select,
+  .neocooler-app .costura-card .costura-item-linha .costura-separacao-qtd,
+  .neocooler-app .costura-card .costura-item-linha .edit-item-btn,
+  .neocooler-app .costura-card .costura-item-linha .costura-separacao-btn{
+    grid-column:1/-1!important;
+    width:100%!important;
+    min-height:44px!important;
+  }
+}

@@ -1262,3 +1262,96 @@ body{
   .production-grid .corte-form-grid,.production-grid .aloc-grid{grid-template-columns:1fr!important}
   .modalOverlay{padding:10px!important}
 }
+
+/* Acumulado de corte: ocupa toda a largura da etapa quando aberto. */
+.neocooler-app section.production-grid>.producao-historico-minimizado{
+  grid-column:1 / -1!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+}
+.neocooler-app .producao-historico-minimizado.aberto .producao-historico-conteudo{
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+.neocooler-app .producao-resumo-grid{
+  width:100%!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:10px!important;
+}
+.neocooler-app .producao-resumo-item{min-width:0!important}
+.neocooler-app .producao-grafico-toggle{
+  min-height:38px;
+  padding:8px 12px;
+  border:1px solid #d8cdbd;
+  border-radius:9px;
+  background:#1c2a3a;
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+}
+.neocooler-app .corte-acumulado-grafico{
+  margin-top:14px;
+  padding:14px;
+  border:1px solid #ded5c4;
+  border-radius:14px;
+  background:#fff;
+}
+.neocooler-app .corte-acumulado-grafico-head{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.neocooler-app .corte-acumulado-grafico-head strong{font-size:15px;color:#26384a}
+.neocooler-app .corte-acumulado-grafico-head span{font-size:10px;color:#7a7160}
+.neocooler-app .corte-acumulado-barras{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 18px;
+}
+.neocooler-app .corte-acumulado-barra{min-width:0}
+.neocooler-app .corte-acumulado-barra-top{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  margin-bottom:4px;
+  font-size:11px;
+  color:#26384a;
+}
+.neocooler-app .corte-acumulado-barra-top span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.neocooler-app .corte-acumulado-barra-top b{color:#d8622c}
+.neocooler-app .corte-acumulado-trilho{
+  height:9px;
+  background:#eee7dc;
+  border-radius:999px;
+  overflow:hidden;
+}
+.neocooler-app .corte-acumulado-trilho span{
+  display:block;
+  height:100%;
+  background:#d8622c;
+  border-radius:999px;
+  min-width:4px;
+}
+@media(max-width:760px){
+  .neocooler-app section.production-grid>.producao-historico-minimizado{
+    grid-column:1 / -1!important;
+  }
+  .neocooler-app .producao-resumo-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .neocooler-app .corte-acumulado-barras{
+    grid-template-columns:1fr;
+  }
+  .neocooler-app .corte-acumulado-grafico-head{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+}

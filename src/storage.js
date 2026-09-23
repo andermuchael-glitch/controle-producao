@@ -119,6 +119,44 @@ export async function salvarListaSegura(key, baseValue, nextValue) {
   }
 }
 
+export async function atualizarEstoqueSeguro(key, produto, valor, modo = "definir") {
+  const nome = String(produto || "").trim();
+  const quantidade = Math.max(0, Number(valor) || 0);
+  if (!nome) return { ok: false, estoque: 0 };
+
+  if (!firebaseConfigurado) {
+    try {
+      const atual = JSON.parse(window.localStorage.getItem(key) || "{}");
+      const estoqueAtual = Math.max(0, Number(atual[nome]) || 0);
+      const novoEstoque = modo === "somar" ? estoqueAtual + quantidade : quantidade;
+      atual[nome] = novoEstoque;
+      window.localStorage.setItem(key, JSON.stringify(atual));
+      return { ok: true, estoque: novoEstoque };
+    } catch (e) {
+      return { ok: false, estoque: 0 };
+    }
+  }
+
+  try {
+    const ref = doc(db, COLECAO, key);
+    let resultado = { ok: false, estoque: 0 };
+    await runTransaction(db, async (tx) => {
+      const snap = await tx.get(ref);
+      let mapa = {};
+      try { mapa = JSON.parse(snap.exists() ? (snap.data().value || "{}") : "{}"); } catch {}
+      const estoqueAtual = Math.max(0, Number(mapa[nome]) || 0);
+      const novoEstoque = modo === "somar" ? estoqueAtual + quantidade : quantidade;
+      mapa[nome] = novoEstoque;
+      tx.set(ref, { value: JSON.stringify(mapa), atualizadoEm: Date.now() });
+      resultado = { ok: true, estoque: novoEstoque };
+    });
+    return resultado;
+  } catch (e) {
+    console.error("Erro ao atualizar estoque", e);
+    return { ok: false, estoque: 0 };
+  }
+}
+
 export async function salvarValor(key, value) {
   if (firebaseConfigurado) {
     const ref = doc(db, COLECAO, key);

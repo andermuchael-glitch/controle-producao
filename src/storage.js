@@ -128,7 +128,7 @@ export async function atualizarEstoqueSeguro(key, produto, valor, modo = "defini
     try {
       const atual = JSON.parse(window.localStorage.getItem(key) || "{}");
       const estoqueAtual = Math.max(0, Number(atual[nome]) || 0);
-      const novoEstoque = modo === "somar" ? estoqueAtual + quantidade : quantidade;
+      const novoEstoque = modo === "somar" ? estoqueAtual + quantidade : modo === "subtrair" ? Math.max(0, estoqueAtual - quantidade) : quantidade;
       atual[nome] = novoEstoque;
       window.localStorage.setItem(key, JSON.stringify(atual));
       return { ok: true, estoque: novoEstoque };

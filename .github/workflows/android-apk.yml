@@ -33,29 +33,50 @@ jobs:
       - name: Build web app
         run: npm install --no-audit --no-fund && npm run build
 
-      - name: Install Bubblewrap
-        run: npm install -g @bubblewrap/cli
+      - name: Install Bubblewrap 1.25
+        run: npm install -g @bubblewrap/cli@1.25.0
 
-      - name: Configure Bubblewrap non-interactively
+      - name: Prepare Bubblewrap-compatible Android SDK
         run: |
+          set -e
+          BW_SDK="$HOME/.bubblewrap/android_sdk"
+          rm -rf "$BW_SDK"
+          mkdir -p "$BW_SDK"
+
+          # Bubblewrap expects its SDK root to contain bin/ (or tools/).
+          # GitHub's Android SDK keeps sdkmanager under cmdline-tools/latest/bin.
+          cp -a "$ANDROID_SDK_ROOT/cmdline-tools/latest/." "$BW_SDK/"
+
+          ln -sfn "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
+          ln -sfn "$ANDROID_SDK_ROOT/platforms" "$BW_SDK/platforms"
+
+          # Build Tools 34 is the version used by Bubblewrap 1.25.
+          yes | "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" --licenses || true
+          "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" "build-tools;34.0.0"
+
           mkdir -p "$HOME/.bubblewrap"
           cat > "$HOME/.bubblewrap/config.json" <<EOF
           {
             "jdkPath": "$JAVA_HOME_17_X64",
-            "androidSdkPath": "$ANDROID_SDK_ROOT"
+            "androidSdkPath": "$BW_SDK"
           }
           EOF
+
           bubblewrap doctor
 
       - name: Prepare test signing key
         run: |
           rm -rf android-twa
           mkdir -p android-twa
-          keytool -genkeypair -v             -keystore android-twa/android.keystore             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
+          keytool -genkeypair -v             -keystore "$GITHUB_WORKSPACE/android-twa/android.keystore"             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
 
       - name: Initialize TWA project
         run: |
-          yes "" | bubblewrap init             --manifest=https://neocooler.netlify.app/manifest.webmanifest             --directory=android-twa
+          {
+            for i in {1..15}; do printf '\n'; done
+            printf '%s\n' "$GITHUB_WORKSPACE/android-twa/android.keystore"
+            printf '%s\n' "android"
+          } | bubblewrap init             --manifest=https://neocooler.netlify.app/manifest.webmanifest             --directory=android-twa
 
       - name: Build signed APK only
         working-directory: android-twa
@@ -63,7 +84,7 @@ jobs:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
         run: |
-          bubblewrap build             --skipPwaValidation             --signingKeyPath=./android.keystore             --signingKeyAlias=android
+          bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android.keystore"             --signingKeyAlias=android
 
       - name: Verify APK
         run: |

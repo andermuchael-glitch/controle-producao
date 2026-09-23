@@ -36,9 +36,16 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Configure Bubblewrap SDK paths
+      - name: Configure Bubblewrap non-interactively
         run: |
-          bubblewrap updateConfig             --jdkPath="$JAVA_HOME_17_X64"             --androidSdkPath="$ANDROID_SDK_ROOT"
+          mkdir -p "$HOME/.bubblewrap"
+          cat > "$HOME/.bubblewrap/config.json" <<EOF
+          {
+            "jdkPath": "$JAVA_HOME_17_X64",
+            "androidSdkPath": "$ANDROID_SDK_ROOT"
+          }
+          EOF
+          bubblewrap doctor
 
       - name: Prepare test signing key
         run: |

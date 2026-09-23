@@ -1116,6 +1116,97 @@ body{
   .neocooler-app .producao-resumo-grid{grid-template-columns:1fr}
 }
 
+/* Painéis de produção recolhíveis: compactos por padrão e detalhados sob toque/clique */
+.neocooler-app .producao-historico-minimizado{
+  width:100%!important;
+  min-width:0!important;
+  padding:0!important;
+  overflow:hidden;
+}
+.neocooler-app .producao-historico-toggle{
+  width:100%;
+  min-height:82px;
+  display:flex;
+  align-items:center;
+  gap:16px;
+  padding:15px 18px;
+  border:0;
+  background:linear-gradient(135deg,#fffdf8,#f7f3ea);
+  color:#26384a;
+  text-align:left;
+  cursor:pointer;
+  font:inherit;
+}
+.neocooler-app .producao-historico-toggle:hover{background:#fff9ef}
+.neocooler-app .producao-historico-toggle:focus-visible{
+  outline:3px solid #d8622c!important;
+  outline-offset:-3px!important;
+}
+.neocooler-app .producao-historico-toggle-info{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+.neocooler-app .producao-historico-toggle-info strong{
+  font-size:18px;
+  line-height:1.15;
+}
+.neocooler-app .producao-historico-toggle-info small{
+  color:#7a7160;
+  font-size:11px;
+}
+.neocooler-app .producao-historico-toggle-total{
+  flex:0 0 auto;
+  display:flex;
+  align-items:baseline;
+  gap:5px;
+  white-space:nowrap;
+}
+.neocooler-app .producao-historico-toggle-total b{
+  color:#d8622c;
+  font-size:25px;
+}
+.neocooler-app .producao-historico-toggle-total small{
+  color:#7a7160;
+  font-size:9px;
+}
+.neocooler-app .producao-historico-chevron{
+  flex:0 0 34px;
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#1c2a3a;
+  color:#fff;
+  font-size:11px;
+}
+.neocooler-app .producao-historico-minimizado.aberto .producao-historico-toggle{
+  border-bottom:1px solid #ded5c4;
+}
+.neocooler-app .producao-historico-conteudo{
+  padding:14px 18px 18px;
+}
+.neocooler-app .producao-historico-conteudo .producao-historico-head{
+  display:none;
+}
+@media(max-width:640px){
+  .neocooler-app .producao-historico-toggle{
+    min-height:70px;
+    padding:12px;
+    gap:8px;
+  }
+  .neocooler-app .producao-historico-toggle-info strong{font-size:14px}
+  .neocooler-app .producao-historico-toggle-info small{font-size:9px}
+  .neocooler-app .producao-historico-toggle-total{flex-direction:column;align-items:flex-end;gap:0}
+  .neocooler-app .producao-historico-toggle-total b{font-size:20px}
+  .neocooler-app .producao-historico-toggle-total small{font-size:8px}
+  .neocooler-app .producao-historico-chevron{flex-basis:30px;width:30px;height:30px;font-size:9px}
+  .neocooler-app .producao-historico-conteudo{padding:10px}
+}
+
 /* NeoCooler mobile-first production UX */
 .producao-historico-card{flex:0 0 100%!important;width:100%!important;max-width:none!important;order:-2!important;box-sizing:border-box;background:linear-gradient(135deg,#fffdf8,#f7f3ea);border:1px solid #ded5c4;border-radius:18px;padding:18px;margin-bottom:0;box-shadow:0 10px 28px #00000012}
 .producao-historico-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:12px}

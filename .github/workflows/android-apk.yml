@@ -43,14 +43,10 @@ jobs:
           rm -rf "$BW_SDK"
           mkdir -p "$BW_SDK"
 
-          # Bubblewrap expects its SDK root to contain bin/ (or tools/).
-          # GitHub's Android SDK keeps sdkmanager under cmdline-tools/latest/bin.
           cp -a "$ANDROID_SDK_ROOT/cmdline-tools/latest/." "$BW_SDK/"
-
           ln -sfn "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
           ln -sfn "$ANDROID_SDK_ROOT/platforms" "$BW_SDK/platforms"
 
-          # Build Tools 34 is the version used by Bubblewrap 1.25.
           yes | "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" --licenses || true
           "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" "build-tools;34.0.0"
 
@@ -72,9 +68,24 @@ jobs:
 
       - name: Initialize TWA project
         run: |
+          KEYSTORE="$GITHUB_WORKSPACE/android-twa/android.keystore"
           {
-            for i in {1..15}; do printf '\n'; done
-            printf '%s\n' "$GITHUB_WORKSPACE/android-twa/android.keystore"
+            printf '%s\n' "neocooler.netlify.app"
+            printf '%s\n' "/"
+            printf '%s\n' "NeoCooler — Controle de Produção"
+            printf '%s\n' "NeoCooler"
+            printf '%s\n' "app.neocooler.controleproducao"
+            printf '%s\n' "1"
+            printf '%s\n' "standalone"
+            printf '%s\n' "portrait-primary"
+            printf '%s\n' "#1c2a3a"
+            printf '%s\n' "#14233b"
+            printf '%s\n' "https://neocooler.netlify.app/icone-neocooler-512.png"
+            printf '%s\n' "https://neocooler.netlify.app/icone-neocooler-512.png"
+            printf '%s\n' ""
+            printf '%s\n' "n"
+            printf '%s\n' "n"
+            printf '%s\n' "$KEYSTORE"
             printf '%s\n' "android"
           } | bubblewrap init             --manifest=https://neocooler.netlify.app/manifest.webmanifest             --directory=android-twa
 

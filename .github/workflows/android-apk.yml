@@ -12,6 +12,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Setup JDK 17
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
@@ -25,27 +36,32 @@ jobs:
       - name: Install Bubblewrap
         run: npm install -g @bubblewrap/cli
 
-      - name: Accept Android SDK licenses
+      - name: Configure Bubblewrap SDK paths
         run: |
-          yes | sdkmanager --licenses || true
+          bubblewrap updateConfig             --jdkPath="$JAVA_HOME_17_X64"             --androidSdkPath="$ANDROID_SDK_ROOT"
 
-      - name: Initialize TWA project
+      - name: Prepare test signing key
         run: |
           rm -rf android-twa
           mkdir -p android-twa
-          yes "" | bubblewrap init --manifest=https://neocooler.netlify.app/manifest.webmanifest --directory=android-twa
+          keytool -genkeypair -v             -keystore android-twa/android.keystore             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
 
-      - name: Create temporary test signing key
+      - name: Initialize TWA project
         run: |
-          keytool -genkeypair -v             -keystore neocooler-test.jks             -alias neocooler             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
+          yes "" | bubblewrap init             --manifest=https://neocooler.netlify.app/manifest.webmanifest             --directory=android-twa
 
-      - name: Build signed test APK
+      - name: Build signed APK only
         working-directory: android-twa
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
         run: |
-          bubblewrap build             --skipPwaValidation             --signingKeyPath=../neocooler-test.jks             --signingKeyAlias=neocooler
+          bubblewrap build             --skipPwaValidation             --signingKeyPath=./android.keystore             --signingKeyAlias=android
+
+      - name: Verify APK
+        run: |
+          test -s android-twa/app-release-signed.apk
+          ls -lh android-twa/app-release-signed.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

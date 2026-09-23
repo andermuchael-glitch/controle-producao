@@ -64,30 +64,31 @@ jobs:
         run: |
           rm -rf android-twa
           mkdir -p android-twa
-          keytool -genkeypair -v             -keystore "$GITHUB_WORKSPACE/android-twa/android.keystore"             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
+          keytool -genkeypair -v             -keystore "$GITHUB_WORKSPACE/android-twa/android-keystore"             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
 
       - name: Initialize TWA project
         run: |
-          KEYSTORE="$GITHUB_WORKSPACE/android-twa/android.keystore"
-          {
-            printf '%s\n' "neocooler.netlify.app"
-            printf '%s\n' "/"
-            printf '%s\n' "NeoCooler — Controle de Produção"
-            printf '%s\n' "NeoCooler"
-            printf '%s\n' "app.neocooler.controleproducao"
-            printf '%s\n' "1"
-            printf '%s\n' "standalone"
-            printf '%s\n' "portrait-primary"
-            printf '%s\n' "#1c2a3a"
-            printf '%s\n' "#14233b"
-            printf '%s\n' "https://neocooler.netlify.app/icone-neocooler-512.png"
-            printf '%s\n' "https://neocooler.netlify.app/icone-neocooler-512.png"
-            printf '%s\n' ""
-            printf '%s\n' "n"
-            printf '%s\n' "n"
-            printf '%s\n' "$KEYSTORE"
-            printf '%s\n' "android"
-          } | bubblewrap init             --manifest=https://neocooler.netlify.app/manifest.webmanifest             --directory=android-twa
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq expect
+          cat > /tmp/bubblewrap-init.exp <<'EOF'
+          #!/usr/bin/expect -f
+          set timeout 180
+          set manifest "https://neocooler.netlify.app/manifest.webmanifest"
+          set directory "android-twa"
+          spawn bubblewrap init --manifest=$manifest --directory=$directory
+          expect {
+            -re {^\? .*} {
+              send "\r"
+              exp_continue
+            }
+            eof
+          }
+          catch wait result
+          set exit_code [lindex $result 3]
+          exit $exit_code
+          EOF
+          chmod +x /tmp/bubblewrap-init.exp
+          /tmp/bubblewrap-init.exp
 
       - name: Build signed APK only
         working-directory: android-twa
@@ -95,7 +96,7 @@ jobs:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
         run: |
-          bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android.keystore"             --signingKeyAlias=android
+          bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android-keystore"             --signingKeyAlias=android
 
       - name: Verify APK
         run: |

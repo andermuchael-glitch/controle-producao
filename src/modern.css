@@ -1046,11 +1046,10 @@ body{
   font-weight:700;
   text-transform:none;
 }
-.neocooler-app .producao-resumo-valores{
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  border-top:1px solid #e8dfd1;
-}
+.neocooler-app .producao-resumo-valores{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) minmax(105px,1.25fr);border-top:1px solid #e8dfd1}
+.neocooler-app .producao-resumo-estoque{display:flex!important;flex-direction:column!important;align-items:center;justify-content:center;gap:4px;min-height:52px;padding:5px 5px;background:#eef7ef;border-left:1px solid #dbe7dc}
+.neocooler-app .producao-resumo-estoque input{width:72px;height:28px;box-sizing:border-box;padding:2px 6px;border:1px solid #b8c9ba;border-radius:6px;background:#fff;text-align:center;font-size:14px;font-weight:800;color:#26384a}
+.neocooler-app .producao-resumo-estoque button{height:24px;padding:2px 8px;border:0;border-radius:6px;background:#1c2a3a;color:#fff;font-size:9px;font-weight:800;cursor:pointer}
 .neocooler-app .producao-resumo-valores span{
   display:flex;
   flex-direction:column;
@@ -1108,7 +1107,10 @@ body{
   }
   .neocooler-app .producao-resumo-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
   .neocooler-app .producao-resumo-produto{min-height:40px;font-size:10px;padding:8px}
+  .neocooler-app .producao-resumo-valores{grid-template-columns:repeat(4,minmax(0,1fr)) minmax(72px,1.15fr)}
   .neocooler-app .producao-resumo-valores small{font-size:7px}
+  .neocooler-app .producao-resumo-estoque input{width:58px;height:26px;font-size:13px}
+  .neocooler-app .producao-resumo-estoque button{font-size:8px;padding:2px 6px}
   .neocooler-app .producao-resumo-valores b{font-size:15px}
   .neocooler-app .producao-resumo-total b{font-size:17px}
 }

@@ -1763,3 +1763,88 @@ body{
     width:100%!important;
   }
 }
+
+/* ===== ETAPAS DE PRODUÇÃO — MODO LISTA =====
+   Aplicado a todas as abas de produção, preservando o Quadro Geral. */
+@media(min-width:601px){
+  .neocooler-app main.app-main:not(.quadro-main) .production-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:12px!important;
+    width:100%!important;
+    max-width:1550px!important;
+    margin-left:auto!important;
+    margin-right:auto!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .production-grid>.pedido-card,
+  .neocooler-app main.app-main:not(.quadro-main) .production-grid>.dia-group{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    min-height:0!important;
+    height:auto!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+    border-radius:14px!important;
+    overflow:hidden!important;
+  }
+  /* Sublimação também entra na lista, um dia por linha. */
+  .neocooler-app main.app-main:not(.quadro-main) .sublimacao-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:12px!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .sublimacao-grid>.producao-historico-card{
+    grid-column:1!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .sublimacao-grid>.dia-group{
+    width:100%!important;
+    max-width:100%!important;
+  }
+  /* Cabeçalho dos cartões em formato de lista. */
+  .neocooler-app main.app-main:not(.quadro-main) .pedido-card .pedidoTop{
+    min-height:44px!important;
+    align-items:center!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .pedido-card .pedidoNum{
+    font-size:20px!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .pedido-card .corteLinha{
+    margin-top:8px!important;
+  }
+}
+
+/* Linha visual consistente entre itens das listas. */
+.neocooler-app main.app-main:not(.quadro-main) .production-grid>.pedido-card,
+.neocooler-app main.app-main:not(.quadro-main) .production-grid>.dia-group{
+  box-shadow:0 5px 18px #07101c18!important;
+}
+
+/* Sublimação: lista larga, um dia por linha. */
+@media(min-width:601px){
+  .neocooler-app main.app-main:not(.quadro-main) .sublimacao-grid>.dia-group .itemLinha{
+    grid-template-columns:190px 22px minmax(240px,1fr) 150px 115px 42px!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .sublimacao-grid>.dia-group .itemLinha .enviarBtn{
+    grid-column:1!important;
+  }
+}
+
+/* Celular continua sendo lista de cartões, mas sem apertar os controles. */
+@media(max-width:600px){
+  .neocooler-app main.app-main:not(.quadro-main) .production-grid{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .production-grid>.pedido-card,
+  .neocooler-app main.app-main:not(.quadro-main) .production-grid>.dia-group{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+  }
+  .neocooler-app main.app-main:not(.quadro-main) .sublimacao-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+}

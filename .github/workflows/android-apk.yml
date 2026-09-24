@@ -3,6 +3,12 @@ name: Build NeoCooler Android APK
 on:
   push:
     branches: [main]
+    paths:
+      - ".github/workflows/android-apk.yml"
+      - "public/manifest.webmanifest"
+      - "public/icone-neocooler-192.png"
+      - "public/icone-neocooler-512.png"
+      - "public/icone-neocooler.svg"
   workflow_dispatch:
 
 jobs:
@@ -16,19 +22,17 @@ jobs:
         uses: actions/setup-java@v6
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
         with:
-          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+          packages: "platform-tools platforms;android-36 build-tools;36.0.0"
 
       - name: Setup Node
         uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
-          cache-dependency-path: package.json
 
       - name: Build web app
         run: npm install --no-audit --no-fund && npm run build
@@ -60,35 +64,68 @@ jobs:
 
           bubblewrap doctor
 
+      - name: Wait for Netlify PWA manifest
+        run: |
+          set -e
+          MANIFEST_URL="https://neocooler.netlify.app/manifest.webmanifest"
+          echo "Aguardando o deploy do Netlify disponibilizar o manifest..."
+          for i in $(seq 1 36); do
+            if curl --fail --silent --show-error --location "$MANIFEST_URL" -o /tmp/neocooler-manifest.webmanifest; then
+              if grep -q '"name"' /tmp/neocooler-manifest.webmanifest && grep -q '"icons"' /tmp/neocooler-manifest.webmanifest; then
+                echo "Manifest disponível."
+                exit 0
+              fi
+            fi
+            echo "Tentativa $i/36: manifest ainda não disponível; aguardando 5s..."
+            sleep 5
+          done
+          echo "Manifest do Netlify não ficou disponível a tempo."
+          exit 1
+
       - name: Prepare test signing key
         run: |
+          set -e
           rm -rf android-twa
           mkdir -p android-twa
           keytool -genkeypair -v             -keystore "$GITHUB_WORKSPACE/android-twa/android-keystore"             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
 
       - name: Initialize TWA project
         run: |
+          set -e
           sudo apt-get update -qq
           sudo apt-get install -y -qq expect
+
           cat > /tmp/bubblewrap-init.exp <<'EOF'
           #!/usr/bin/expect -f
-          set timeout 180
+          set timeout 300
           set manifest "https://neocooler.netlify.app/manifest.webmanifest"
           set directory "android-twa"
+
+          log_user 1
           spawn bubblewrap init --manifest=$manifest --directory=$directory
+
           expect {
-            -re {^\? .*} {
-              send "\r"
+            -re {.*\?.*} {
+              send -- "\r"
               exp_continue
             }
-            eof
+            eof {
+              catch wait result
+              set exit_code [lindex $result 3]
+              exit $exit_code
+            }
+            timeout {
+              puts stderr "Bubblewrap init excedeu o tempo limite."
+              exit 124
+            }
           }
-          catch wait result
-          set exit_code [lindex $result 3]
-          exit $exit_code
           EOF
+
           chmod +x /tmp/bubblewrap-init.exp
           /tmp/bubblewrap-init.exp
+
+          test -s android-twa/twa-manifest.json
+          test -s android-twa/manifest-checksum.txt
 
       - name: Build signed APK only
         working-directory: android-twa
@@ -101,6 +138,7 @@ jobs:
       - name: Verify APK
         run: |
           test -s android-twa/app-release-signed.apk
+          file android-twa/app-release-signed.apk
           ls -lh android-twa/app-release-signed.apk
 
       - name: Upload APK

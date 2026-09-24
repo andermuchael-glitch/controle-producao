@@ -1388,3 +1388,57 @@ body{
     min-height:44px!important;
   }
 }
+
+/* Sublimação: cartões de dia compactos e alinhados dentro da grade de 5 colunas */
+.neocooler-app .production-grid>.dia-group .itemLinha{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto auto auto!important;
+  gap:7px!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  align-items:center!important;
+  box-sizing:border-box!important;
+}
+.neocooler-app .production-grid>.dia-group .itemLinha .enviarBtn{
+  grid-column:1/-1!important;
+  grid-row:1!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:40px!important;
+  box-sizing:border-box!important;
+  white-space:normal!important;
+}
+.neocooler-app .production-grid>.dia-group .itemLinha .swatchSm{grid-column:1!important;grid-row:2!important}
+.neocooler-app .production-grid>.dia-group .itemLinha .itemTexto{grid-column:2!important;grid-row:2!important;min-width:0!important;width:100%!important}
+.neocooler-app .production-grid>.dia-group .itemLinha .sublimadorPill{grid-column:3!important;grid-row:2!important;max-width:100%!important}
+.neocooler-app .production-grid>.dia-group .itemLinha .edit-item-btn{grid-column:4!important;grid-row:2!important;min-height:36px!important;padding:6px 8px!important;font-size:11px!important}
+.neocooler-app .production-grid>.dia-group .itemLinha .removerBtn{grid-column:5!important;grid-row:2!important;width:30px!important;min-width:30px!important}
+.neocooler-app .production-grid>.dia-group .diaTitulo{
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+}
+@media(max-width:1050px){
+  .neocooler-app .production-grid>.dia-group .itemLinha{
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+  }
+  .neocooler-app .production-grid>.dia-group .itemLinha .sublimadorPill{grid-column:2!important;grid-row:3!important;justify-self:start}
+  .neocooler-app .production-grid>.dia-group .itemLinha .edit-item-btn{grid-column:3!important;grid-row:3!important}
+  .neocooler-app .production-grid>.dia-group .itemLinha .removerBtn{grid-column:3!important;grid-row:2!important}
+}
+@media(max-width:600px){
+  .neocooler-app .production-grid>.dia-group .itemLinha{
+    grid-template-columns:auto minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+  .neocooler-app .production-grid>.dia-group .itemLinha .enviarBtn{
+    grid-column:1/-1!important;
+    grid-row:1!important;
+  }
+  .neocooler-app .production-grid>.dia-group .itemLinha .swatchSm{grid-column:1!important;grid-row:2!important}
+  .neocooler-app .production-grid>.dia-group .itemLinha .itemTexto{grid-column:2!important;grid-row:2!important}
+  .neocooler-app .production-grid>.dia-group .itemLinha .sublimadorPill{grid-column:2!important;grid-row:3!important;justify-self:start}
+  .neocooler-app .production-grid>.dia-group .itemLinha .edit-item-btn{grid-column:1/-1!important;grid-row:4!important;width:100%!important;min-height:44px!important}
+  .neocooler-app .production-grid>.dia-group .itemLinha .removerBtn{grid-column:1/-1!important;grid-row:5!important;width:100%!important}
+}

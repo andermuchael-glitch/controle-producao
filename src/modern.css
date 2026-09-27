@@ -2094,3 +2094,141 @@ body{
     height:24px;
   }
 }
+
+
+/* SUBLIMAÇÃO — lista profissional, compacta e legível */
+.neocooler-app .sublimacao-grid{
+  gap:14px!important;
+}
+.neocooler-app .sublimacao-grid>.dia-group{
+  background:#fff!important;
+  color:#26384a!important;
+  border:1px solid #d9e1ea!important;
+  box-shadow:0 6px 20px #17203314!important;
+}
+.neocooler-app .sublimacao-grid>.dia-group .diaTitulo{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  min-height:52px!important;
+  padding:12px 16px!important;
+  color:#1d334c!important;
+  font-size:16px!important;
+  font-weight:800!important;
+  background:#f5f8fb!important;
+}
+.neocooler-app .sublimacao-grid>.dia-group .diaTitulo::after{
+  content:"SUBLIMAÇÃO";
+  font-size:9px;
+  letter-spacing:1px;
+  color:#d8622c;
+  font-weight:900;
+}
+.neocooler-app .sublimacao-grid .itemLinha{
+  display:grid!important;
+  grid-template-columns:12px minmax(0,1fr) auto auto auto!important;
+  gap:10px!important;
+  align-items:center!important;
+  min-height:62px!important;
+  padding:9px 14px!important;
+  background:#fff!important;
+  color:#26384a!important;
+  border-bottom:1px solid #edf1f5!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha:last-child{
+  border-bottom:0!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .itemTexto{
+  display:block!important;
+  min-width:0!important;
+  color:#26384a!important;
+  font-size:14px!important;
+  font-weight:650!important;
+  line-height:1.35!important;
+  overflow-wrap:anywhere!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .itemTexto b{
+  color:#1d334c!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .swatchSm{
+  width:12px!important;
+  height:12px!important;
+  min-width:12px!important;
+  border-radius:50%!important;
+  display:block!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .sublimadorPill{
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  background:#eef3fa!important;
+  color:#4a6078!important;
+  font-size:12px!important;
+  font-weight:700!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .enviarBtn{
+  min-height:40px!important;
+  padding:8px 13px!important;
+  border-radius:9px!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .edit-item-btn{
+  min-height:40px!important;
+  padding:7px 11px!important;
+  background:#f3f6fa!important;
+  color:#26384a!important;
+}
+.neocooler-app .sublimacao-grid .itemLinha .removerBtn{
+  min-width:40px!important;
+  min-height:40px!important;
+}
+
+/* Fechado: mostra somente o resumo essencial do pedido. */
+.neocooler-app .sublimacao-grid .pedido-item-colapsavel:not(.pedido-aberto) .enviarBtn,
+.neocooler-app .sublimacao-grid .pedido-item-colapsavel:not(.pedido-aberto) .edit-item-btn,
+.neocooler-app .sublimacao-grid .pedido-item-colapsavel:not(.pedido-aberto) .removerBtn{
+  display:none!important;
+}
+.neocooler-app .sublimacao-grid .pedido-item-colapsavel:not(.pedido-aberto){
+  grid-template-columns:12px minmax(0,1fr) auto!important;
+}
+.neocooler-app .sublimacao-grid .pedido-item-colapsavel.pedido-aberto{
+  background:#fbfdff!important;
+  box-shadow:inset 4px 0 #d8622c!important;
+}
+@media(max-width:760px){
+  .neocooler-app .sublimacao-grid>.dia-group .diaTitulo{
+    min-height:48px!important;
+    padding:10px 12px!important;
+    font-size:15px!important;
+  }
+  .neocooler-app .sublimacao-grid>.dia-group .diaTitulo::after{
+    font-size:8px;
+  }
+  .neocooler-app .sublimacao-grid .itemLinha,
+  .neocooler-app .sublimacao-grid .pedido-item-colapsavel:not(.pedido-aberto){
+    grid-template-columns:12px minmax(0,1fr) auto!important;
+    gap:8px!important;
+    min-height:58px!important;
+    padding:8px 10px!important;
+  }
+  .neocooler-app .sublimacao-grid .itemLinha .itemTexto{
+    font-size:13px!important;
+  }
+  .neocooler-app .sublimacao-grid .itemLinha .sublimadorPill{
+    font-size:11px!important;
+    padding:5px 8px!important;
+  }
+  .neocooler-app .sublimacao-grid .pedido-item-colapsavel.pedido-aberto{
+    grid-template-columns:12px minmax(0,1fr)!important;
+  }
+  .neocooler-app .sublimacao-grid .pedido-item-colapsavel.pedido-aberto .enviarBtn,
+  .neocooler-app .sublimacao-grid .pedido-item-colapsavel.pedido-aberto .edit-item-btn{
+    grid-column:1/-1!important;
+    width:100%!important;
+  }
+  .neocooler-app .sublimacao-grid .pedido-item-colapsavel.pedido-aberto .sublimadorPill{
+    grid-column:2!important;
+    justify-self:start!important;
+  }
+}

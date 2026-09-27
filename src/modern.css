@@ -2011,3 +2011,86 @@ body{
     grid-template-columns:repeat(2,minmax(0,1fr))!important;
   }
 }
+
+
+/* Pedidos minimizados: toque no número para abrir/fechar os itens */
+.neocooler-app .pedido-collapsible{
+  transition:box-shadow .18s ease,transform .18s ease;
+}
+.neocooler-app .pedido-collapsible:not(.pedido-aberto) .itensLista{
+  display:none!important;
+}
+.neocooler-app .pedido-collapsible:not(.pedido-aberto) .barraTrack{
+  margin-bottom:0!important;
+}
+.neocooler-app .pedido-collapsible .pedidoTop{
+  margin-bottom:0!important;
+  min-height:58px!important;
+  padding:10px 14px!important;
+}
+.neocooler-app .pedido-collapsible .pedido-num-clicavel{
+  cursor:pointer!important;
+  user-select:none!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  min-height:44px!important;
+  padding:5px 9px!important;
+  margin:-5px 0!important;
+  border-radius:9px!important;
+  transition:background .15s ease,transform .15s ease!important;
+}
+.neocooler-app .pedido-collapsible .pedido-num-clicavel::after{
+  content:"⌄";
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:22px;
+  height:22px;
+  margin-left:8px;
+  border-radius:50%;
+  background:#1c2a3a;
+  color:#fff;
+  font-size:13px;
+  line-height:1;
+}
+.neocooler-app .pedido-collapsible.pedido-aberto .pedido-num-clicavel::after{
+  content:"⌃";
+}
+.neocooler-app .pedido-collapsible .pedido-num-clicavel:hover,
+.neocooler-app .pedido-collapsible .pedido-num-clicavel:focus-visible{
+  background:#edf3f8!important;
+  outline:2px solid #d8622c!important;
+  outline-offset:2px!important;
+}
+.neocooler-app .pedido-collapsible:not(.pedido-aberto){
+  cursor:default;
+}
+.neocooler-app .pedido-collapsible:not(.pedido-aberto) .pedidoTop{
+  border-bottom:0!important;
+}
+.neocooler-app .pedido-item-colapsavel{
+  transition:background .15s ease;
+}
+.neocooler-app .pedido-item-colapsavel:not(.pedido-aberto)>button:not(.enviarBtn),
+.neocooler-app .pedido-item-colapsavel:not(.pedido-aberto)>.sublimadorPill,
+.neocooler-app .pedido-item-colapsavel:not(.pedido-aberto)>.swatchSm{
+  display:none!important;
+}
+.neocooler-app .pedido-item-colapsavel:not(.pedido-aberto) .enviarBtn,
+.neocooler-app .pedido-item-colapsavel:not(.pedido-aberto) .itemTexto{
+  opacity:.92!important;
+}
+@media(max-width:760px){
+  .neocooler-app .pedido-collapsible .pedidoTop{
+    min-height:62px!important;
+    padding:9px 10px!important;
+  }
+  .neocooler-app .pedido-collapsible .pedido-num-clicavel{
+    min-height:46px!important;
+    font-size:18px!important;
+  }
+  .neocooler-app .pedido-collapsible .pedido-num-clicavel::after{
+    width:24px;
+    height:24px;
+  }
+}

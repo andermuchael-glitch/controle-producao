@@ -1,47 +1,24 @@
-name: Corrigir sintaxe do App
+name: Validar build do App
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  fix:
-    if: github.actor != 'github-actions[bot]'
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Corrigir JSX quebrado
-        shell: bash
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          p = Path('src/App.jsx')
-          text = p.read_text(encoding='utf-8')
-          old = 'style={styles.pedidoNumWrap"'
-          new = 'style={styles.pedidoNumWrap}'
-          count = text.count(old)
-          print(f'ocorrencias encontradas: {count}')
-          if count:
-              text = text.replace(old, new)
-              p.write_text(text, encoding='utf-8')
-          else:
-              print('Nenhuma correção necessária.')
-          PY
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
 
-      - name: Validar build
-        run: npm ci && npm run build
-
-      - name: Gravar correção e remover reparo temporário
-        shell: bash
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/App.jsx
-          git rm .github/workflows/fix-syntax.yml
-          git diff --cached --quiet && echo "Nenhuma alteração necessária." || git commit -m "Corrigir JSX do cabeçalho dos pedidos"
-          git push
+      - name: Instalar dependências e validar build
+        run: npm install --no-audit --no-fund && npm run build

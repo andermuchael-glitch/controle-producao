@@ -2555,3 +2555,231 @@ body{
     width:100%!important;
   }
 }
+
+
+/* SUBLIMAÇÃO — painel responsivo dedicado: desktop e celular */
+.neocooler-app .sublimacao-grid{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:16px!important;
+  width:100%!important;
+}
+.neocooler-app .sublimacao-grid>.producao-historico-card{
+  width:100%!important;
+  margin:0!important;
+}
+.neocooler-app .sublimacao-grid>.dia-group{
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+  background:#fff!important;
+}
+.neocooler-app .sublimacao-grid>.dia-group .diaTitulo{
+  min-height:54px!important;
+  padding:12px 16px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  background:#1c2a3a!important;
+  color:#fff!important;
+  font-size:16px!important;
+  font-weight:800!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-dia-total{
+  padding:5px 10px!important;
+  border-radius:999px!important;
+  background:#ffffff1c!important;
+  color:#fff!important;
+  font-size:12px!important;
+  font-weight:800!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedidos{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:10px!important;
+  padding:10px!important;
+  background:#f3f6fa!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido{
+  min-width:0!important;
+  overflow:hidden!important;
+  border:1px solid #dbe2ea!important;
+  border-radius:12px!important;
+  background:#fff!important;
+  box-shadow:0 3px 12px #1720330d!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido-toggle{
+  width:100%!important;
+  min-height:66px!important;
+  padding:10px 12px!important;
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr) auto!important;
+  grid-template-rows:auto auto!important;
+  column-gap:10px!important;
+  align-items:center!important;
+  border:0!important;
+  background:#fff!important;
+  color:#26384a!important;
+  text-align:left!important;
+  cursor:pointer!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido-num{
+  grid-row:1/3!important;
+  font-size:18px!important;
+  font-weight:900!important;
+  color:#1c2a3a!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido-meta{
+  min-width:0!important;
+  font-size:11px!important;
+  color:#738197!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido-prof{
+  min-width:0!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  color:#536a82!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido-chevron{
+  grid-column:3!important;
+  grid-row:1/3!important;
+  width:30px!important;
+  height:30px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+  background:#1c2a3a!important;
+  color:#fff!important;
+  font-size:11px!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido.aberto{
+  border-color:#d8622c!important;
+  box-shadow:0 5px 16px #d8622c1c!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido.aberto .sublimacao-pedido-toggle{
+  background:#fff8f3!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-pedido-itens{
+  display:flex!important;
+  flex-direction:column!important;
+  border-top:1px solid #e5eaf0!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-item{
+  display:grid!important;
+  grid-template-columns:10px minmax(0,1fr) auto auto 38px!important;
+  gap:8px!important;
+  align-items:center!important;
+  padding:9px 10px!important;
+  min-height:54px!important;
+  border-bottom:1px solid #edf1f5!important;
+  background:#fbfcfe!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-item:last-child{
+  border-bottom:0!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-item-dot{
+  width:10px!important;
+  height:10px!important;
+  border-radius:50%!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-item-info{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-item-info strong{
+  font-size:12px!important;
+  color:#26384a!important;
+  overflow-wrap:anywhere!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-item-info span{
+  font-size:10px!important;
+  color:#718095!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-acao{
+  min-height:38px!important;
+  padding:7px 10px!important;
+  border-radius:8px!important;
+  border:1px solid #d4dce6!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+  white-space:nowrap!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-acao.enviar{
+  background:#1f8f43!important;
+  color:#fff!important;
+  border-color:#1f8f43!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-acao.editar{
+  background:#f1f5f9!important;
+  color:#26384a!important;
+}
+.neocooler-app .sublimacao-grid .sublimacao-acao.remover{
+  width:38px!important;
+  padding:0!important;
+  background:#fff!important;
+  color:#c62828!important;
+  font-size:18px!important;
+}
+
+/* desktop: dois pedidos lado a lado dentro de cada dia */
+@media(min-width:1100px){
+  .neocooler-app .sublimacao-grid>.dia-group .sublimacao-pedidos{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+/* tablet */
+@media(min-width:761px) and (max-width:1099px){
+  .neocooler-app .sublimacao-grid>.dia-group .sublimacao-pedidos{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
+/* celular: um pedido por linha, largura total */
+@media(max-width:760px){
+  .neocooler-app .sublimacao-grid{
+    gap:12px!important;
+  }
+  .neocooler-app .sublimacao-grid>.dia-group{
+    border-radius:12px!important;
+  }
+  .neocooler-app .sublimacao-grid>.dia-group .diaTitulo{
+    min-height:48px!important;
+    padding:10px 12px!important;
+    font-size:14px!important;
+  }
+  .neocooler-app .sublimacao-grid .sublimacao-pedidos{
+    grid-template-columns:1fr!important;
+    gap:8px!important;
+    padding:8px!important;
+  }
+  .neocooler-app .sublimacao-grid .sublimacao-pedido-toggle{
+    min-height:62px!important;
+    padding:9px 10px!important;
+  }
+  .neocooler-app .sublimacao-grid .sublimacao-pedido-num{
+    font-size:17px!important;
+  }
+  .neocooler-app .sublimacao-grid .sublimacao-item{
+    grid-template-columns:10px minmax(0,1fr)!important;
+    gap:7px!important;
+    padding:9px 10px!important;
+  }
+  .neocooler-app .sublimacao-grid .sublimacao-acao{
+    grid-column:2!important;
+    width:100%!important;
+    min-height:44px!important;
+  }
+  .neocooler-app .sublimacao-grid .sublimacao-acao.remover{
+    width:44px!important;
+    grid-column:2!important;
+    justify-self:start!important;
+  }
+}

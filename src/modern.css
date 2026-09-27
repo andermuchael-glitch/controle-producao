@@ -2366,3 +2366,192 @@ body{
   .neocooler-app .kanban-pedido-resumo{padding:0 10px 9px!important}
   .neocooler-app .kanban-pedido-item{min-height:56px!important;padding:9px 10px!important}
 }
+
+
+/* SUBLIMAÇÃO — painel por pedido, compacto e operacional */
+.neocooler-app .sublimacao-grid>.dia-group{
+  width:100%!important;
+  background:#fff!important;
+  border:1px solid #d8e0e8!important;
+  border-radius:14px!important;
+  overflow:hidden!important;
+  box-shadow:0 5px 18px #15223812!important;
+}
+.neocooler-app .sublimacao-grid>.dia-group .diaTitulo{
+  min-height:48px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  padding:10px 14px!important;
+  background:#f3f7fb!important;
+  color:#1f344b!important;
+  font-size:15px!important;
+  font-weight:900!important;
+}
+.neocooler-app .sublimacao-dia-total{
+  margin-left:auto!important;
+  padding:5px 9px!important;
+  border-radius:999px!important;
+  background:#e4edf7!important;
+  color:#38536d!important;
+  font-size:11px!important;
+}
+.neocooler-app .sublimacao-pedidos{
+  display:flex!important;
+  flex-direction:column!important;
+}
+.neocooler-app .sublimacao-pedido{
+  border-top:1px solid #e8edf2!important;
+  background:#fff!important;
+}
+.neocooler-app .sublimacao-pedido:first-child{border-top:0!important}
+.neocooler-app .sublimacao-pedido-toggle{
+  width:100%!important;
+  min-height:62px!important;
+  display:grid!important;
+  grid-template-columns:minmax(72px,auto) minmax(80px,1fr) minmax(100px,auto) 32px!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:9px 12px!important;
+  border:0!important;
+  background:#fff!important;
+  color:#26384a!important;
+  text-align:left!important;
+  cursor:pointer!important;
+}
+.neocooler-app .sublimacao-pedido-toggle:hover,
+.neocooler-app .sublimacao-pedido-toggle:focus-visible{
+  background:#f5f8fb!important;
+  outline:2px solid #d8622c!important;
+  outline-offset:-2px!important;
+}
+.neocooler-app .sublimacao-pedido-num{
+  font-size:17px!important;
+  font-weight:900!important;
+  color:#1e344b!important;
+}
+.neocooler-app .sublimacao-pedido-meta{
+  color:#687b8f!important;
+  font-size:11px!important;
+  font-weight:700!important;
+}
+.neocooler-app .sublimacao-pedido-meta b{color:#d8622c!important;font-size:14px!important}
+.neocooler-app .sublimacao-pedido-prof{
+  justify-self:end!important;
+  max-width:180px!important;
+  padding:6px 10px!important;
+  border-radius:999px!important;
+  background:#eef3fa!important;
+  color:#50657a!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+}
+.neocooler-app .sublimacao-pedido-chevron{
+  width:30px!important;
+  height:30px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-radius:50%!important;
+  background:#1c2a3a!important;
+  color:#fff!important;
+  font-size:10px!important;
+}
+.neocooler-app .sublimacao-pedido.aberto .sublimacao-pedido-toggle{
+  background:#f8fbfe!important;
+  box-shadow:inset 4px 0 #d8622c!important;
+}
+.neocooler-app .sublimacao-pedido-itens{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:7px!important;
+  padding:9px 12px 12px 20px!important;
+  background:#f8fafc!important;
+  border-top:1px solid #e5ebf1!important;
+}
+.neocooler-app .sublimacao-item{
+  display:grid!important;
+  grid-template-columns:12px minmax(0,1fr) auto auto 40px!important;
+  align-items:center!important;
+  gap:9px!important;
+  min-height:52px!important;
+  padding:7px 8px!important;
+  border:1px solid #e0e7ee!important;
+  border-radius:10px!important;
+  background:#fff!important;
+}
+.neocooler-app .sublimacao-item-dot{
+  width:12px!important;
+  height:12px!important;
+  border-radius:50%!important;
+}
+.neocooler-app .sublimacao-item-info{
+  min-width:0!important;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:2px!important;
+}
+.neocooler-app .sublimacao-item-info strong{
+  color:#26384a!important;
+  font-size:13px!important;
+  overflow-wrap:anywhere!important;
+}
+.neocooler-app .sublimacao-item-info span{
+  color:#74869a!important;
+  font-size:10px!important;
+}
+.neocooler-app .sublimacao-acao{
+  min-height:38px!important;
+  border-radius:8px!important;
+  padding:7px 10px!important;
+  font-size:11px!important;
+  font-weight:800!important;
+  cursor:pointer!important;
+}
+.neocooler-app .sublimacao-acao.enviar{background:#1f8a3d!important;color:#fff!important;border:1px solid #1f8a3d!important}
+.neocooler-app .sublimacao-acao.editar{background:#eef3f8!important;color:#26384a!important;border:1px solid #d3dde7!important}
+.neocooler-app .sublimacao-acao.remover{background:#fff!important;color:#c52a38!important;border:1px solid #e5b9be!important;font-size:18px!important}
+@media(max-width:760px){
+  .neocooler-app .sublimacao-grid>.dia-group .diaTitulo{
+    min-height:46px!important;
+    padding:9px 11px!important;
+  }
+  .neocooler-app .sublimacao-pedido-toggle{
+    grid-template-columns:minmax(62px,auto) minmax(0,1fr) 30px!important;
+    min-height:58px!important;
+    padding:8px 10px!important;
+  }
+  .neocooler-app .sublimacao-pedido-prof{
+    grid-column:2!important;
+    justify-self:start!important;
+    max-width:100%!important;
+    padding:3px 8px!important;
+  }
+  .neocooler-app .sublimacao-pedido-chevron{
+    grid-column:3!important;
+    grid-row:1 / span 2!important;
+  }
+  .neocooler-app .sublimacao-pedido-itens{
+    padding:8px!important;
+  }
+  .neocooler-app .sublimacao-item{
+    grid-template-columns:10px minmax(0,1fr)!important;
+    gap:7px!important;
+    padding:9px!important;
+  }
+  .neocooler-app .sublimacao-item-info span{
+    font-size:10px!important;
+  }
+  .neocooler-app .sublimacao-acao{
+    grid-column:2!important;
+    width:100%!important;
+    min-height:42px!important;
+  }
+  .neocooler-app .sublimacao-acao.remover{
+    width:100%!important;
+  }
+}

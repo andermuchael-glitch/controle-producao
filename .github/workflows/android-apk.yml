@@ -5,10 +5,11 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/android-apk.yml"
-      - "public/manifest.webmanifest"
-      - "public/icone-neocooler-192.png"
-      - "public/icone-neocooler-512.png"
-      - "public/icone-neocooler.svg"
+      - "src/**"
+      - "public/**"
+      - "package.json"
+      - "vite.config.js"
+      - "index.html"
   workflow_dispatch:
 
 jobs:

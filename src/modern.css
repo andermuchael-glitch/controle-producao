@@ -2783,3 +2783,13 @@ body{
     justify-self:start!important;
   }
 }
+
+
+/* Pedidos minimizados: mostrar os itens somente quando o número do pedido for aberto. */
+.neocooler-app .pedido-collapsible:not(.pedido-aberto) .itensLista{display:none!important}
+.neocooler-app .pedido-collapsible{transition:box-shadow .18s ease,transform .18s ease}
+.neocooler-app .pedido-collapsible:not(.pedido-aberto){min-height:0!important}
+.neocooler-app .pedido-collapsible .pedido-num-clicavel,.neocooler-app .pedido-collapsible .pedidoNum{cursor:pointer!important}
+.neocooler-app .pedido-collapsible:not(.pedido-aberto) .pedidoTop{margin-bottom:0!important}
+.neocooler-app .pedido-collapsible.pedido-aberto .pedidoTop{margin-bottom:10px!important}
+.neocooler-app .pedido-collapsible .pedido-num-clicavel:focus-visible,.neocooler-app .pedido-collapsible .pedidoNum:focus-visible{outline:3px solid #d8622c!important;outline-offset:3px!important;border-radius:5px}

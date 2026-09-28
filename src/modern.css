@@ -2028,6 +2028,7 @@ body{
   min-height:58px!important;
   padding:10px 14px!important;
 }
+.neocooler-app .pedido-collapsible .pedido-num-clicavel{appearance:none!important;-webkit-appearance:none!important;border:0!important;background:transparent!important;color:inherit!important;font:inherit!important;text-align:left!important;line-height:1.2!important;cursor:pointer!important;touch-action:manipulation!important}
 .neocooler-app .pedido-collapsible .pedido-num-clicavel{
   cursor:pointer!important;
   user-select:none!important;

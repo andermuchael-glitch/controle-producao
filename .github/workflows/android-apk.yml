@@ -103,21 +103,128 @@ jobs:
           set timeout 300
           set manifest "https://raw.githubusercontent.com/andermuchael-glitch/controle-producao/main/public/manifest.webmanifest?v=20261009b"
           set directory "android-twa"
-
+          array set answered {}
           log_user 1
           spawn bubblewrap init --manifest=$manifest --directory=$directory
 
           expect {
             -re {Domain:} {
-              send -- "neocooler.netlify.app\r"
+              if {![info exists answered(domain)]} {
+                set answered(domain) 1
+                send -- "neocooler.netlify.app\r"
+              }
               exp_continue
             }
             -re {URL path:} {
-              send -- "/\r"
+              if {![info exists answered(path)]} {
+                set answered(path) 1
+                send -- "/\r"
+              }
               exp_continue
             }
-            -re {.*\?.*} {
-              send -- "\r"
+            -re {Application name:} {
+              if {![info exists answered(name)]} {
+                set answered(name) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Short name:} {
+              if {![info exists answered(shortname)]} {
+                set answered(shortname) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Application ID:} {
+              if {![info exists answered(appid)]} {
+                set answered(appid) 1
+                send -- "com.neocooler.controleproducao\r"
+              }
+              exp_continue
+            }
+            -re {Starting version code for the new app version:} {
+              if {![info exists answered(version)]} {
+                set answered(version) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Display mode:} {
+              if {![info exists answered(display)]} {
+                set answered(display) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Orientation:} {
+              if {![info exists answered(orientation)]} {
+                set answered(orientation) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Status bar color:} {
+              if {![info exists answered(theme)]} {
+                set answered(theme) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Splash screen color:} {
+              if {![info exists answered(background)]} {
+                set answered(background) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Icon URL:} {
+              if {![info exists answered(icon)]} {
+                set answered(icon) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Maskable icon URL:} {
+              if {![info exists answered(maskable)]} {
+                set answered(maskable) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Monochrome icon URL:} {
+              if {![info exists answered(monochrome)]} {
+                set answered(monochrome) 1
+                send -- "\r"
+              }
+              exp_continue
+            }
+            -re {Include support for Play Billing\?} {
+              if {![info exists answered(billing)]} {
+                set answered(billing) 1
+                send -- "n\r"
+              }
+              exp_continue
+            }
+            -re {Request geolocation permission\?} {
+              if {![info exists answered(location)]} {
+                set answered(location) 1
+                send -- "n\r"
+              }
+              exp_continue
+            }
+            -re {Key store location:} {
+              if {![info exists answered(keystore)]} {
+                set answered(keystore) 1
+                send -- "$env(GITHUB_WORKSPACE)/android-twa/android.keystore\r"
+              }
+              exp_continue
+            }
+            -re {Key name:} {
+              if {![info exists answered(keyalias)]} {
+                set answered(keyalias) 1
+                send -- "android\r"
+              }
               exp_continue
             }
             eof {
@@ -126,7 +233,7 @@ jobs:
               exit $exit_code
             }
             timeout {
-              puts stderr "Bubblewrap init excedeu o tempo limite."
+              puts stderr "Bubblewrap init excedeu o tempo limite. Verifique a última pergunta exibida."
               exit 124
             }
           }

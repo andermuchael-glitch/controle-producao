@@ -108,119 +108,119 @@ jobs:
           spawn bubblewrap init --manifest=$manifest --directory=$directory
 
           expect {
-            -re {Domain:} {
+            -re {\?[^\r\n]*Domain:} {
               if {![info exists answered(domain)]} {
                 set answered(domain) 1
                 send -- "neocooler.netlify.app\r"
               }
               exp_continue
             }
-            -re {URL path:} {
+            -re {\?[^\r\n]*URL path:} {
               if {![info exists answered(path)]} {
                 set answered(path) 1
                 send -- "/\r"
               }
               exp_continue
             }
-            -re {Application name:} {
+            -re {\?[^\r\n]*Application name:} {
               if {![info exists answered(name)]} {
                 set answered(name) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Short name:} {
+            -re {\?[^\r\n]*Short name:} {
               if {![info exists answered(shortname)]} {
                 set answered(shortname) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Application ID:} {
+            -re {\?[^\r\n]*Application ID:} {
               if {![info exists answered(appid)]} {
                 set answered(appid) 1
                 send -- "com.neocooler.controleproducao\r"
               }
               exp_continue
             }
-            -re {Starting version code for the new app version:} {
+            -re {\?[^\r\n]*Starting version code for the new app version:} {
               if {![info exists answered(version)]} {
                 set answered(version) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Display mode:} {
+            -re {\?[^\r\n]*Display mode:} {
               if {![info exists answered(display)]} {
                 set answered(display) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Orientation:} {
+            -re {\?[^\r\n]*Orientation:} {
               if {![info exists answered(orientation)]} {
                 set answered(orientation) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Status bar color:} {
+            -re {\?[^\r\n]*Status bar color:} {
               if {![info exists answered(theme)]} {
                 set answered(theme) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Splash screen color:} {
+            -re {\?[^\r\n]*Splash screen color:} {
               if {![info exists answered(background)]} {
                 set answered(background) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Icon URL:} {
+            -re {\?[^\r\n]*Icon URL:} {
               if {![info exists answered(icon)]} {
                 set answered(icon) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Maskable icon URL:} {
+            -re {\?[^\r\n]*Maskable icon URL:} {
               if {![info exists answered(maskable)]} {
                 set answered(maskable) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Monochrome icon URL:} {
+            -re {\?[^\r\n]*Monochrome icon URL:} {
               if {![info exists answered(monochrome)]} {
                 set answered(monochrome) 1
                 send -- "\r"
               }
               exp_continue
             }
-            -re {Include support for Play Billing\?} {
+            -re {\?[^\r\n]*Include support for Play Billing\?} {
               if {![info exists answered(billing)]} {
                 set answered(billing) 1
                 send -- "n\r"
               }
               exp_continue
             }
-            -re {Request geolocation permission\?} {
+            -re {\?[^\r\n]*Request geolocation permission\?} {
               if {![info exists answered(location)]} {
                 set answered(location) 1
                 send -- "n\r"
               }
               exp_continue
             }
-            -re {Key store location:} {
+            -re {\?[^\r\n]*Key store location:} {
               if {![info exists answered(keystore)]} {
                 set answered(keystore) 1
                 send -- "$env(GITHUB_WORKSPACE)/android-twa/android.keystore\r"
               }
               exp_continue
             }
-            -re {Key name:} {
+            -re {\?[^\r\n]*Key name:} {
               if {![info exists answered(keyalias)]} {
                 set answered(keyalias) 1
                 send -- "android\r"

@@ -52,9 +52,9 @@ jobs:
           test -s "$ANDROID_SDK_ROOT/platforms/android-36/android.jar"
           test -x "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner"
           mkdir -p "$BW_SDK/platforms" "$BW_SDK/build-tools"
-          ln -sfn "$ANDROID_SDK_ROOT/platforms/android-36" "$BW_SDK/platforms/android-36"
-          ln -sfn "$ANDROID_SDK_ROOT/build-tools/36.0.0" "$BW_SDK/build-tools/36.0.0"
-          ln -sfn "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
+          cp -a "$ANDROID_SDK_ROOT/platforms/android-36" "$BW_SDK/platforms/android-36"
+          cp -a "$ANDROID_SDK_ROOT/build-tools/36.0.0" "$BW_SDK/build-tools/36.0.0"
+          cp -a "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
           if [ -d "$ANDROID_SDK_ROOT/licenses" ]; then
             cp -a "$ANDROID_SDK_ROOT/licenses" "$BW_SDK/licenses"
           fi

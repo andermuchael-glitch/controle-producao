@@ -109,6 +109,8 @@ jobs:
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
+          ANDROID_HOME: /home/runner/.bubblewrap/android_sdk
+          ANDROID_SDK_ROOT: /home/runner/.bubblewrap/android_sdk
         run: |
           bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android.keystore"             --signingKeyAlias=android
 
@@ -118,7 +120,7 @@ jobs:
           test -s android-twa/app-release-signed.apk
           file android-twa/app-release-signed.apk
           ls -lh android-twa/app-release-signed.apk
-          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs android-twa/app-release-signed.apk
+          "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" verify --verbose --print-certs android-twa/app-release-signed.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

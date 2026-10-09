@@ -14,7 +14,7 @@
   "backgroundColor": "#14233b",
   "enableNotifications": false,
   "startUrl": "/",
-  "iconUrl": "https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@main/public/icone-neocooler-512-v2.png",
+  "iconUrl": "https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@5d6dd2148df061652c6154fa44722479528e4aef/public/icone-neocooler-512-v2.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
     "path": "./android.keystore",

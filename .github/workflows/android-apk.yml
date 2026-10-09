@@ -65,30 +65,46 @@ jobs:
 
           bubblewrap doctor
 
-      - name: Wait for Netlify PWA manifest
+      - name: Wait for Netlify PWA manifest and validate icon
         run: |
           set -e
           MANIFEST_URL="https://neocooler.netlify.app/manifest.webmanifest"
-          echo "Aguardando o deploy do Netlify disponibilizar o manifest..."
+          EXPECTED_ICON="https://raw.githubusercontent.com/andermuchael-glitch/controle-producao/main/public/icone-neocooler-512.png"
+          echo "Aguardando o deploy do Netlify publicar o manifesto corrigido..."
           for i in $(seq 1 36); do
             if curl --fail --silent --show-error --location "$MANIFEST_URL" -o /tmp/neocooler-manifest.webmanifest; then
-              if grep -q '"name"' /tmp/neocooler-manifest.webmanifest && grep -q '"icons"' /tmp/neocooler-manifest.webmanifest; then
-                echo "Manifest disponível."
-                exit 0
+              if grep -Fq "$EXPECTED_ICON" /tmp/neocooler-manifest.webmanifest; then
+                echo "Manifesto atualizado disponível."
+                break
               fi
             fi
-            echo "Tentativa $i/36: manifest ainda não disponível; aguardando 5s..."
+            if [ "$i" -eq 36 ]; then
+              echo "O Netlify não publicou o manifesto com o ícone corrigido dentro do prazo."
+              exit 1
+            fi
+            echo "Tentativa $i/36: aguardando o deploy do manifesto corrigido (5s)..."
             sleep 5
           done
-          echo "Manifest do Netlify não ficou disponível a tempo."
-          exit 1
+
+          ICON_URL="$(node -e 'const fs=require("fs");const m=JSON.parse(fs.readFileSync("/tmp/neocooler-manifest.webmanifest","utf8"));const i=(m.icons||[]).find(x=>x.sizes==="512x512"&&x.type==="image/png");if(!i)process.exit(2);process.stdout.write(i.src)')"
+          test "$ICON_URL" = "$EXPECTED_ICON"
+          curl --fail --silent --show-error --location "$ICON_URL" -o /tmp/neocooler-icon.png
+          node --input-type=module <<'NODE'
+          import fs from "node:fs";
+          const p=fs.readFileSync("/tmp/neocooler-icon.png");
+          const signature=Buffer.from([137,80,78,71,13,10,26,10]);
+          if(p.length<10000 || !p.subarray(0,8).equals(signature)) throw new Error("O ícone publicado não é um PNG válido.");
+          const w=p.readUInt32BE(16), h=p.readUInt32BE(20);
+          if(w!==512 || h!==512) throw new Error(`Dimensão incorreta do ícone: ${w}x${h}; esperado 512x512.`);
+          console.log(`Ícone PNG validado: ${w}x${h}, ${p.length} bytes.`);
+          NODE
 
       - name: Prepare test signing key
         run: |
           set -e
           rm -rf android-twa
           mkdir -p android-twa
-          keytool -genkeypair -v             -keystore "$GITHUB_WORKSPACE/android-twa/android-keystore"             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
+          keytool -genkeypair -v             -keystore "$GITHUB_WORKSPACE/android-twa/android.keystore"             -alias android             -keyalg RSA             -keysize 2048             -validity 10000             -storepass changeit             -keypass changeit             -dname "CN=NeoCooler Test, OU=NeoCooler, O=NeoCooler, L=Itajai, ST=SC, C=BR"
 
       - name: Initialize TWA project
         run: |
@@ -134,7 +150,7 @@ jobs:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
         run: |
-          bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android-keystore"             --signingKeyAlias=android
+          bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android.keystore"             --signingKeyAlias=android
 
       - name: Verify APK
         run: |

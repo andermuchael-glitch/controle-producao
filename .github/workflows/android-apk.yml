@@ -42,28 +42,18 @@ jobs:
       - name: Install Bubblewrap 1.25
         run: npm install -g @bubblewrap/cli@1.25.0
 
-      - name: Prepare Bubblewrap-compatible Android SDK
+      - name: Configure Bubblewrap to use the installed Android SDK
         run: |
           set -e
-          BW_SDK="$HOME/.bubblewrap/android_sdk"
-          rm -rf "$BW_SDK"
-          mkdir -p "$BW_SDK"
-
-          cp -a "$ANDROID_SDK_ROOT/cmdline-tools/latest/." "$BW_SDK/"
-          ln -sfn "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
-          # Install the required Android platform directly into Bubblewrap SDK.
-
-          yes | "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" --licenses || true
-          "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" "platforms;android-36" "build-tools;34.0.0"
-
           mkdir -p "$HOME/.bubblewrap"
           cat > "$HOME/.bubblewrap/config.json" <<EOF
           {
             "jdkPath": "$JAVA_HOME_17_X64",
-            "androidSdkPath": "$BW_SDK"
+            "androidSdkPath": "$ANDROID_SDK_ROOT"
           }
           EOF
-
+          test -s "$ANDROID_SDK_ROOT/platforms/android-36/android.jar"
+          test -x "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner"
           bubblewrap doctor
 
       - name: Validate pinned PWA manifest and PNG icon
@@ -109,8 +99,8 @@ jobs:
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
-          ANDROID_HOME: /home/runner/.bubblewrap/android_sdk
-          ANDROID_SDK_ROOT: /home/runner/.bubblewrap/android_sdk
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
         run: |
           bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android.keystore"             --signingKeyAlias=android
 
@@ -120,7 +110,7 @@ jobs:
           test -s android-twa/app-release-signed.apk
           file android-twa/app-release-signed.apk
           ls -lh android-twa/app-release-signed.apk
-          "$ANDROID_SDK_ROOT/build-tools/34.0.0/apksigner" verify --verbose --print-certs android-twa/app-release-signed.apk
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs android-twa/app-release-signed.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

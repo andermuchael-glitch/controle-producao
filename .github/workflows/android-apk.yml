@@ -69,7 +69,7 @@ jobs:
         run: |
           set -e
           MANIFEST_URL="https://neocooler.netlify.app/manifest.webmanifest"
-          EXPECTED_ICON="https://raw.githubusercontent.com/andermuchael-glitch/controle-producao/main/public/icone-neocooler-512.png"
+          EXPECTED_ICON="https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@main/public/icone-neocooler-512.png"
           echo "Aguardando o deploy do Netlify publicar o manifesto corrigido..."
           for i in $(seq 1 36); do
             if curl --fail --silent --show-error --location "$MANIFEST_URL" -o /tmp/neocooler-manifest.webmanifest; then
@@ -88,7 +88,8 @@ jobs:
 
           ICON_URL="$(node -e 'const fs=require("fs");const m=JSON.parse(fs.readFileSync("/tmp/neocooler-manifest.webmanifest","utf8"));const i=(m.icons||[]).find(x=>x.sizes==="512x512"&&x.type==="image/png");if(!i)process.exit(2);process.stdout.write(i.src)')"
           test "$ICON_URL" = "$EXPECTED_ICON"
-          curl --fail --silent --show-error --location "$ICON_URL" -o /tmp/neocooler-icon.png
+          curl --fail --silent --show-error --location -D /tmp/neocooler-icon.headers "$ICON_URL" -o /tmp/neocooler-icon.png
+          grep -Eiq "^content-type: image/png" /tmp/neocooler-icon.headers || { echo "O CDN não informou MIME image/png para o ícone."; cat /tmp/neocooler-icon.headers; exit 1; }
           node --input-type=module <<'NODE'
           import fs from "node:fs";
           const p=fs.readFileSync("/tmp/neocooler-icon.png");

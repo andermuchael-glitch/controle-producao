@@ -13,10 +13,10 @@
   "theme_color": "#1c2a3a",
   "icons": [
     {
-      "src": "/icone-neocooler-512.png",
+      "src": "https://raw.githubusercontent.com/andermuchael-glitch/controle-producao/main/public/icone-neocooler-512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

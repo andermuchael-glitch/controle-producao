@@ -69,7 +69,7 @@ jobs:
         run: |
           set -e
           MANIFEST_URL="https://neocooler.netlify.app/manifest.webmanifest"
-          EXPECTED_ICON="https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@main/public/icone-neocooler-512.png"
+          EXPECTED_ICON="https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@228c8fc9334277ea1cd32156ff4bdbb66fc3ea06/public/icone-neocooler-512.png"
           echo "Aguardando o deploy do Netlify publicar o manifesto corrigido..."
           for i in $(seq 1 36); do
             if curl --fail --silent --show-error --location "$MANIFEST_URL" -o /tmp/neocooler-manifest.webmanifest; then

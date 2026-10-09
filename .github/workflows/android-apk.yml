@@ -42,31 +42,19 @@ jobs:
       - name: Install Bubblewrap 1.25
         run: npm install -g @bubblewrap/cli@1.25.0
 
-      - name: Prepare Bubblewrap-compatible Android SDK
+      - name: Configure Bubblewrap to use installed Android SDK
         run: |
           set -e
-          BW_SDK="$HOME/.bubblewrap/android_sdk"
-          rm -rf "$BW_SDK"
-          mkdir -p "$BW_SDK"
-          cp -a "$ANDROID_SDK_ROOT/cmdline-tools/latest/." "$BW_SDK/"
-          test -s "$ANDROID_SDK_ROOT/platforms/android-36/android.jar"
-          test -x "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner"
-          mkdir -p "$BW_SDK/platforms" "$BW_SDK/build-tools"
-          cp -a "$ANDROID_SDK_ROOT/platforms/android-36" "$BW_SDK/platforms/android-36"
-          cp -a "$ANDROID_SDK_ROOT/build-tools/36.0.0" "$BW_SDK/build-tools/36.0.0"
-          cp -a "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
-          if [ -d "$ANDROID_SDK_ROOT/licenses" ]; then
-            cp -a "$ANDROID_SDK_ROOT/licenses" "$BW_SDK/licenses"
-          fi
+          ln -sfn "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin" "$ANDROID_SDK_ROOT/bin"
           mkdir -p "$HOME/.bubblewrap"
           cat > "$HOME/.bubblewrap/config.json" <<EOF
           {
             "jdkPath": "$JAVA_HOME_17_X64",
-            "androidSdkPath": "$BW_SDK"
+            "androidSdkPath": "$ANDROID_SDK_ROOT"
           }
           EOF
-          test -s "$BW_SDK/platforms/android-36/android.jar"
-          test -x "$BW_SDK/build-tools/36.0.0/apksigner"
+          test -s "$ANDROID_SDK_ROOT/platforms/android-36/android.jar"
+          test -x "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner"
           bubblewrap doctor
 
       - name: Validate pinned PWA manifest and PNG icon
@@ -112,8 +100,8 @@ jobs:
         env:
           BUBBLEWRAP_KEYSTORE_PASSWORD: changeit
           BUBBLEWRAP_KEY_PASSWORD: changeit
-          ANDROID_HOME: /home/runner/.bubblewrap/android_sdk
-          ANDROID_SDK_ROOT: /home/runner/.bubblewrap/android_sdk
+          ANDROID_HOME: /usr/local/lib/android/sdk
+          ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
         run: |
           bubblewrap build             --skipPwaValidation             --signingKeyPath="$GITHUB_WORKSPACE/android-twa/android.keystore"             --signingKeyAlias=android
 

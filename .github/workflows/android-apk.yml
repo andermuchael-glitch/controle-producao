@@ -51,10 +51,10 @@ jobs:
 
           cp -a "$ANDROID_SDK_ROOT/cmdline-tools/latest/." "$BW_SDK/"
           ln -sfn "$ANDROID_SDK_ROOT/platform-tools" "$BW_SDK/platform-tools"
-          ln -sfn "$ANDROID_SDK_ROOT/platforms" "$BW_SDK/platforms"
+          # Install the required Android platform directly into Bubblewrap SDK.
 
           yes | "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" --licenses || true
-          "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" "build-tools;34.0.0"
+          "$BW_SDK/bin/sdkmanager" --sdk_root="$BW_SDK" "platforms;android-36" "build-tools;34.0.0"
 
           mkdir -p "$HOME/.bubblewrap"
           cat > "$HOME/.bubblewrap/config.json" <<EOF

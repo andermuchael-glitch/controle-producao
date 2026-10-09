@@ -68,8 +68,8 @@ jobs:
       - name: Validate pinned PWA manifest and PNG icon
         run: |
           set -e
-          MANIFEST_URL="https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@272b074282a57ae497ad179cab1736cf6b0f800f/public/manifest.webmanifest"
-          EXPECTED_ICON="https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@228c8fc9334277ea1cd32156ff4bdbb66fc3ea06/public/icone-neocooler-512.png"
+          MANIFEST_URL="https://raw.githubusercontent.com/andermuchael-glitch/controle-producao/main/public/manifest.webmanifest?v=20261009b"
+          EXPECTED_ICON="https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@main/public/icone-neocooler-512-v2.png"
           curl --fail --silent --show-error --location "$MANIFEST_URL" -o /tmp/neocooler-manifest.webmanifest
           ICON_URL="$(node -e 'const fs=require("fs");const m=JSON.parse(fs.readFileSync("/tmp/neocooler-manifest.webmanifest","utf8"));const i=(m.icons||[]).find(x=>x.sizes==="512x512"&&x.type==="image/png");if(!i)process.exit(2);process.stdout.write(i.src)')"
           test "$ICON_URL" = "$EXPECTED_ICON"
@@ -101,7 +101,7 @@ jobs:
           cat > /tmp/bubblewrap-init.exp <<'EOF'
           #!/usr/bin/expect -f
           set timeout 300
-          set manifest "https://cdn.jsdelivr.net/gh/andermuchael-glitch/controle-producao@272b074282a57ae497ad179cab1736cf6b0f800f/public/manifest.webmanifest"
+          set manifest "https://raw.githubusercontent.com/andermuchael-glitch/controle-producao/main/public/manifest.webmanifest?v=20261009b"
           set directory "android-twa"
 
           log_user 1

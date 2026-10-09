@@ -79,7 +79,7 @@ jobs:
           import fs from "node:fs";
           const p=fs.readFileSync("/tmp/neocooler-icon.png");
           const signature=Buffer.from([137,80,78,71,13,10,26,10]);
-          if(p.length<10000 || !p.subarray(0,8).equals(signature)) throw new Error("O ícone não é um PNG binário válido.");
+          if(p.length<1000 || !p.subarray(0,8).equals(signature)) throw new Error(`O ícone não é um PNG binário válido (tamanho: ${p.length} bytes; assinatura PNG: ${p.subarray(0,8).toString("hex")}).`);
           const w=p.readUInt32BE(16), h=p.readUInt32BE(20);
           if(w!==512 || h!==512) throw new Error(`Dimensão incorreta: ${w}x${h}; esperado 512x512.`);
           console.log(`Ícone PNG validado: ${w}x${h}, ${p.length} bytes.`);

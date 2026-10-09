@@ -7,6 +7,7 @@ on:
       - ".github/workflows/android-apk.yml"
       - "src/**"
       - "public/**"
+      - "scripts/**"
       - "package.json"
       - "vite.config.js"
       - "index.html"
@@ -113,9 +114,11 @@ jobs:
 
       - name: Verify APK
         run: |
+          set -e
           test -s android-twa/app-release-signed.apk
           file android-twa/app-release-signed.apk
           ls -lh android-twa/app-release-signed.apk
+          "$ANDROID_SDK_ROOT/build-tools/36.0.0/apksigner" verify --verbose --print-certs android-twa/app-release-signed.apk
 
       - name: Upload APK
         uses: actions/upload-artifact@v4

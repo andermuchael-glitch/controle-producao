@@ -9,7 +9,7 @@ const CORES = [{nome:"Preto",hex:"#1a1a1a"},{nome:"Royal",hex:"#1f4fd8"},{nome:"
 const corHex=(nome)=>CORES.find(c=>c.nome===nome)?.hex||"#999";
 const corClara=(hex)=>["#ffffff","#f0e4c8","#f4c81f","#f4b6c2","#7ec8e3","#4fc9b0"].includes(hex);
 const EQUIPES=["Não decidido","Costura interna","Eleni","Sandra","Dona Josi","Mara","Mirian","Adriana"];
-const SUBLIMADORES=["Gabriel","Pedro","Kayo","Kauan","Ricarlos","Jeferson"];
+const SUBLIMADORES=["Pedro","Kayo","Kauan","Ricarlos","Gerente","Jose"];
 const CORTADORES=["Kayo"];
 const PRODUTOS_SEM_COSTURA=new Set(["PORTA COPOS","MOUSE PAD","MOUSEPAD PADRÃO","TOLHA DE BANHO","TOALHA DE BANHO","TOALHA C/ CAPUZ G","TOALHA C/ CAPUZ M","BOLSA TOALHA","TOALHA ESPORTIVA 80X30","TOALHA PERSONALIZADA 70X40"]);
 const produtoNormalizado=p=>String(p||"").trim().toUpperCase();

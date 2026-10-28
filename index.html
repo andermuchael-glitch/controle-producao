@@ -8,20 +8,20 @@
     <meta name="description" content="NeoCooler: sistema de controle de produção para acompanhar pedidos, Pré-Corte, Sublimação, Costura e Separação." />
     <meta name="keywords" content="NeoCooler, controle de produção, pedidos, pré-corte, sublimação, costura, separação" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://neocooler.netlify.app/" />
+    <link rel="canonical" href="https://andermuchael-glitch.github.io/controle-producao/" />
 
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="NeoCooler — Controle de Produção" />
     <meta property="og:description" content="Controle de produção da NeoCooler: pedidos, Pré-Corte, Sublimação, Costura e Separação." />
-    <meta property="og:url" content="https://neocooler.netlify.app/" />
-    <meta property="og:image" content="https://neocooler.netlify.app/icone-neocooler-512.png" />
+    <meta property="og:url" content="https://andermuchael-glitch.github.io/controle-producao/" />
+    <meta property="og:image" content="https://andermuchael-glitch.github.io/controle-producao/icone-neocooler-512.png" />
     <meta property="og:image:alt" content="NeoCooler — Controle de Produção" />
 
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="NeoCooler — Controle de Produção" />
     <meta name="twitter:description" content="Sistema de controle de produção da NeoCooler." />
-    <meta name="twitter:image" content="https://neocooler.netlify.app/icone-neocooler-512.png" />
+    <meta name="twitter:image" content="https://andermuchael-glitch.github.io/controle-producao/icone-neocooler-512.png" />
 
     <meta name="theme-color" content="#1c2a3a" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -29,22 +29,15 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="NeoCooler" />
 
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/icone-neocooler.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icone-neocooler-512.png" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="icon" href="%BASE_URL%icone-neocooler.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icone-neocooler-512.png" />
 
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch(() => {});
-        });
-      }
-    </script>
-  </head>
+</head>
 
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-    <script src="/global-search.js" defer></script>
+    <script type="module" src="%BASE_URL%src/main.jsx"></script>
+    <script src="%BASE_URL%global-search.js" defer></script>
   </body>
 </html>

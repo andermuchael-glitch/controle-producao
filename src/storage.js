@@ -1,120 +1,98 @@
-import { addDoc, collection, doc, onSnapshot, query, orderBy, limit, onSnapshot as onSnapshotQuery, setDoc, runTransaction } from "firebase/firestore";
-import { db, firebaseConfigurado } from "./firebase.js";
+import { supabase, supabaseConfigurado } from "./supabase.js";
 
-const COLECAO = "controleProducao";
+const STATE_TABLE = "controle_producao_state";
+const AUDIT_TABLE = "auditoria_producao";
 
-// Camada de persistência com dois modos:
-//  - Firebase configurado: dados ficam no Firestore e sincronizam em tempo
-//    real entre todos os dispositivos/pessoas usando o app.
-//  - Firebase NÃO configurado: cai para localStorage (só no próprio
-//    navegador), como fallback — assim o app continua funcionando mesmo
-//    sem Firebase, só sem sincronizar entre pessoas.
+function parseJson(value, fallback) {
+  try { return typeof value === "string" ? JSON.parse(value || "") : (value ?? fallback); }
+  catch { return fallback; }
+}
+
+function localGet(key) {
+  try { return window.localStorage.getItem(key); } catch { return null; }
+}
 
 export function inscrever(key, callback) {
-  if (firebaseConfigurado) {
-    const ref = doc(db, COLECAO, key);
-    return onSnapshot(
-      ref,
-      (snap) => callback(snap.exists() ? snap.data().value : null, null),
-      (erro) => callback(null, erro)
-    );
+  if (!supabaseConfigurado || !supabase) {
+    callback(null, new Error("Supabase não configurado."));
+    return () => {};
   }
-  try {
-    const raw = window.localStorage.getItem(key);
-    callback(raw, null);
-  } catch (e) {
-    callback(null, e);
+
+  let ativo = true;
+  const carregar = async () => {
+    const { data, error } = await supabase.from(STATE_TABLE).select("value").eq("key", key).maybeSingle();
+    if (!ativo) return;
+    if (error) callback(null, error);
+    else callback(data ? (typeof data.value === "string" ? data.value : JSON.stringify(data.value)) : null, null);
+  };
+  carregar();
+
+  const canal = supabase.channel("state-" + key)
+    .on("postgres_changes", {
+      event: "*",
+      schema: "public",
+      table: STATE_TABLE,
+      filter: "key=eq." + key,
+    }, (payload) => {
+      if (!ativo) return;
+      const row = payload.new;
+      callback(row ? (typeof row.value === "string" ? row.value : JSON.stringify(row.value)) : null, null);
+    })
+    .subscribe((status) => {
+      if (status === "SUBSCRIBED") carregar();
+    });
+
+  return () => {
+    ativo = false;
+    supabase.removeChannel(canal);
+  };
+}
+
+function mergeListas(baseValue, nextValue, serverValue) {
+  const base = parseJson(baseValue, []);
+  const local = parseJson(nextValue, []);
+  const remoto = parseJson(serverValue, []);
+  const chave = (item) => String(item?.id || `${item?.pedido || ""}||${item?.produto || ""}||${item?.criadoEm || ""}`);
+  const mapear = (lista) => new Map((Array.isArray(lista) ? lista : []).map(item => [chave(item), item]));
+  const mb = mapear(base), ml = mapear(local), mr = mapear(remoto);
+  const iguais = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+  const resultado = [];
+
+  for (const k of new Set([...mb.keys(), ...ml.keys(), ...mr.keys()])) {
+    const b = mb.get(k), l = ml.get(k), r = mr.get(k);
+    if (l === undefined) {
+      if (r === undefined || b === undefined || iguais(r, b)) continue;
+      resultado.push(r); continue;
+    }
+    if (r === undefined) { resultado.push(l); continue; }
+    if (b === undefined) { resultado.push(l); continue; }
+    if (iguais(l, b)) { resultado.push(r); continue; }
+    if (iguais(r, b)) { resultado.push(l); continue; }
+    if (r.etapa === "arquivado" && l.etapa !== "arquivado") resultado.push(r);
+    else resultado.push(l);
   }
-  return () => {};
+  return resultado;
 }
 
 export async function salvarListaSegura(key, baseValue, nextValue) {
-  if (!firebaseConfigurado) {
-    try {
-      window.localStorage.setItem(key, nextValue);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  }
-
+  if (!supabaseConfigurado || !supabase) return false;
   try {
-    const ref = doc(db, COLECAO, key);
-    await runTransaction(db, async (tx) => {
-      const snap = await tx.get(ref);
-      const servidor = snap.exists() ? snap.data().value : null;
-      let base = [];
-      let local = [];
-      let remoto = [];
-      try { base = JSON.parse(baseValue || "[]"); } catch {}
-      try { local = JSON.parse(nextValue || "[]"); } catch {}
-      try { remoto = JSON.parse(servidor || "[]"); } catch {}
+    const { data: existente, error: erroLeitura } = await supabase
+      .from(STATE_TABLE).select("value").eq("key", key).maybeSingle();
+    if (erroLeitura) throw erroLeitura;
 
-      const chave = (item) => String(
-        item?.id || `${item?.pedido || ""}||${item?.produto || ""}||${item?.criadoEm || ""}`
-      );
-
-      const mapear = (lista) => new Map(
-        (Array.isArray(lista) ? lista : []).map(item => [chave(item), item])
-      );
-      const mb = mapear(base);
-      const ml = mapear(local);
-      const mr = mapear(remoto);
-
-      const iguais = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
-      const chaves = new Set([...mb.keys(), ...ml.keys(), ...mr.keys()]);
-      const resultado = [];
-
-      for (const k of chaves) {
-        const b = mb.get(k);
-        const l = ml.get(k);
-        const r = mr.get(k);
-
-        if (l === undefined) {
-          if (r === undefined) continue;
-          if (b === undefined || iguais(r, b)) continue;
-          resultado.push(r);
-          continue;
-        }
-
-        if (r === undefined) {
-          if (b === undefined || iguais(l, b)) {
-            resultado.push(l);
-          } else {
-            resultado.push(l);
-          }
-          continue;
-        }
-
-        if (b === undefined) {
-          resultado.push(l);
-          continue;
-        }
-
-        if (iguais(l, b)) {
-          resultado.push(r);
-          continue;
-        }
-
-        if (iguais(r, b)) {
-          resultado.push(l);
-          continue;
-        }
-
-        // Um pedido arquivado é terminal: uma versão antiga de outro
-        // dispositivo nunca deve ressuscitá-lo ao salvar outra alteração.
-        if (r.etapa === "arquivado" && l.etapa !== "arquivado") {
-          resultado.push(r);
-        } else {
-          resultado.push(l);
-        }
-      }
-
-      tx.set(ref, { value: JSON.stringify(resultado), atualizadoEm: Date.now() });
-    });
+    const servidor = existente?.value;
+    const resultado = mergeListas(baseValue, nextValue, servidor);
+    const { error } = await supabase.from(STATE_TABLE).upsert({
+      key,
+      value: JSON.stringify(resultado),
+      updated_at: new Date().toISOString(),
+      updated_by: (await supabase.auth.getUser()).data?.user?.id || null,
+    }, { onConflict: "key" });
+    if (error) throw error;
     return true;
   } catch (e) {
-    console.error("Erro ao salvar lista com proteção contra conflito", e);
+    console.error("Erro ao salvar lista no Supabase", e);
     return false;
   }
 }
@@ -122,79 +100,77 @@ export async function salvarListaSegura(key, baseValue, nextValue) {
 export async function atualizarEstoqueSeguro(key, produto, valor, modo = "definir") {
   const nome = String(produto || "").trim();
   const quantidade = Math.max(0, Number(valor) || 0);
-  if (!nome) return { ok: false, estoque: 0 };
-
-  if (!firebaseConfigurado) {
-    try {
-      const atual = JSON.parse(window.localStorage.getItem(key) || "{}");
-      const estoqueAtual = Math.max(0, Number(atual[nome]) || 0);
-      const novoEstoque = modo === "somar" ? estoqueAtual + quantidade : modo === "subtrair" ? Math.max(0, estoqueAtual - quantidade) : quantidade;
-      atual[nome] = novoEstoque;
-      window.localStorage.setItem(key, JSON.stringify(atual));
-      return { ok: true, estoque: novoEstoque };
-    } catch (e) {
-      return { ok: false, estoque: 0 };
-    }
-  }
+  if (!nome || !supabaseConfigurado || !supabase) return { ok: false, estoque: 0 };
 
   try {
-    const ref = doc(db, COLECAO, key);
-    let resultado = { ok: false, estoque: 0 };
-    await runTransaction(db, async (tx) => {
-      const snap = await tx.get(ref);
-      let mapa = {};
-      try { mapa = JSON.parse(snap.exists() ? (snap.data().value || "{}") : "{}"); } catch {}
-      const estoqueAtual = Math.max(0, Number(mapa[nome]) || 0);
-      const novoEstoque = modo === "somar" ? estoqueAtual + quantidade : quantidade;
-      mapa[nome] = novoEstoque;
-      tx.set(ref, { value: JSON.stringify(mapa), atualizadoEm: Date.now() });
-      resultado = { ok: true, estoque: novoEstoque };
-    });
-    return resultado;
+    const { data, error: leituraErro } = await supabase.from(STATE_TABLE).select("value").eq("key", key).maybeSingle();
+    if (leituraErro) throw leituraErro;
+    const mapa = parseJson(data?.value, {});
+    const atual = Math.max(0, Number(mapa[nome]) || 0);
+    const novo = modo === "somar" ? atual + quantidade : modo === "subtrair" ? Math.max(0, atual - quantidade) : quantidade;
+    mapa[nome] = novo;
+    const { data: authData } = await supabase.auth.getUser();
+    const { error } = await supabase.from(STATE_TABLE).upsert({
+      key, value: JSON.stringify(mapa), updated_at: new Date().toISOString(), updated_by: authData?.user?.id || null,
+    }, { onConflict: "key" });
+    if (error) throw error;
+    return { ok: true, estoque: novo };
   } catch (e) {
-    console.error("Erro ao atualizar estoque", e);
+    console.error("Erro ao atualizar estoque no Supabase", e);
     return { ok: false, estoque: 0 };
   }
 }
 
 export async function salvarValor(key, value) {
-  if (firebaseConfigurado) {
-    const ref = doc(db, COLECAO, key);
-    await setDoc(ref, { value, atualizadoEm: Date.now() });
-    return true;
-  }
+  if (!supabaseConfigurado || !supabase) return false;
   try {
-    window.localStorage.setItem(key, value);
+    const { data: authData } = await supabase.auth.getUser();
+    const { error } = await supabase.from(STATE_TABLE).upsert({
+      key, value: typeof value === "string" ? value : JSON.stringify(value),
+      updated_at: new Date().toISOString(), updated_by: authData?.user?.id || null,
+    }, { onConflict: "key" });
+    if (error) throw error;
     return true;
   } catch (e) {
+    console.error("Erro ao salvar valor no Supabase", e);
     return false;
   }
 }
 
-
-// PRE_CORTE_AUDIT_V1
-const AUDIT_COLLECTION = "auditoriaProducao";
-
 export async function registrarAuditoria(registro) {
-  if (!firebaseConfigurado) return false;
+  if (!supabaseConfigurado || !supabase) return false;
   try {
-    await addDoc(collection(db, AUDIT_COLLECTION), {
-      ...registro,
-      criadoEm: Date.now(),
+    const { data: authData } = await supabase.auth.getUser();
+    const usuario = authData?.user;
+    if (!usuario) return false;
+    const { error } = await supabase.from(AUDIT_TABLE).insert({
+      usuario_email: usuario.email || registro.usuarioEmail || "",
+      registro,
+      criado_em: new Date().toISOString(),
     });
+    if (error) throw error;
     return true;
   } catch (e) {
+    console.error("Erro ao registrar auditoria no Supabase", e);
     return false;
   }
 }
 
 export function inscreverAuditoria(callback) {
-  if (!firebaseConfigurado) {
-    callback([], null);
+  if (!supabaseConfigurado || !supabase) {
+    callback([], new Error("Supabase não configurado."));
     return () => {};
   }
-  const q = query(collection(db, AUDIT_COLLECTION), orderBy("criadoEm", "desc"), limit(300));
-  return onSnapshotQuery(q, (snap) => {
-    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })), null);
-  }, (erro) => callback([], erro));
+  let ativo = true;
+  const carregar = async () => {
+    const { data, error } = await supabase.from(AUDIT_TABLE).select("id, usuario_email, registro, criado_em").order("criado_em", { ascending: false }).limit(300);
+    if (!ativo) return;
+    if (error) callback([], error);
+    else callback((data || []).map(row => ({ id: row.id, ...(row.registro || {}), usuarioEmail: row.usuario_email, criadoEm: new Date(row.criado_em).getTime() })), null);
+  };
+  carregar();
+  const canal = supabase.channel("auditoria-producao")
+    .on("postgres_changes", { event: "*", schema: "public", table: AUDIT_TABLE }, carregar)
+    .subscribe();
+  return () => { ativo = false; supabase.removeChannel(canal); };
 }

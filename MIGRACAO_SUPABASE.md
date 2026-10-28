@@ -12,8 +12,14 @@ A planilha `controle-producao-2026-10-28 (2).xlsx` tem uma aba `Producao`, 657 l
 4. Habilite o método de login por e-mail/senha no Supabase Auth e cadastre os usuários autorizados.
 5. Validar a importação em uma tabela de staging antes de substituir o banco ativo.
 
-## Atenção
-O app ainda usa Firebase em `AuthGate.jsx`, `storage.js` e na comunicação interna. Este commit prepara o cliente e o esquema; não troca o backend sozinho. A próxima etapa deve migrar autenticação, persistência em tempo real, auditoria e mensagens em conjunto e só então remover Firebase/Netlify após teste e confirmação.
+## Estado atual da migração
+- O cliente Supabase usa a URL do projeto Neocooler e a chave pública publishable fornecida. A chave é pública por definição; nunca incluir `service_role`/secret no frontend.
+- `AuthGate.jsx` já usa Supabase Auth; os usuários precisam existir em **Authentication → Users** no projeto Supabase e ter acesso autorizado.
+- `storage.js` já aponta produção, metadados, estoque e auditoria para as tabelas Supabase.
+- `main.jsx` e `Mensagens.jsx` já usam Supabase Realtime para notificações e chat.
+- `src/firebase.js` e a dependência Firebase permanecem no repositório por enquanto, mas não devem ser removidas até a validação integral da migração e verificação de que nenhum módulo ainda as importa.
+- O esquema SQL precisa ser aplicado no projeto Supabase antes de testar. O build não executa SQL nem valida a autenticação real.
+- Não desative Firebase/Netlify e não publique no GitHub Pages até completar testes de login, CRUD, sincronização em dois navegadores, estoque, auditoria, mensagens e importação de backup.
 
 
 ## GitHub Pages (preparação, sem publicar)

@@ -8,20 +8,20 @@
     <meta name="description" content="NeoCooler: sistema de controle de produção para acompanhar pedidos, Pré-Corte, Sublimação, Costura e Separação." />
     <meta name="keywords" content="NeoCooler, controle de produção, pedidos, pré-corte, sublimação, costura, separação" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://neocooler.netlify.app/" />
+    <link rel="canonical" href="https://andermuchael-glitch.github.io/controle-producao/" />
 
     <meta property="og:locale" content="pt_BR" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="NeoCooler — Controle de Produção" />
     <meta property="og:description" content="Controle de produção da NeoCooler: pedidos, Pré-Corte, Sublimação, Costura e Separação." />
-    <meta property="og:url" content="https://neocooler.netlify.app/" />
-    <meta property="og:image" content="https://neocooler.netlify.app/icone-neocooler-512.png" />
+    <meta property="og:url" content="https://andermuchael-glitch.github.io/controle-producao/" />
+    <meta property="og:image" content="https://andermuchael-glitch.github.io/controle-producao/icone-neocooler-512.png" />
     <meta property="og:image:alt" content="NeoCooler — Controle de Produção" />
 
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="NeoCooler — Controle de Produção" />
     <meta name="twitter:description" content="Sistema de controle de produção da NeoCooler." />
-    <meta name="twitter:image" content="https://neocooler.netlify.app/icone-neocooler-512.png" />
+    <meta name="twitter:image" content="https://andermuchael-glitch.github.io/controle-producao/icone-neocooler-512.png" />
 
     <meta name="theme-color" content="#1c2a3a" />
     <meta name="mobile-web-app-capable" content="yes" />
@@ -29,22 +29,56 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="NeoCooler" />
 
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/icone-neocooler.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icone-neocooler-512.png" />
-
-    <script>
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch(() => {});
-        });
-      }
-    </script>
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <link rel="icon" href="%BASE_URL%icone-neocooler.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="%BASE_URL%icone-neocooler-512.png" />
   </head>
-
   <body>
-    <div id="root"></div>
+    <div id="root"><div style="font:16px Arial,sans-serif;padding:24px;color:#1c2a3a">Iniciando NeoCooler…</div></div>
+    <script>
+      (function () {
+        var root = document.getElementById("root");
+        function showError(title, detail) {
+          if (!root) return;
+          var panel = document.getElementById("neo-diagnostic-error");
+          if (!panel) {
+            panel = document.createElement("div");
+            panel.id = "neo-diagnostic-error";
+            panel.style.cssText = "position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#fff7ed;color:#7c2d12;padding:24px;font:14px/1.5 Arial,sans-serif;box-sizing:border-box";
+            document.body.appendChild(panel);
+          }
+          panel.innerHTML = "";
+          var heading = document.createElement("h2");
+          heading.textContent = title;
+          panel.appendChild(heading);
+          var message = document.createElement("pre");
+          message.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 monospace";
+          message.textContent = String(detail || "Sem detalhes adicionais");
+          panel.appendChild(message);
+          var tip = document.createElement("p");
+          tip.textContent = "Envie uma captura desta tela ao suporte. Nenhum dado do banco foi alterado por este diagnóstico.";
+          panel.appendChild(tip);
+        }
+        window.addEventListener("error", function (event) {
+          var target = event.target;
+          if (target && target !== window && (target.src || target.href)) {
+            showError("Falha ao carregar um arquivo", (target.src || target.href));
+          } else {
+            showError("Erro ao iniciar o NeoCooler", (event.message || "Erro JavaScript") + (event.filename ? "\\nArquivo: " + event.filename : "") + (event.lineno ? "\\nLinha: " + event.lineno : ""));
+          }
+        }, true);
+        window.addEventListener("unhandledrejection", function (event) {
+          var reason = event.reason;
+          showError("Erro durante a inicialização", reason && (reason.stack || reason.message) || reason || "Falha assíncrona");
+        });
+        window.setTimeout(function () {
+          if (root && !root.querySelector("form,button,main,[data-app-root]")) {
+            showError("O NeoCooler não terminou de iniciar", "A página abriu, mas a interface não foi renderizada após 12 segundos.\nURL: " + location.href + "\nCaminho base esperado: /controle-producao/");
+          }
+        }, 12000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
-    <script src="/global-search.js" defer></script>
+    <script src="%BASE_URL%global-search.js" defer></script>
   </body>
 </html>

@@ -5,14 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node scripts/fix-jsx-build.mjs && node scripts/restore-flow-and-edit.mjs && vite build",
+    "build": "node scripts/fix-jsx-build.mjs && node scripts/restore-flow-and-edit.mjs && vite build && node scripts/prepare-github-pages.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
-    "firebase": "^10.13.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "@supabase/supabase-js": "^2.57.4"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",

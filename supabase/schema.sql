@@ -107,3 +107,31 @@ create table if not exists public.producao_import_staging (
 alter table public.producao_import_staging enable row level security;
 -- Intentionally no client policies: staging import should be done by an authorized
 -- operator through the Supabase dashboard, not exposed to the public frontend.
+
+
+-- Enable live updates for the client subscriptions used by the app.
+do $$
+begin
+  alter publication supabase_realtime add table public.controle_producao_state;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.usuarios;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.conversas;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.mensagens;
+exception when duplicate_object then null;
+end $$;
+do $$
+begin
+  alter publication supabase_realtime add table public.auditoria_producao;
+exception when duplicate_object then null;
+end $$;

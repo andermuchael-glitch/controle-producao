@@ -86,3 +86,24 @@ create policy "Participants can send their own messages"
       where c.id = conversa_id and auth.uid() = any(c.participantes)
     )
   );
+
+-- Isolated staging table for the Excel backup. Import and compare here first;
+-- do not write the XLSX rows directly into live application state.
+create table if not exists public.producao_import_staging (
+  id bigint generated always as identity primary key,
+  source_row integer,
+  pedido text,
+  produto text,
+  quantidade numeric,
+  etapa text,
+  cor text,
+  equipe text,
+  sublimador text,
+  data_corte date,
+  data_sublimacao date,
+  data_entrega date,
+  imported_at timestamptz not null default now()
+);
+alter table public.producao_import_staging enable row level security;
+-- Intentionally no client policies: staging import should be done by an authorized
+-- operator through the Supabase dashboard, not exposed to the public frontend.

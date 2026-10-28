@@ -34,7 +34,50 @@
     <link rel="apple-touch-icon" href="%BASE_URL%icone-neocooler-512.png" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root"><div style="font:16px Arial,sans-serif;padding:24px;color:#1c2a3a">Iniciando NeoCooler…</div></div>
+    <script>
+      (function () {
+        var root = document.getElementById("root");
+        function showError(title, detail) {
+          if (!root) return;
+          var panel = document.getElementById("neo-diagnostic-error");
+          if (!panel) {
+            panel = document.createElement("div");
+            panel.id = "neo-diagnostic-error";
+            panel.style.cssText = "position:fixed;inset:0;z-index:2147483647;overflow:auto;background:#fff7ed;color:#7c2d12;padding:24px;font:14px/1.5 Arial,sans-serif;box-sizing:border-box";
+            document.body.appendChild(panel);
+          }
+          panel.innerHTML = "";
+          var heading = document.createElement("h2");
+          heading.textContent = title;
+          panel.appendChild(heading);
+          var message = document.createElement("pre");
+          message.style.cssText = "white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.5 monospace";
+          message.textContent = String(detail || "Sem detalhes adicionais");
+          panel.appendChild(message);
+          var tip = document.createElement("p");
+          tip.textContent = "Envie uma captura desta tela ao suporte. Nenhum dado do banco foi alterado por este diagnóstico.";
+          panel.appendChild(tip);
+        }
+        window.addEventListener("error", function (event) {
+          var target = event.target;
+          if (target && target !== window && (target.src || target.href)) {
+            showError("Falha ao carregar um arquivo", (target.src || target.href));
+          } else {
+            showError("Erro ao iniciar o NeoCooler", (event.message || "Erro JavaScript") + (event.filename ? "\\nArquivo: " + event.filename : "") + (event.lineno ? "\\nLinha: " + event.lineno : ""));
+          }
+        }, true);
+        window.addEventListener("unhandledrejection", function (event) {
+          var reason = event.reason;
+          showError("Erro durante a inicialização", reason && (reason.stack || reason.message) || reason || "Falha assíncrona");
+        });
+        window.setTimeout(function () {
+          if (root && !root.querySelector("form,button,main,[data-app-root]")) {
+            showError("O NeoCooler não terminou de iniciar", "A página abriu, mas a interface não foi renderizada após 12 segundos.\nURL: " + location.href + "\nCaminho base esperado: /controle-producao/");
+          }
+        }, 12000);
+      })();
+    </script>
     <script type="module" src="/src/main.jsx"></script>
     <script src="%BASE_URL%global-search.js" defer></script>
   </body>

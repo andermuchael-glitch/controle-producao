@@ -23,3 +23,10 @@ O app ainda usa Firebase em `AuthGate.jsx`, `storage.js` e na comunicação inte
 - O workflow de CI valida o build da branch de migração, mas não publica nada e não altera a configuração de Pages.
 - URL pretendida após aprovação e configuração manual: https://andermuchael-glitch.github.io/controle-producao/
 - O deploy está intencionalmente bloqueado até Supabase Auth, armazenamento, mensagens e importação serem implementados e testados. Sem as variáveis Supabase, não publicar a aplicação migrada.
+
+## Importação do Excel sem afetar produção
+1. Converta uma cópia da aba `Producao` para CSV UTF-8; mantenha o XLSX original intacto.
+2. Execute o SQL do esquema para criar a tabela `producao_import_staging`.
+3. Importe o CSV nessa tabela pela interface do Supabase (não pelo frontend público).
+4. Compare a contagem de linhas, pedidos distintos, quantidades e etapas com a planilha original.
+5. Só depois da validação, criar um script idempotente de transformação para o formato JSON usado pelo aplicativo. Não sobrescrever `controle_producao_state` sem uma comparação e um plano de reversão.

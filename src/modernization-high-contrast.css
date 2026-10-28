@@ -1,0 +1,99 @@
+/* NeoCooler — modernização visual incremental. Sem mudanças na lógica ou no banco. */
+:root{
+  --neo-stage-pre:#334155;
+  --neo-stage-sublimation-wait:#b45309;
+  --neo-stage-sublimation:#7c3aed;
+  --neo-stage-sewing-wait:#0369a1;
+  --neo-stage-sewing:#2563eb;
+  --neo-stage-separation:#0f766e;
+  --neo-stage-archived:#475569;
+  --neo-stage-danger:#b91c1c;
+  --neo-focus:#f97316;
+}
+.neocooler-app{--neo-page:#f1f5f9;--neo-surface:#fff;--neo-ink:#172033;--neo-muted:#475569;color:var(--neo-ink)!important}
+.neocooler-app .app-header{
+  background:linear-gradient(125deg,#0b1220 0%,#14233d 68%,#182f4c 100%)!important;
+  border-bottom:4px solid #f97316!important;
+  box-shadow:0 12px 34px rgba(2,8,23,.24)!important
+}
+.neocooler-app .app-header .brandRow h1{color:#fff!important;font-weight:850!important;letter-spacing:-.035em!important}
+.neocooler-app .app-header .subtitle{color:#dbeafe!important}
+.neocooler-app .tabs-row{gap:8px!important;align-items:stretch!important}
+.neocooler-app .tabs-row .tab-btn{
+  min-height:42px!important;padding:10px 13px!important;border:1px solid #cbd5e1!important;
+  border-radius:10px!important;background:#fff!important;color:#263449!important;font-weight:800!important;
+  box-shadow:0 2px 4px rgba(15,23,42,.08)!important
+}
+.neocooler-app .tabs-row .tab-btn:first-child{border-color:#64748b!important}
+.neocooler-app .tabs-row .tab-btn:nth-child(2){--tab-color:var(--neo-stage-pre)}
+.neocooler-app .tabs-row .tab-btn:nth-child(3){--tab-color:var(--neo-stage-sublimation-wait)}
+.neocooler-app .tabs-row .tab-btn:nth-child(4){--tab-color:var(--neo-stage-sublimation)}
+.neocooler-app .tabs-row .tab-btn:nth-child(5){--tab-color:var(--neo-stage-sewing-wait)}
+.neocooler-app .tabs-row .tab-btn:nth-child(6){--tab-color:var(--neo-stage-sewing)}
+.neocooler-app .tabs-row .tab-btn:nth-child(7){--tab-color:var(--neo-stage-separation)}
+.neocooler-app .tabs-row .tab-btn:not(:first-child){border-bottom:4px solid var(--tab-color,#64748b)!important}
+.neocooler-app .tabs-row .tab-btn.ativo,
+.neocooler-app .tabs-row .tab-btn[aria-current="page"]{
+  background:var(--tab-color,#1e293b)!important;color:#fff!important;border-color:var(--tab-color,#1e293b)!important;
+  box-shadow:0 5px 14px color-mix(in srgb,var(--tab-color,#1e293b) 28%,transparent)!important
+}
+.neocooler-app .stats-row{gap:9px!important}
+.neocooler-app .stats-row>div{
+  position:relative;overflow:hidden;border-radius:13px!important;background:#1e293b!important;
+  border:1px solid #475569!important;box-shadow:0 5px 14px rgba(2,8,23,.2)!important
+}
+.neocooler-app .stats-row>div:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:var(--stat-color,#94a3b8)}
+.neocooler-app .stats-row>div:nth-child(1){--stat-color:#94a3b8}
+.neocooler-app .stats-row>div:nth-child(2){--stat-color:#f59e0b}
+.neocooler-app .stats-row>div:nth-child(3){--stat-color:#a78bfa}
+.neocooler-app .stats-row>div:nth-child(4){--stat-color:#38bdf8}
+.neocooler-app .stats-row>div:nth-child(5){--stat-color:#60a5fa}
+.neocooler-app .stats-row>div:nth-child(6){--stat-color:#2dd4bf}
+.neocooler-app .stats-row>div>div:first-child{font-size:clamp(19px,2vw,28px)!important;font-weight:900!important;color:#fff!important}
+.neocooler-app .stats-row>div>div:last-child{color:#e2e8f0!important;font-weight:750!important;letter-spacing:.025em!important;text-transform:uppercase}
+.neocooler-app [data-global-search-direct="true"]>input{
+  min-height:46px!important;border:1px solid #94a3b8!important;border-radius:12px!important;background:#fff!important;
+  box-shadow:0 3px 12px rgba(15,23,42,.06)!important
+}
+.neocooler-app .production-grid>.pedido-card,
+.neocooler-app .production-grid>.dia-group{
+  --stage-accent:#2563eb!important;
+  border:1px solid color-mix(in srgb,var(--stage-accent) 35%,#fff)!important;
+  border-top:5px solid var(--stage-accent)!important;border-radius:16px!important;
+  box-shadow:0 8px 20px rgba(15,23,42,.08)!important;background:#fff!important
+}
+.neocooler-app.etapa-ativa-pre_corte .production-grid>.pedido-card,
+.neocooler-app.etapa-ativa-pre_corte .production-grid>.dia-group{--stage-accent:var(--neo-stage-pre)!important}
+.neocooler-app.etapa-ativa-aguardando_sublimacao .production-grid>.pedido-card,
+.neocooler-app.etapa-ativa-aguardando_sublimacao .production-grid>.dia-group{--stage-accent:var(--neo-stage-sublimation-wait)!important}
+.neocooler-app.etapa-ativa-sublimacao .production-grid>.pedido-card,
+.neocooler-app.etapa-ativa-sublimacao .production-grid>.dia-group{--stage-accent:var(--neo-stage-sublimation)!important}
+.neocooler-app.etapa-ativa-aguardando_costura .production-grid>.pedido-card,
+.neocooler-app.etapa-ativa-aguardando_costura .production-grid>.dia-group{--stage-accent:var(--neo-stage-sewing-wait)!important}
+.neocooler-app.etapa-ativa-costura .production-grid>.pedido-card,
+.neocooler-app.etapa-ativa-costura .production-grid>.dia-group{--stage-accent:var(--neo-stage-sewing)!important}
+.neocooler-app.etapa-ativa-separacao .production-grid>.pedido-card,
+.neocooler-app.etapa-ativa-separacao .production-grid>.dia-group{--stage-accent:var(--neo-stage-separation)!important}
+.neocooler-app .production-grid>.pedido-card:before,
+.neocooler-app .production-grid>.dia-group:before{background:var(--stage-accent)!important}
+.neocooler-app .production-grid>.pedido-card:hover,
+.neocooler-app .production-grid>.dia-group:hover{box-shadow:0 13px 26px rgba(15,23,42,.14)!important;transform:translateY(-2px)}
+.neocooler-app button:focus-visible,.neocooler-app a:focus-visible,
+.neocooler-app input:focus-visible,.neocooler-app select:focus-visible,
+.neocooler-app textarea:focus-visible{outline:3px solid var(--neo-focus)!important;outline-offset:3px!important}
+.neocooler-app button:disabled{cursor:not-allowed!important;filter:saturate(.4)!important;opacity:.68!important;transform:none!important}
+.neocooler-app .painelProducao,.neocooler-app .producao-historico-card{
+  border:1px solid #d6deea!important;box-shadow:0 8px 24px rgba(15,23,42,.07)!important
+}
+.neocooler-app .producao-kicker{letter-spacing:.11em!important;font-weight:900!important}
+@media(max-width:760px){
+  .neocooler-app .app-header{border-bottom-width:3px!important}
+  .neocooler-app .tabs-row .tab-btn{min-height:42px!important;padding:9px 11px!important}
+  .neocooler-app .stats-row>div{border-radius:10px!important}
+  .neocooler-app .stats-row>div>div:first-child{font-size:18px!important}
+  .neocooler-app .stats-row>div>div:last-child{font-size:8px!important}
+  .neocooler-app .production-grid>.pedido-card,.neocooler-app .production-grid>.dia-group{border-radius:14px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .neocooler-app *,.neocooler-app *:before,.neocooler-app *:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
+}

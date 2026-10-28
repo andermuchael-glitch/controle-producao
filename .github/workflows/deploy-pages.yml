@@ -3,6 +3,7 @@ name: Publicar NeoCooler no GitHub Pages
 on:
   push:
     branches:
+      - main
       - migracao-supabase-segura
   workflow_dispatch:
 

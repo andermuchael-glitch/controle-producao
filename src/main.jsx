@@ -282,7 +282,7 @@ function ComunicacaoInterna() {
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/service-worker.js", { scope: "/" }).catch(() => {});
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}service-worker.js`, { scope: import.meta.env.BASE_URL }).catch(() => {});
   });
 }
 

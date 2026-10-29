@@ -174,3 +174,39 @@ export function inscreverAuditoria(callback) {
     .subscribe();
   return () => { ativo = false; supabase.removeChannel(canal); };
 }
+
+/**
+ * Corrige uma duplicação confirmada entre duas etapas lendo e gravando o estado
+ * atual diretamente no Supabase, sem o merge de exclusões usado para salvamentos comuns.
+ * Só remove registros da etapa de origem quando as somas das duas etapas coincidem
+ * exatamente com a quantidade explicitamente confirmada.
+ */
+export async function corrigirDuplicacaoEtapaSegura({ pedido, produto, quantidade, etapaRemover, etapaManter }) {
+  if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
+  try {
+    const { data, error: leituraErro } = await supabase.from(STATE_TABLE).select("value").eq("key", "costura:itens").maybeSingle();
+    if (leituraErro) throw leituraErro;
+    const lista = parseJson(data?.value, []);
+    if (!Array.isArray(lista)) return { ok: false, motivo: "estado_invalido" };
+    const corresponde = item => String(item?.pedido) === String(pedido) && String(item?.produto || "").trim().toUpperCase() === String(produto || "").trim().toUpperCase();
+    const soma = etapa => lista.filter(i => corresponde(i) && i.etapa === etapa).reduce((s, i) => s + (Number(i.qtd) || 0), 0);
+    if (soma(etapaRemover) !== Number(quantidade) || soma(etapaManter) !== Number(quantidade)) {
+      return { ok: false, motivo: "quantidades_nao_conferem", aguardando: soma(etapaRemover), mantida: soma(etapaManter) };
+    }
+    const corrigida = lista.filter(i => !(corresponde(i) && i.etapa === etapaRemover));
+    const { error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    const { data: authData } = await supabase.auth.getUser();
+    const { error: gravaErro } = await supabase.from(STATE_TABLE).upsert({
+      key: "costura:itens",
+      value: JSON.stringify(corrigida),
+      updated_at: new Date().toISOString(),
+      updated_by: authData?.user?.id || null,
+    }, { onConflict: "key" });
+    if (gravaErro) throw gravaErro;
+    return { ok: true, removidos: lista.length - corrigida.length };
+  } catch (error) {
+    console.error("Falha ao corrigir duplicação de etapa", error);
+    return { ok: false, motivo: "erro_gravacao" };
+  }
+}

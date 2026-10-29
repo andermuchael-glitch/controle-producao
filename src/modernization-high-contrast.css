@@ -97,3 +97,84 @@
 @media(prefers-reduced-motion:reduce){
   .neocooler-app *,.neocooler-app *:before,.neocooler-app *:after{transition:none!important;animation:none!important;scroll-behavior:auto!important}
 }
+
+
+/* Dashboard NeoCooler Premium — camada visual sem alterar dados ou fluxo de produção. */
+:root{
+  --neo-navy:#071426;
+  --neo-navy-2:#10233c;
+  --neo-panel:#12243a;
+  --neo-cyan:#38bdf8;
+  --neo-orange:#ff8a24;
+}
+html{background:var(--neo-navy)}
+body{
+  background:
+    radial-gradient(ellipse at 10% 0%,rgba(30,91,151,.22),transparent 38%),
+    radial-gradient(ellipse at 92% 28%,rgba(124,58,237,.12),transparent 32%),
+    linear-gradient(160deg,#071426 0%,#0b1a2d 52%,#14243a 100%) fixed!important;
+}
+.neocooler-app{background:transparent!important}
+.neocooler-app .app-header{
+  background:linear-gradient(125deg,rgba(5,17,34,.98),rgba(15,38,66,.97))!important;
+  border-bottom:3px solid var(--neo-orange)!important;
+}
+.neocooler-app .app-main{isolation:isolate}
+.neocooler-app .tabs-row .tab-btn{
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease!important;
+}
+.neocooler-app .tabs-row .tab-btn:hover{transform:translateY(-2px)!important}
+.neocooler-app .stats-row>div{
+  background:linear-gradient(145deg,#1c3049,#14243a)!important;
+  border:1px solid rgba(148,180,215,.24)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.045)!important;
+}
+.neocooler-app .stats-row>div:after{
+  content:"";position:absolute;inset:auto 10px 0 10px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--stat-color,#38bdf8),transparent);opacity:.65
+}
+.neocooler-app [data-global-search-direct="true"]>input{
+  box-shadow:0 8px 24px rgba(0,0,0,.13)!important;
+  transition:border-color .2s ease,box-shadow .2s ease!important
+}
+.neocooler-app [data-global-search-direct="true"]>input:focus{
+  border-color:#38bdf8!important;box-shadow:0 0 0 4px rgba(56,189,248,.16)!important
+}
+.neocooler-app .production-grid>.pedido-card,
+.neocooler-app .production-grid>.dia-group{
+  box-shadow:0 8px 20px rgba(2,8,23,.09),0 1px 0 rgba(255,255,255,.72) inset!important;
+  transition:transform .18s ease,box-shadow .18s ease!important;
+}
+.neocooler-app .production-grid>.pedido-card:hover,
+.neocooler-app .production-grid>.dia-group:hover{
+  transform:translateY(-3px)!important;
+  box-shadow:0 15px 30px rgba(2,8,23,.17)!important;
+}
+.neocooler-app .launch-pedido-btn{
+  background:linear-gradient(135deg,#fff 0%,#fff7ed 100%)!important;
+  border:1px solid rgba(249,115,22,.5)!important;
+  box-shadow:0 7px 18px rgba(249,115,22,.12)!important;
+}
+.neocooler-app .launch-pedido-btn:hover{transform:translateY(-2px)!important;box-shadow:0 10px 24px rgba(249,115,22,.2)!important}
+.neocooler-app .painelProducao,.neocooler-app .producao-historico-card{
+  border-radius:18px!important;
+  box-shadow:0 12px 30px rgba(2,8,23,.12)!important;
+}
+.neocooler-app button,.neocooler-app select,.neocooler-app input{transition:box-shadow .18s ease,border-color .18s ease,transform .18s ease}
+.neocooler-app button:active{transform:scale(.985)}
+@media(min-width:1100px){
+  .neocooler-app .app-header{padding-left:clamp(18px,2.4vw,36px)!important;padding-right:clamp(18px,2.4vw,36px)!important}
+  .neocooler-app main.app-main{max-width:1600px!important;margin-inline:auto!important}
+}
+@media(max-width:760px){
+  body{background:linear-gradient(160deg,#0a1729 0%,#10243a 50%,#29384a 100%) fixed!important}
+  .neocooler-app .stats-row>div{box-shadow:0 5px 12px rgba(0,0,0,.15)!important}
+  .neocooler-app .production-grid>.pedido-card,
+  .neocooler-app .production-grid>.dia-group{box-shadow:0 5px 13px rgba(2,8,23,.1)!important}
+}
+@media(prefers-reduced-motion:reduce){
+  .neocooler-app button,.neocooler-app select,.neocooler-app input,
+  .neocooler-app .production-grid>.pedido-card,.neocooler-app .production-grid>.dia-group{
+    transition:none!important
+  }
+}

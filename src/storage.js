@@ -304,3 +304,34 @@ export async function moverParaSublimacaoNoServidor({ pedido, produto, quantidad
     return { ok: false, motivo: "erro_gravacao" };
   }
 }
+
+/** Arquiva os registros das fases operacionais removidas, preservando todos os dados e quantidades. Idempotente. */
+export async function arquivarFasesCosturaRemovidas() {
+  if (!supabaseConfigurado || !supabase) return { ok: false, arquivados: 0 };
+  try {
+    const { data, error } = await supabase.from(STATE_TABLE).select("value").eq("key", "costura:itens").maybeSingle();
+    if (error) throw error;
+    const lista = parseJson(data?.value, []);
+    if (!Array.isArray(lista)) throw new Error("Estado de produção inválido");
+    const removidas = new Set(["aguardando_costura", "costura", "separacao"]);
+    let arquivados = 0;
+    const agora = Date.now();
+    const atualizada = lista.map(item => {
+      if (!removidas.has(item?.etapa)) return item;
+      arquivados++;
+      return { ...item, etapa: "arquivado", arquivadoEm: item.arquivadoEm || agora, motivoArquivamento: "Fluxo simplificado: arquivamento após sublimação" };
+    });
+    if (!arquivados) return { ok: true, arquivados: 0 };
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    const { error: saveError } = await supabase.from(STATE_TABLE).upsert({
+      key: "costura:itens", value: JSON.stringify(atualizada),
+      updated_at: new Date().toISOString(), updated_by: authData?.user?.id || null,
+    }, { onConflict: "key" });
+    if (saveError) throw saveError;
+    return { ok: true, arquivados };
+  } catch (error) {
+    console.error("Falha ao arquivar fases removidas", error);
+    return { ok: false, arquivados: 0 };
+  }
+}

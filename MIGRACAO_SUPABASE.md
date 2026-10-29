@@ -1,38 +1,37 @@
-# Migração segura para Supabase
+# Migração do NeoCooler para Supabase
 
-Esta branch de preparação é isolada da `main`. Não desative Firebase/Netlify nem importe dados em produção antes de validar a migração.
+## Estado da migração
 
-## Backup recebido
-A planilha `controle-producao-2026-10-28 (2).xlsx` tem uma aba `Producao`, 657 linhas e as colunas `pedido`, `produto`, `quantidade`, `etapa`, `cor`, `equipe`, `sublimador`, `dataCorte`, `dataSublimacao`, `dataEntrega`. Ela é uma cópia de dados, mas não garante incluir metadados, estoque, auditoria, conversas ou anexos.
+A versão principal do aplicativo está migrada para Supabase e publicada pelo GitHub Pages.
 
-## Preparação
-1. Crie/abra o projeto Supabase pretendido.
-2. No SQL Editor, revise e execute `supabase/schema.sql`.
-3. Configure `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` no ambiente de preview/deploy. Use somente a chave pública/anon no frontend; nunca coloque a service_role key no código.
-4. Habilite o método de login por e-mail/senha no Supabase Auth e cadastre os usuários autorizados.
-5. Validar a importação em uma tabela de staging antes de substituir o banco ativo.
+- Branch principal: `main`
+- Aplicação: https://andermuchael-glitch.github.io/controle-producao/
+- Autenticação: Supabase Auth (e-mail e senha).
+- Estado de produção, metadados e estoque: `public.controle_producao_state`.
+- Auditoria: `public.auditoria_producao`.
+- Mensagens internas: `public.conversas` e `public.mensagens`.
+- Importação de backup: `public.producao_import_staging`, mantida separada do estado ativo.
+- O código da aplicação não deve voltar a usar Firebase/Firestore. Os arquivos residuais de configuração e regras do Firebase foram removidos da branch principal.
 
-## Estado atual da migração
-- O cliente Supabase usa a URL do projeto Neocooler e a chave pública publishable fornecida. A chave é pública por definição; nunca incluir `service_role`/secret no frontend.
-- `AuthGate.jsx` já usa Supabase Auth; os usuários precisam existir em **Authentication → Users** no projeto Supabase e ter acesso autorizado.
-- `storage.js` já aponta produção, metadados, estoque e auditoria para as tabelas Supabase.
-- `main.jsx` e `Mensagens.jsx` já usam Supabase Realtime para notificações e chat.
-- `src/firebase.js` e a dependência Firebase permanecem no repositório por enquanto, mas não devem ser removidas até a validação integral da migração e verificação de que nenhum módulo ainda as importa.
-- O esquema SQL precisa ser aplicado no projeto Supabase antes de testar. O build não executa SQL nem valida a autenticação real.
-- Não desative Firebase/Netlify e não publique no GitHub Pages até completar testes de login, CRUD, sincronização em dois navegadores, estoque, auditoria, mensagens e importação de backup.
+## Configuração
 
+O cliente usa a URL do projeto Supabase Neocooler e a chave pública publishable. A chave pública pode estar no frontend; nunca colocar uma chave `service_role` ou secret no código ou no navegador.
 
-## GitHub Pages (preparação, sem publicar)
-- O Vite usa a base `/controle-producao/`, o caminho correto para o repositório de projeto no GitHub Pages.
-- O manifest e o registro do service worker usam esse caminho-base.
-- O build prepara `dist/404.html` para fallback SPA.
-- O workflow de CI valida o build da branch de migração, mas não publica nada e não altera a configuração de Pages.
-- URL pretendida após aprovação e configuração manual: https://andermuchael-glitch.github.io/controle-producao/
-- O deploy está intencionalmente bloqueado até Supabase Auth, armazenamento, mensagens e importação serem implementados e testados. Sem as variáveis Supabase, não publicar a aplicação migrada.
+As contas autorizadas precisam existir em **Supabase Dashboard → Authentication → Users**. As políticas RLS das tabelas precisam permanecer habilitadas.
 
-## Importação do Excel sem afetar produção
-1. Converta uma cópia da aba `Producao` para CSV UTF-8; mantenha o XLSX original intacto.
-2. Execute o SQL do esquema para criar a tabela `producao_import_staging`.
-3. Importe o CSV nessa tabela pela interface do Supabase (não pelo frontend público).
-4. Compare a contagem de linhas, pedidos distintos, quantidades e etapas com a planilha original.
-5. Só depois da validação, criar um script idempotente de transformação para o formato JSON usado pelo aplicativo. Não sobrescrever `controle_producao_state` sem uma comparação e um plano de reversão.
+## Dados e segurança
+
+O backup Excel de 28/10/2026 tinha 657 linhas na aba `Producao`. Ele não contém necessariamente todos os metadados, o progresso detalhado de cada item, estoque, auditoria, conversas ou anexos. A tabela `producao_import_staging` é uma área de conferência e não deve ser tratada como banco ativo.
+
+Não reimportar nem executar scripts de restauração novamente sem comparar os dados atuais e preparar um plano de reversão. Não excluir nem recriar tabelas ativas para corrigir problemas de interface.
+
+## Validação após publicação
+
+1. Entrar com uma conta já cadastrada no Supabase Auth.
+2. Confirmar que os indicadores e pedidos aparecem.
+3. Abrir o mesmo aplicativo em dois navegadores e confirmar a sincronização.
+4. Testar criação e edição de pedido, movimentação de etapa, arquivamento e estoque.
+5. Testar mensagens internas e permissões de auditoria.
+6. Confirmar que os dados continuam após atualizar a página e fazer novo login.
+
+Se algum teste falhar, corrigir a integração ou as políticas com alterações pequenas e revisadas; não voltar ao Firebase como fallback silencioso.

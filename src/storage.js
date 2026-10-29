@@ -210,3 +210,34 @@ export async function corrigirDuplicacaoEtapaSegura({ pedido, produto, quantidad
     return { ok: false, motivo: "erro_gravacao" };
   }
 }
+
+/** Remove somente os registros de origem de pedidos confirmados pelo usuário como já estando na etapa destino. */
+export async function corrigirEtapaConfirmada({ pedidos, produto, etapaRemover, etapaManter }) {
+  if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
+  try {
+    const { data, error } = await supabase.from(STATE_TABLE).select("value").eq("key", "costura:itens").maybeSingle();
+    if (error) throw error;
+    const lista = parseJson(data?.value, []);
+    if (!Array.isArray(lista)) return { ok: false, motivo: "estado_invalido" };
+    const ids = new Set(pedidos.map(String));
+    const mesmoProduto = i => String(i?.produto || "").trim().toUpperCase() === String(produto).trim().toUpperCase();
+    const temDestino = new Set(lista.filter(i => ids.has(String(i?.pedido)) && mesmoProduto(i) && i.etapa === etapaManter).map(i => String(i.pedido)));
+    const remover = i => ids.has(String(i?.pedido)) && mesmoProduto(i) && i.etapa === etapaRemover && temDestino.has(String(i.pedido));
+    const corrigida = lista.filter(i => !remover(i));
+    const removidos = lista.length - corrigida.length;
+    if (!removidos) return { ok: true, removidos: 0, motivo: "nenhum_registro_origem_encontrado", pedidosDestino: [...temDestino] };
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError) throw authError;
+    const { error: gravaErro } = await supabase.from(STATE_TABLE).upsert({
+      key: "costura:itens",
+      value: JSON.stringify(corrigida),
+      updated_at: new Date().toISOString(),
+      updated_by: authData?.user?.id || null,
+    }, { onConflict: "key" });
+    if (gravaErro) throw gravaErro;
+    return { ok: true, removidos, pedidosDestino: [...temDestino] };
+  } catch (error) {
+    console.error("Falha ao corrigir etapa confirmada", error);
+    return { ok: false, motivo: "erro_gravacao" };
+  }
+}

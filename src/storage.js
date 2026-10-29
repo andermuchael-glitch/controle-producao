@@ -241,3 +241,66 @@ export async function corrigirEtapaConfirmada({ pedidos, produto, etapaRemover, 
     return { ok: false, motivo: "erro_gravacao" };
   }
 }
+
+async function lerEstadoItensAtual() {
+  const { data, error } = await supabase.from(STATE_TABLE).select("value").eq("key", "costura:itens").maybeSingle();
+  if (error) throw error;
+  const lista = parseJson(data?.value, []);
+  if (!Array.isArray(lista)) throw new Error("Estado de produção inválido");
+  return lista;
+}
+async function gravarEstadoItensAtual(lista) {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  const { error } = await supabase.from(STATE_TABLE).upsert({
+    key: "costura:itens", value: JSON.stringify(lista),
+    updated_at: new Date().toISOString(), updated_by: authData?.user?.id || null,
+  }, { onConflict: "key" });
+  if (error) throw error;
+}
+export async function repararDuplicacoesConfirmadas(pedidos, produto, etapaOrigem, etapaDestino) {
+  if (!supabaseConfigurado || !supabase) return { ok: false, removidos: 0 };
+  try {
+    const lista = await lerEstadoItensAtual();
+    const numeros = new Set(pedidos.map(String));
+    const prod = String(produto || "").trim().toUpperCase();
+    const destino = new Set(lista.filter(i => numeros.has(String(i.pedido)) && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === etapaDestino).map(i => String(i.pedido)));
+    const corrigida = lista.filter(i => !(numeros.has(String(i.pedido)) && destino.has(String(i.pedido)) && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === etapaOrigem));
+    const removidos = lista.length - corrigida.length;
+    if (removidos) await gravarEstadoItensAtual(corrigida);
+    return { ok: true, removidos, pedidosDestino: [...destino] };
+  } catch (error) {
+    console.error("Falha ao reparar duplicações confirmadas", error);
+    return { ok: false, removidos: 0 };
+  }
+}
+/** Move quantidade da origem ao destino com leitura do estado mais recente, evitando reaplicar a mesma origem já removida. */
+export async function moverParaSublimacaoNoServidor({ pedido, produto, quantidade, cor, sublimador, dataSublimacao }) {
+  if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
+  try {
+    const lista = await lerEstadoItensAtual();
+    const pedidoStr = String(pedido);
+    const prod = String(produto || "").trim().toUpperCase();
+    const origens = lista.filter(i => String(i.pedido) === pedidoStr && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === "aguardando_sublimacao");
+    const total = origens.reduce((s, i) => s + Math.max(0, Number(i.qtd) || 0), 0);
+    const qtd = Number(quantidade);
+    if (!Number.isFinite(qtd) || qtd < 1 || qtd > total) return { ok: false, motivo: "saldo_insuficiente", disponivel: total };
+    let saldo = qtd;
+    const atualizada = [];
+    for (const item of lista) {
+      if (saldo > 0 && String(item.pedido) === pedidoStr && String(item.produto || "").trim().toUpperCase() === prod && item.etapa === "aguardando_sublimacao") {
+        const disponivel = Math.max(0, Number(item.qtd) || 0);
+        const mover = Math.min(disponivel, saldo);
+        if (disponivel - mover > 0) atualizada.push({ ...item, qtd: disponivel - mover });
+        saldo -= mover;
+      } else atualizada.push(item);
+    }
+    if (saldo > 0) return { ok: false, motivo: "saldo_insuficiente", disponivel: qtd - saldo };
+    atualizada.push({ id: "mov-" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), pedido: pedidoStr, produto, cor: cor || "", qtd, etapa: "sublimacao", sublimador, dataSublimacao, equipe: "Não decidido", feito: false, conferido: false, criadoEm: Date.now() });
+    await gravarEstadoItensAtual(atualizada);
+    return { ok: true, itens: atualizada };
+  } catch (error) {
+    console.error("Falha ao mover pedido para sublimação", error);
+    return { ok: false, motivo: "erro_gravacao" };
+  }
+}

@@ -55,8 +55,8 @@ begin
   -- Repetição da mesma requisição (retry de rede) não cria outro lançamento.
   select exists (
     select 1
-    from jsonb_array_elements(v_estado) e
-    where e->>'movimentacaoId' = p_operacao_id::text
+    from jsonb_array_elements(v_estado) as t(item)
+    where item->>'movimentacaoId' = p_operacao_id::text
   ) into v_repetida;
 
   if v_repetida then
@@ -65,10 +65,10 @@ begin
 
   select coalesce(sum(greatest(0, coalesce((e->>'qtd')::numeric, 0))), 0)
   into v_total
-  from jsonb_array_elements(v_estado) e
-  where trim(coalesce(e->>'pedido','')) = trim(p_pedido)
-    and upper(trim(coalesce(e->>'produto',''))) = upper(trim(p_produto))
-    and e->>'etapa' = p_etapa_origem;
+  from jsonb_array_elements(v_estado) as t(item)
+  where trim(coalesce(item->>'pedido','')) = trim(p_pedido)
+    and upper(trim(coalesce(item->>'produto',''))) = upper(trim(p_produto))
+    and item->>'etapa' = p_etapa_origem;
 
   if v_total < p_quantidade then
     return jsonb_build_object(
@@ -81,7 +81,7 @@ begin
 
   v_saldo := p_quantidade;
 
-  for v_item in select value from jsonb_array_elements(v_estado)
+  for v_item in select item from jsonb_array_elements(v_estado) as t(item)
   loop
     if v_saldo > 0
        and trim(coalesce(v_item->>'pedido','')) = trim(p_pedido)

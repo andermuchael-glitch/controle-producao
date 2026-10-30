@@ -268,7 +268,7 @@ export async function repararDuplicacoesConfirmadas(pedidos, produto, etapaOrige
     const corrigida = lista.filter(i => !(numeros.has(String(i.pedido)) && destino.has(String(i.pedido)) && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === etapaOrigem));
     const removidos = lista.length - corrigida.length;
     if (removidos) await gravarEstadoItensAtual(corrigida);
-    return { ok: true, removidos, pedidosDestino: [...destino] };
+    return { ok: true, removidos, pedidosDestino: [...destino], itens: corrigida };
   } catch (error) {
     console.error("Falha ao reparar duplicações confirmadas", error);
     return { ok: false, removidos: 0 };

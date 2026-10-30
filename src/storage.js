@@ -278,7 +278,9 @@ export async function repararDuplicacoesConfirmadas(pedidos, produto, etapaOrige
  * Movimenta uma quantidade entre etapas usando uma função transacional no PostgreSQL.
  * O banco bloqueia a linha do estado, valida o saldo e grava débito/crédito juntos.
  */
-const movimentacoesEmAndamento = new Set();\n\nfunction novoIdMovimentacao() {
+const movimentacoesEmAndamento = new Set();
+
+function novoIdMovimentacao() {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : "op-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);

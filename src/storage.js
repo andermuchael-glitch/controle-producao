@@ -274,35 +274,85 @@ export async function repararDuplicacoesConfirmadas(pedidos, produto, etapaOrige
     return { ok: false, removidos: 0 };
   }
 }
-/** Move quantidade da origem ao destino com leitura do estado mais recente, evitando reaplicar a mesma origem já removida. */
-export async function moverParaSublimacaoNoServidor({ pedido, produto, quantidade, cor, sublimador, dataSublimacao }) {
+/**
+ * Movimenta uma quantidade entre etapas usando uma função transacional no PostgreSQL.
+ * O banco bloqueia a linha do estado, valida o saldo e grava débito/crédito juntos.
+ */
+const movimentacoesEmAndamento = new Set();
+
+function novoIdMovimentacao() {
+  return typeof crypto !== "undefined" && crypto.randomUUID
+    ? crypto.randomUUID()
+    : "op-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
+}
+
+async function moverEtapaAtomica({ pedido, produto, quantidade, etapaOrigem, etapaDestino, dados }) {
   if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
+  const qtd = Number(quantidade);
+  if (!Number.isFinite(qtd) || qtd <= 0) return { ok: false, motivo: "quantidade_invalida" };
+  const chave = [String(pedido).trim(), String(produto || "").trim().toUpperCase(), etapaOrigem, etapaDestino].join("::");
+  if (movimentacoesEmAndamento.has(chave)) return { ok: false, motivo: "movimentacao_em_andamento" };
+  movimentacoesEmAndamento.add(chave);
   try {
-    const lista = await lerEstadoItensAtual();
-    const pedidoStr = String(pedido);
-    const prod = String(produto || "").trim().toUpperCase();
-    const origens = lista.filter(i => String(i.pedido) === pedidoStr && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === "aguardando_sublimacao");
-    const total = origens.reduce((s, i) => s + Math.max(0, Number(i.qtd) || 0), 0);
-    const qtd = Number(quantidade);
-    if (!Number.isFinite(qtd) || qtd < 1 || qtd > total) return { ok: false, motivo: "saldo_insuficiente", disponivel: total };
-    let saldo = qtd;
-    const atualizada = [];
-    for (const item of lista) {
-      if (saldo > 0 && String(item.pedido) === pedidoStr && String(item.produto || "").trim().toUpperCase() === prod && item.etapa === "aguardando_sublimacao") {
-        const disponivel = Math.max(0, Number(item.qtd) || 0);
-        const mover = Math.min(disponivel, saldo);
-        if (disponivel - mover > 0) atualizada.push({ ...item, qtd: disponivel - mover });
-        saldo -= mover;
-      } else atualizada.push(item);
-    }
-    if (saldo > 0) return { ok: false, motivo: "saldo_insuficiente", disponivel: qtd - saldo };
-    atualizada.push({ id: "mov-" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), pedido: pedidoStr, produto, cor: cor || "", qtd, etapa: "sublimacao", sublimador, dataSublimacao, equipe: "Não decidido", feito: false, conferido: false, criadoEm: Date.now() });
-    await gravarEstadoItensAtual(atualizada);
-    return { ok: true, itens: atualizada };
+    const { data, error } = await supabase.rpc("mover_etapa_producao_atomica", {
+      p_operacao_id: novoIdMovimentacao(),
+      p_pedido: String(pedido).trim(),
+      p_produto: String(produto || "").trim(),
+      p_etapa_origem: etapaOrigem,
+      p_etapa_destino: etapaDestino,
+      p_quantidade: qtd,
+      p_dados: dados || {},
+    });
+    if (error) throw error;
+    const resultado = typeof data === "string" ? JSON.parse(data) : data;
+    if (!resultado?.ok) return { ok: false, motivo: resultado?.motivo || "movimentacao_recusada", disponivel: resultado?.disponivel };
+    const itens = Array.isArray(resultado.itens) ? resultado.itens : null;
+    if (!itens) throw new Error("O Supabase não retornou a lista atualizada.");
+    return { ok: true, itens, repetida: !!resultado.repetida };
   } catch (error) {
-    console.error("Falha ao mover pedido para sublimação", error);
+    console.error("Falha na movimentação transacional", error);
     return { ok: false, motivo: "erro_gravacao" };
+  } finally {
+    movimentacoesEmAndamento.delete(chave);
   }
+}
+
+export async function moverParaSublimacaoNoServidor({ pedido, produto, quantidade, cor, sublimador, dataSublimacao }) {
+  return moverEtapaAtomica({
+    pedido, produto, quantidade,
+    etapaOrigem: "aguardando_sublimacao",
+    etapaDestino: "sublimacao",
+    dados: {
+      id: "mov-" + novoIdMovimentacao(),
+      cor: cor || "",
+      sublimador: sublimador || "",
+      dataSublimacao: dataSublimacao || "",
+      equipe: "Não decidido",
+      feito: false,
+      conferido: false,
+      criadoEm: Date.now(),
+    },
+  });
+}
+
+/** Move Pré-Corte para Aguardando Sublimação em uma única transação no banco. */
+export async function moverParaAguardandoSublimacaoNoServidor({ pedido, produto, quantidade, cortador, dataCorte, qtdEstoqueConsumida = 0, qtdNovaCorte = 0 }) {
+  return moverEtapaAtomica({
+    pedido, produto, quantidade,
+    etapaOrigem: "pre_corte",
+    etapaDestino: "aguardando_sublimacao",
+    dados: {
+      id: "corte-" + novoIdMovimentacao(),
+      cortador: cortador || "Kayo",
+      dataCorte: Number(qtdNovaCorte) > 0 ? (dataCorte || "") : "",
+      qtdEstoqueConsumida: Math.max(0, Number(qtdEstoqueConsumida) || 0),
+      qtdNovaCorte: Math.max(0, Number(qtdNovaCorte) || 0),
+      equipe: "Não decidido",
+      feito: false,
+      conferido: false,
+      criadoEm: Date.now(),
+    },
+  });
 }
 
 /** Arquiva os registros das fases operacionais removidas, preservando todos os dados e quantidades. Idempotente. */
@@ -336,29 +386,3 @@ export async function arquivarFasesCosturaRemovidas() {
   }
 }
 
-/** Move quantidade do Pré-Corte para Aguardando Sublimação, debitando todo o saldo de origem em uma única gravação. */
-export async function moverParaAguardandoSublimacaoNoServidor({ pedido, produto, quantidade, cortador, dataCorte, qtdEstoqueConsumida = 0, qtdNovaCorte = 0 }) {
-  if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
-  try {
-    const lista = await lerEstadoItensAtual();
-    const pedidoStr = String(pedido).trim();
-    const prod = String(produto || "").trim().toUpperCase();
-    const total = lista.filter(i => String(i.pedido).trim() === pedidoStr && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === "pre_corte").reduce((s, i) => s + Math.max(0, Number(i.qtd) || 0), 0);
-    const qtd = Number(quantidade);
-    if (!Number.isFinite(qtd) || qtd < 1 || qtd > total) return { ok: false, motivo: "saldo_insuficiente", disponivel: total };
-    let saldo = qtd;
-    const atualizada = [];
-    for (const item of lista) {
-      if (saldo > 0 && String(item.pedido).trim() === pedidoStr && String(item.produto || "").trim().toUpperCase() === prod && item.etapa === "pre_corte") {
-        const disponivel = Math.max(0, Number(item.qtd) || 0);
-        const mover = Math.min(disponivel, saldo);
-        if (disponivel - mover > 0) atualizada.push({ ...item, qtd: disponivel - mover });
-        saldo -= mover;
-      } else atualizada.push(item);
-    }
-    if (saldo > 0) return { ok: false, motivo: "saldo_insuficiente", disponivel: qtd - saldo };
-    atualizada.push({ id: "corte-" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), pedido: pedidoStr, produto, qtd, etapa: "aguardando_sublimacao", cortador: cortador || "Kayo", dataCorte: Number(qtdNovaCorte) > 0 ? (dataCorte || "") : "", qtdEstoqueConsumida: Math.max(0, Number(qtdEstoqueConsumida) || 0), qtdNovaCorte: Math.max(0, Number(qtdNovaCorte) || 0), equipe: "Não decidido", feito: false, conferido: false, criadoEm: Date.now() });
-    await gravarEstadoItensAtual(atualizada);
-    return { ok: true, itens: atualizada };
-  } catch (error) { console.error("Falha ao mover Pré-Corte para Aguardando Sublimação", error); return { ok: false, motivo: "erro_gravacao" }; }
-}

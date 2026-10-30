@@ -335,3 +335,30 @@ export async function arquivarFasesCosturaRemovidas() {
     return { ok: false, arquivados: 0 };
   }
 }
+
+/** Move quantidade do Pré-Corte para Aguardando Sublimação, debitando todo o saldo de origem em uma única gravação. */
+export async function moverParaAguardandoSublimacaoNoServidor({ pedido, produto, quantidade, cortador, dataCorte, qtdEstoqueConsumida = 0, qtdNovaCorte = 0 }) {
+  if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
+  try {
+    const lista = await lerEstadoItensAtual();
+    const pedidoStr = String(pedido).trim();
+    const prod = String(produto || "").trim().toUpperCase();
+    const total = lista.filter(i => String(i.pedido).trim() === pedidoStr && String(i.produto || "").trim().toUpperCase() === prod && i.etapa === "pre_corte").reduce((s, i) => s + Math.max(0, Number(i.qtd) || 0), 0);
+    const qtd = Number(quantidade);
+    if (!Number.isFinite(qtd) || qtd < 1 || qtd > total) return { ok: false, motivo: "saldo_insuficiente", disponivel: total };
+    let saldo = qtd;
+    const atualizada = [];
+    for (const item of lista) {
+      if (saldo > 0 && String(item.pedido).trim() === pedidoStr && String(item.produto || "").trim().toUpperCase() === prod && item.etapa === "pre_corte") {
+        const disponivel = Math.max(0, Number(item.qtd) || 0);
+        const mover = Math.min(disponivel, saldo);
+        if (disponivel - mover > 0) atualizada.push({ ...item, qtd: disponivel - mover });
+        saldo -= mover;
+      } else atualizada.push(item);
+    }
+    if (saldo > 0) return { ok: false, motivo: "saldo_insuficiente", disponivel: qtd - saldo };
+    atualizada.push({ id: "corte-" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)), pedido: pedidoStr, produto, qtd, etapa: "aguardando_sublimacao", cortador: cortador || "Kayo", dataCorte: Number(qtdNovaCorte) > 0 ? (dataCorte || "") : "", qtdEstoqueConsumida: Math.max(0, Number(qtdEstoqueConsumida) || 0), qtdNovaCorte: Math.max(0, Number(qtdNovaCorte) || 0), equipe: "Não decidido", feito: false, conferido: false, criadoEm: Date.now() });
+    await gravarEstadoItensAtual(atualizada);
+    return { ok: true, itens: atualizada };
+  } catch (error) { console.error("Falha ao mover Pré-Corte para Aguardando Sublimação", error); return { ok: false, motivo: "erro_gravacao" }; }
+}

@@ -278,7 +278,7 @@ export async function repararDuplicacoesConfirmadas(pedidos, produto, etapaOrige
  * Movimenta uma quantidade entre etapas usando uma função transacional no PostgreSQL.
  * O banco bloqueia a linha do estado, valida o saldo e grava débito/crédito juntos.
  */
-function novoIdMovimentacao() {
+const movimentacoesEmAndamento = new Set();\n\nfunction novoIdMovimentacao() {
   return typeof crypto !== "undefined" && crypto.randomUUID
     ? crypto.randomUUID()
     : "op-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2);
@@ -288,6 +288,9 @@ async function moverEtapaAtomica({ pedido, produto, quantidade, etapaOrigem, eta
   if (!supabaseConfigurado || !supabase) return { ok: false, motivo: "supabase_indisponivel" };
   const qtd = Number(quantidade);
   if (!Number.isFinite(qtd) || qtd <= 0) return { ok: false, motivo: "quantidade_invalida" };
+  const chave = [String(pedido).trim(), String(produto || "").trim().toUpperCase(), etapaOrigem, etapaDestino].join("::");
+  if (movimentacoesEmAndamento.has(chave)) return { ok: false, motivo: "movimentacao_em_andamento" };
+  movimentacoesEmAndamento.add(chave);
   try {
     const { data, error } = await supabase.rpc("mover_etapa_producao_atomica", {
       p_operacao_id: novoIdMovimentacao(),
@@ -307,6 +310,8 @@ async function moverEtapaAtomica({ pedido, produto, quantidade, etapaOrigem, eta
   } catch (error) {
     console.error("Falha na movimentação transacional", error);
     return { ok: false, motivo: "erro_gravacao" };
+  } finally {
+    movimentacoesEmAndamento.delete(chave);
   }
 }
 

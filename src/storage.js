@@ -207,7 +207,7 @@ export async function corrigirDuplicacaoEtapaSegura({ pedido, produto, quantidad
     return { ok: true, removidos: lista.length - corrigida.length };
   } catch (error) {
     console.error("Falha ao corrigir duplicação de etapa", error);
-    return { ok: false, motivo: "erro_gravacao" };
+    return { ok: false, motivo: "erro_gravacao", detalhe: error?.message || error?.details || error?.hint || "Erro desconhecido no Supabase." };
   }
 }
 

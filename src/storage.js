@@ -238,7 +238,7 @@ export async function corrigirEtapaConfirmada({ pedidos, produto, etapaRemover, 
     return { ok: true, removidos, pedidosDestino: [...temDestino] };
   } catch (error) {
     console.error("Falha ao corrigir etapa confirmada", error);
-    return { ok: false, motivo: "erro_gravacao" };
+    return { ok: false, motivo: "erro_gravacao", detalhe: error?.message || error?.details || error?.hint || error?.code || "Erro desconhecido no Supabase." };
   }
 }
 

@@ -63,7 +63,7 @@ begin
     return jsonb_build_object('ok', true, 'repetida', true, 'itens', v_estado);
   end if;
 
-  select coalesce(sum(greatest(0, coalesce((e->>'qtd')::numeric, 0))), 0)
+  select coalesce(sum(greatest(0, coalesce((item->>'qtd')::numeric, 0))), 0)
   into v_total
   from jsonb_array_elements(v_estado) as t(item)
   where trim(coalesce(item->>'pedido','')) = trim(p_pedido)

@@ -311,7 +311,7 @@ async function moverEtapaAtomica({ pedido, produto, quantidade, etapaOrigem, eta
     return { ok: true, itens, repetida: !!resultado.repetida };
   } catch (error) {
     console.error("Falha na movimentação transacional", error);
-    return { ok: false, motivo: "erro_gravacao" };
+    return { ok: false, motivo: "erro_gravacao", detalhe: error?.message || error?.details || error?.hint || error?.code || "Erro desconhecido no Supabase." };
   } finally {
     movimentacoesEmAndamento.delete(chave);
   }

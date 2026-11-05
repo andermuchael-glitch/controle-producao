@@ -18,6 +18,7 @@ set search_path = public
 as $$
 declare
   v_estado jsonb;
+  v_estado_bruto jsonb;
   v_nova_lista jsonb := '[]'::jsonb;
   v_item jsonb;
   v_item_novo jsonb;
@@ -39,7 +40,7 @@ begin
 
   -- Serializa todas as movimentações: duas sessões não conseguem ler o mesmo saldo
   -- e gravar simultaneamente uma cópia independente da lista.
-  select value into v_estado
+  select value into v_estado_bruto
   from public.controle_producao_state
   where key = 'costura:itens'
   for update;
@@ -48,8 +49,24 @@ begin
     raise exception 'Estado costura:itens não encontrado no Supabase.';
   end if;
 
+  -- A aplicação já possui registros armazenados como texto JSON dentro de jsonb.
+  -- Aceita tanto esse formato legado quanto um array jsonb nativo.
+  if jsonb_typeof(v_estado_bruto) = 'string' then
+    begin
+      v_estado := (v_estado_bruto #>> '{}')::jsonb;
+    exception when others then
+      raise exception 'Estado de produção inválido: o texto salvo não contém JSON válido.';
+    end;
+  else
+    v_estado := v_estado_bruto;
+  end if;
+
   if jsonb_typeof(v_estado) <> 'array' then
     raise exception 'Estado de produção inválido: esperado um array JSON.';
+  end if;
+
+  if p_etapa_destino = 'sublimacao' and nullif(trim(coalesce(p_dados->>'sublimador','')), '') is null then
+    raise exception 'Selecione um sublimador antes de movimentar para Sublimação.';
   end if;
 
   -- Repetição da mesma requisição (retry de rede) não cria outro lançamento.
@@ -116,7 +133,7 @@ begin
   v_nova_lista := v_nova_lista || jsonb_build_array(v_item_novo);
 
   update public.controle_producao_state
-  set value = v_nova_lista,
+  set value = to_jsonb(v_nova_lista::text),
       updated_at = now(),
       updated_by = auth.uid()
   where key = 'costura:itens';
